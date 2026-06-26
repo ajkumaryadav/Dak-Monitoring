@@ -11,7 +11,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import { AttachmentCard } from "@/features/dak/components/attachment-card";
 import { DakStatusForm } from "@/features/dak/components/dak-status-form";
+import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
 import { getAllowedTransitions } from "@/features/dak/lib/workflow";
 import {
   formatDakDate,
@@ -31,6 +33,7 @@ import { cn } from "@/lib/utils";
 interface DakDetailViewProps {
   dak: DakDetail;
   timeline: DakTimelineEntry[];
+  attachments: DakAttachmentWithUrl[];
   canUpdateStatus: boolean;
 }
 
@@ -72,6 +75,7 @@ function buildTimelineEntries(
 export function DakDetailView({
   dak,
   timeline,
+  attachments,
   canUpdateStatus,
 }: DakDetailViewProps) {
   const entries = buildTimelineEntries(dak, timeline);
@@ -212,6 +216,8 @@ export function DakDetailView({
         </Card>
         </div>
       </div>
+
+      <AttachmentCard attachments={attachments} />
     </div>
   );
 }

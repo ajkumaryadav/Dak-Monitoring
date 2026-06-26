@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { DakStatus, PriorityLevel } from "@/types";
 
 import { ACTIVE_STATUSES, TERMINAL_STATUSES } from "@/features/dak/lib/workflow";
+import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 
 export type DakListFilter = "all" | "pending" | "completed";
 
@@ -56,7 +57,7 @@ export async function getDakList(
 /** Aggregate dashboard statistics for DAK monitoring widgets. */
 export async function getDashboardStats(): Promise<DashboardStats> {
   const supabase = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getDistrictDateString();
 
   const { data, error } = await supabase
     .from("dak_entries")

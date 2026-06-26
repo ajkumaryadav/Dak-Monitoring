@@ -18,7 +18,7 @@ export async function logWorkflowAction({
 
   const { error } = await supabase.from("workflow_logs").insert({
     dak_id: dakId,
-    user_id: userId,
+    created_by: userId,
     action,
     remarks: remarks?.trim() || null,
   });

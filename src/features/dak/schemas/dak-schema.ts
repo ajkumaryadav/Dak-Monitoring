@@ -1,7 +1,7 @@
 import { z } from "zod";
 
+import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import type { PriorityLevel } from "@/types";
-
 export const PRIORITY_OPTIONS = [
   { value: "routine", label: "Routine" },
   { value: "important", label: "Important" },
@@ -41,8 +41,15 @@ export const createDakSchema = z.object({
     .min(1, "Due date is required")
     .refine((value) => !Number.isNaN(Date.parse(value)), {
       message: "Please enter a valid due date",
-    }),
+    })
+    .refine(
+      (value) => value.slice(0, 10) >= getDistrictDateString(),
+      {
+        message: "Due date must be on or after today (received date)",
+      }
+    ),
   remarks: z.string().max(1000, "Remarks must be 1000 characters or fewer"),
+  attachment: z.any().optional(),
 });
 
 export type CreateDakInput = z.infer<typeof createDakSchema>;

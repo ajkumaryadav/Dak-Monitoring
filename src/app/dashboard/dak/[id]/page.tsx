@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { DakDetailView } from "@/features/dak/components/dak-detail-view";
+import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
 import {
   getDakById,
   getDakTimeline,
@@ -23,6 +24,7 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
   }
 
   const timeline = await getDakTimeline(id);
+  const attachments = await getDakAttachments(id);
   const user = await getSessionUser();
   const canUpdateStatus = user
     ? hasPermission(user.role, PERMISSIONS.DAK_UPDATE)
@@ -32,6 +34,7 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     <DakDetailView
       dak={dak}
       timeline={timeline}
+      attachments={attachments}
       canUpdateStatus={canUpdateStatus}
     />
   );

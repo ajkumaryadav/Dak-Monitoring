@@ -9,6 +9,8 @@ import {
   createDakFormAction,
   type CreateDakFormState,
 } from "@/features/dak/actions/create-dak";
+import { AttachmentUpload } from "@/features/dak/components/attachment-upload";
+import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
 import type { DepartmentOption } from "@/features/dak/services/get-departments";
 import { cn } from "@/lib/utils";
@@ -32,6 +34,7 @@ export function DakEntryForm({ departments }: DakEntryFormProps) {
     createDakFormAction,
     initialState
   );
+  const minDueDate = getDistrictDateString();
 
   return (
     <div className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.06] via-background to-background shadow-sm">
@@ -61,7 +64,11 @@ export function DakEntryForm({ departments }: DakEntryFormProps) {
         </p>
       )}
 
-      <form action={formAction} className="space-y-6 px-5 py-5 md:px-6 md:py-6">
+      <form
+        action={formAction}
+        encType="multipart/form-data"
+        className="space-y-6 px-5 py-5 md:px-6 md:py-6"
+      >
         {state.message && (
           <p
             className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
@@ -189,6 +196,7 @@ export function DakEntryForm({ departments }: DakEntryFormProps) {
               name="dueDate"
               type="date"
               required
+              min={minDueDate}
               className={cn(inputClassName, "w-full md:max-w-xs")}
               aria-invalid={!!state.errors?.dueDate}
             />
@@ -214,6 +222,8 @@ export function DakEntryForm({ departments }: DakEntryFormProps) {
               </p>
             )}
           </div>
+
+          <AttachmentUpload error={state.errors?.attachment?.[0]} />
         </div>
 
         <div className="flex flex-col-reverse gap-3 border-t border-border/60 pt-5 sm:flex-row sm:justify-end">

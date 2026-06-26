@@ -8,13 +8,16 @@ import {
   type CreateDakInput,
 } from "@/features/dak/schemas/dak-schema";
 import { syncUserProfile } from "@/features/auth/actions/sync-user";
+import { uploadDakAttachment } from "@/features/dak/actions/upload-attachment";
+import { validateAttachmentFile } from "@/features/dak/lib/attachment-validation";
+import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { hasPermission, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 
 export type CreateDakResult =
-  | { success: true }
+  | { success: true; dakId: string }
   | { success: false; message: string };
 
 export type CreateDakFormState = {
@@ -22,9 +25,22 @@ export type CreateDakFormState = {
   errors?: Partial<Record<keyof CreateDakInput, string[]>>;
 };
 
+function getAttachmentFromFormData(
+  formData: FormData
+): File | undefined {
+  const entry = formData.get("attachment");
+
+  if (!(entry instanceof File) || entry.size === 0) {
+    return undefined;
+  }
+
+  return entry;
+}
+
 /** Register a new DAK entry in Supabase. */
 export async function createDak(
-  input: CreateDakInput
+  input: CreateDakInput,
+  attachment?: File
 ): Promise<CreateDakResult> {
   try {
     const user = await getSessionUser();
@@ -43,6 +59,14 @@ export async function createDak(
       };
     }
 
+    if (attachment) {
+      const fileValidation = validateAttachmentFile(attachment);
+
+      if (!fileValidation.valid) {
+        return { success: false, message: fileValidation.message };
+      }
+    }
+
     await syncUserProfile();
 
     const parsed = createDakSchema.safeParse(input);
@@ -55,7 +79,7 @@ export async function createDak(
     }
 
     const supabase = createAdminClient();
-    const today = new Date().toISOString().slice(0, 10);
+    const receivedDate = getDistrictDateString();
 
     const { data: inserted, error } = await supabase
       .from("dak_entries")
@@ -66,10 +90,10 @@ export async function createDak(
         sender_address: parsed.data.senderAddress,
         priority: parsed.data.priority,
         department_id: parsed.data.departmentId,
-        due_date: parsed.data.dueDate,
+        due_date: parsed.data.dueDate.slice(0, 10),
         description: parsed.data.remarks?.trim() || null,
         status: "received",
-        received_date: today,
+        received_date: receivedDate,
         created_by: user.id,
       })
       .select("id")
@@ -90,7 +114,29 @@ export async function createDak(
       remarks: parsed.data.remarks?.trim() || "New correspondence registered",
     });
 
-    return { success: true };
+    if (attachment) {
+      const uploadResult = await uploadDakAttachment(
+        inserted.id,
+        attachment,
+        user.id
+      );
+
+      if (!uploadResult.success) {
+        return {
+          success: false,
+          message: `DAK saved but attachment upload failed: ${uploadResult.message}`,
+        };
+      }
+
+      await logWorkflowAction({
+        dakId: inserted.id,
+        userId: user.id,
+        action: "Attachment uploaded",
+        remarks: attachment.name,
+      });
+    }
+
+    return { success: true, dakId: inserted.id };
   } catch (error) {
     console.error("[createDak]", error);
     return {
@@ -108,6 +154,19 @@ export async function createDakFormAction(
   _prevState: CreateDakFormState,
   formData: FormData
 ): Promise<CreateDakFormState> {
+  const attachment = getAttachmentFromFormData(formData);
+
+  if (attachment) {
+    const fileValidation = validateAttachmentFile(attachment);
+
+    if (!fileValidation.valid) {
+      return {
+        message: fileValidation.message,
+        errors: { attachment: [fileValidation.message] },
+      };
+    }
+  }
+
   const parsed = createDakSchema.safeParse({
     subject: formData.get("subject"),
     senderName: formData.get("senderName"),
@@ -116,6 +175,7 @@ export async function createDakFormAction(
     departmentId: formData.get("departmentId"),
     dueDate: formData.get("dueDate"),
     remarks: formData.get("remarks") ?? "",
+    attachment,
   });
 
   if (!parsed.success) {
@@ -125,7 +185,7 @@ export async function createDakFormAction(
     };
   }
 
-  const result = await createDak(parsed.data);
+  const result = await createDak(parsed.data, attachment);
 
   if (!result.success) {
     return { message: result.message };
@@ -134,5 +194,6 @@ export async function createDakFormAction(
   revalidatePath("/dashboard/dak");
   revalidatePath("/dashboard/dak/pending");
   revalidatePath("/dashboard");
-  redirect("/dashboard/dak");
+  revalidatePath(`/dashboard/dak/${result.dakId}`);
+  redirect(`/dashboard/dak/${result.dakId}`);
 }
