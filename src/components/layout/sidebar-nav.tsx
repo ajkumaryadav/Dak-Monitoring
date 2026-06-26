@@ -7,6 +7,24 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { mainNavItems } from "@/lib/constants/navigation";
 
+function isNavItemActive(pathname: string, href: string): boolean {
+  if (href === "/dashboard") {
+    return pathname === "/dashboard";
+  }
+
+  if (href === "/dashboard/dak") {
+    return (
+      pathname === "/dashboard/dak" ||
+      (pathname.startsWith("/dashboard/dak/") &&
+        !pathname.startsWith("/dashboard/dak/new") &&
+        !pathname.startsWith("/dashboard/dak/pending") &&
+        !pathname.startsWith("/dashboard/dak/completed"))
+    );
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 interface SidebarNavProps {
   onNavigate?: () => void;
 }
@@ -18,11 +36,7 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
     <nav className="flex flex-1 flex-col gap-1 px-3 py-2">
       {mainNavItems.map((item) => {
         const isActive =
-          !item.disabled &&
-          (item.href === "/dashboard"
-            ? pathname === "/dashboard"
-            : pathname === item.href ||
-              pathname.startsWith(`${item.href}/`));
+          !item.disabled && isNavItemActive(pathname, item.href);
         const Icon = item.icon;
 
         if (item.disabled) {

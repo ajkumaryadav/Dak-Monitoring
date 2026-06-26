@@ -1,5 +1,6 @@
-import { getSessionUser } from "@/lib/session";
+import { getDashboardStats } from "@/features/dak/services/get-dak-stats";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
+import { getSessionUser } from "@/lib/session";
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
@@ -8,5 +9,7 @@ export default async function DashboardPage() {
     return null;
   }
 
-  return <DashboardView user={user} />;
+  const stats = await getDashboardStats();
+
+  return <DashboardView user={user} stats={stats} />;
 }

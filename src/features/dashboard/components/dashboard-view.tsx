@@ -1,69 +1,77 @@
+import Link from "next/link";
 import {
-  Activity,
   AlertTriangle,
-  ArrowRight,
   CheckCircle2,
   Clock,
   FileText,
-  GitBranch,
+  Flame,
   Landmark,
   Sparkles,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardSection } from "@/features/dashboard/components/dashboard-section";
 import { DashboardStatCard } from "@/features/dashboard/components/dashboard-stat-card";
+import { STATUS_LABELS } from "@/features/dak/lib/workflow";
+import type { DashboardStats } from "@/features/dak/services/get-dak-stats";
 import { appConfig } from "@/lib/constants/navigation";
 import type { SessionUser } from "@/types";
 
-const statCards = [
-  {
-    title: "Total DAK Received",
-    value: "—",
-    description: "All correspondence registered in the district",
-    icon: FileText,
-    variant: "primary" as const,
-  },
-  {
-    title: "Under Process",
-    value: "—",
-    description: "Active items moving through workflow",
-    icon: Clock,
-    variant: "info" as const,
-  },
-  {
-    title: "Escalated",
-    value: "—",
-    description: "Cases requiring senior review",
-    icon: AlertTriangle,
-    variant: "warning" as const,
-  },
-  {
-    title: "Disposed Today",
-    value: "—",
-    description: "Completed disposals in the last 24 hours",
-    icon: CheckCircle2,
-    variant: "success" as const,
-  },
-];
-
-const workflowStatuses = [
-  { label: "Received", color: "bg-primary" },
-  { label: "Assigned", color: "bg-[oklch(0.45_0.11_240)]" },
-  { label: "Under Process", color: "bg-[oklch(0.55_0.12_200)]" },
-  { label: "Pending", color: "bg-amber-500" },
-  { label: "Escalated", color: "bg-orange-600" },
-];
-
 interface DashboardViewProps {
   user: SessionUser;
+  stats: DashboardStats;
 }
 
-export function DashboardView({ user }: DashboardViewProps) {
+function buildStatCards(stats: DashboardStats) {
+  return [
+    {
+      title: "Total DAK",
+      value: String(stats.total),
+      description: "All correspondence registered in the district",
+      icon: FileText,
+      variant: "primary" as const,
+      href: "/dashboard/dak",
+    },
+    {
+      title: "Pending",
+      value: String(stats.pending),
+      description: "Active items awaiting workflow action",
+      icon: Clock,
+      variant: "info" as const,
+      href: "/dashboard/dak/pending",
+    },
+    {
+      title: "Overdue",
+      value: String(stats.overdue),
+      description: "Past due date and not yet completed",
+      icon: AlertTriangle,
+      variant: "warning" as const,
+      href: "/dashboard/dak/pending",
+    },
+    {
+      title: "Completed",
+      value: String(stats.completed),
+      description: "Disposed or closed correspondence",
+      icon: CheckCircle2,
+      variant: "success" as const,
+      href: "/dashboard/dak/completed",
+    },
+    {
+      title: "High Priority",
+      value: String(stats.highPriority),
+      description: "Urgent or immediate priority items in progress",
+      icon: Flame,
+      variant: "danger" as const,
+      href: "/dashboard/dak/pending",
+    },
+  ];
+}
+
+export function DashboardView({ user, stats }: DashboardViewProps) {
+  const statCards = buildStatCards(stats);
+
   return (
     <div className="space-y-8">
-      {/* Hero header — matches login page navy branding */}
       <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary via-primary to-[oklch(0.32_0.1_255)] px-6 py-6 text-primary-foreground shadow-lg shadow-primary/15 md:px-8 md:py-7">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.08]"
@@ -101,7 +109,6 @@ export function DashboardView({ user }: DashboardViewProps) {
         </div>
       </div>
 
-      {/* Stat cards */}
       <div>
         <div className="mb-4 flex items-center gap-2">
           <h2 className="text-sm font-semibold tracking-wide text-foreground uppercase">
@@ -109,64 +116,29 @@ export function DashboardView({ user }: DashboardViewProps) {
           </h2>
           <div className="h-px flex-1 bg-border" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {statCards.map((stat) => (
-            <DashboardStatCard key={stat.title} {...stat} />
+            <Link key={stat.title} href={stat.href} className="block">
+              <DashboardStatCard {...stat} />
+            </Link>
           ))}
         </div>
       </div>
 
-      {/* Panels */}
-      <div className="grid gap-5 lg:grid-cols-2">
-        <DashboardSection
-          title="Recent Activity"
-          description="Timeline of DAK movements and administrative updates"
-          icon={Activity}
-          variant="primary"
-        >
-          <div className="space-y-3">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 rounded-xl border border-primary/10 bg-primary/[0.03] px-3 py-2.5"
-              >
-                <Skeleton className="size-9 rounded-full bg-primary/10" />
-                <div className="flex-1 space-y-1.5">
-                  <Skeleton className="h-3.5 w-3/4 bg-primary/10" />
-                  <Skeleton className="h-3 w-1/2 bg-primary/5" />
-                </div>
-                <ArrowRight className="size-4 text-muted-foreground/40" />
-              </div>
-            ))}
-            <p className="pt-1 text-center text-xs text-muted-foreground">
-              Activity feed will populate when modules are connected
-            </p>
-          </div>
-        </DashboardSection>
-
-        <DashboardSection
-          title="Workflow Pipeline"
-          description="DAK status distribution across the district"
-          icon={GitBranch}
-          variant="neutral"
-        >
-          <div className="space-y-4">
-            {workflowStatuses.map(({ label, color }) => (
-              <div key={label} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-foreground">{label}</span>
-                  <span className="text-xs text-muted-foreground">—</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={`h-full w-0 rounded-full ${color} opacity-40`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </DashboardSection>
-      </div>
+      <DashboardSection
+        title="Workflow Status Reference"
+        description="Valid DAK statuses in the district monitoring workflow"
+        icon={FileText}
+        variant="neutral"
+      >
+        <div className="flex flex-wrap gap-2">
+          {Object.values(STATUS_LABELS).map((label) => (
+            <Badge key={label} variant="outline" className="capitalize">
+              {label}
+            </Badge>
+          ))}
+        </div>
+      </DashboardSection>
     </div>
   );
 }

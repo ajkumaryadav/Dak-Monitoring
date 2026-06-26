@@ -1,6 +1,7 @@
 import {
   BarChart3,
-  ClipboardList,
+  CheckCircle2,
+  Clock,
   FilePlus2,
   FileText,
   LayoutDashboard,
@@ -23,7 +24,7 @@ export const mainNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: "New DAK",
+    title: "Register DAK",
     href: "/dashboard/dak/new",
     icon: FilePlus2,
   },
@@ -33,16 +34,19 @@ export const mainNavItems: NavItem[] = [
     icon: FileText,
   },
   {
-    title: "Tasks",
-    href: "/dashboard/tasks",
-    icon: ClipboardList,
-    disabled: true,
+    title: "Pending DAK",
+    href: "/dashboard/dak/pending",
+    icon: Clock,
+  },
+  {
+    title: "Completed DAK",
+    href: "/dashboard/dak/completed",
+    icon: CheckCircle2,
   },
   {
     title: "Reports",
     href: "/dashboard/reports",
     icon: BarChart3,
-    disabled: true,
   },
 ];
 

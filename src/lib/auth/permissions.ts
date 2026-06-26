@@ -6,6 +6,7 @@ export const PERMISSIONS = {
   DASHBOARD: "dashboard",
   DAK_ENTRY: "dak:entry",
   DAK_VIEW: "dak:view",
+  DAK_UPDATE: "dak:update",
   TASKS: "tasks",
   DEPARTMENT: "department",
   UPDATES: "updates",
@@ -20,6 +21,8 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard": PERMISSIONS.DASHBOARD,
   "/dashboard/dak/new": PERMISSIONS.DAK_ENTRY,
+  "/dashboard/dak/pending": PERMISSIONS.DAK_VIEW,
+  "/dashboard/dak/completed": PERMISSIONS.DAK_VIEW,
   "/dashboard/dak": PERMISSIONS.DAK_VIEW,
   "/dashboard/tasks": PERMISSIONS.TASKS,
   "/dashboard/reports": PERMISSIONS.REPORTS,
@@ -34,6 +37,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
   collector: [PERMISSIONS.ALL],
   adm: [
     PERMISSIONS.DASHBOARD,
+    PERMISSIONS.DAK_VIEW,
+    PERMISSIONS.DAK_UPDATE,
     PERMISSIONS.TASKS,
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.REPORTS,
@@ -41,12 +46,25 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
   ],
   district_officer: [
     PERMISSIONS.DASHBOARD,
+    PERMISSIONS.DAK_VIEW,
+    PERMISSIONS.DAK_UPDATE,
     PERMISSIONS.TASKS,
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.UPDATES,
   ],
-  block_officer: [PERMISSIONS.DASHBOARD, PERMISSIONS.TASKS, PERMISSIONS.UPDATES],
-  clerk: [PERMISSIONS.DASHBOARD, PERMISSIONS.DAK_VIEW, PERMISSIONS.TASKS],
+  block_officer: [
+    PERMISSIONS.DASHBOARD,
+    PERMISSIONS.DAK_VIEW,
+    PERMISSIONS.DAK_UPDATE,
+    PERMISSIONS.TASKS,
+    PERMISSIONS.UPDATES,
+  ],
+  clerk: [
+    PERMISSIONS.DASHBOARD,
+    PERMISSIONS.DAK_VIEW,
+    PERMISSIONS.DAK_UPDATE,
+    PERMISSIONS.TASKS,
+  ],
   data_entry_operator: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_ENTRY,

@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-export type StatCardVariant = "primary" | "info" | "warning" | "success";
+export type StatCardVariant = "primary" | "info" | "warning" | "success" | "danger";
 
 const variantStyles: Record<
   StatCardVariant,
@@ -27,6 +27,11 @@ const variantStyles: Record<
     card: "border-emerald-500/25 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-background",
     icon: "bg-emerald-600 text-white shadow-emerald-600/30",
     value: "text-emerald-700 dark:text-emerald-400",
+  },
+  danger: {
+    card: "border-destructive/25 bg-gradient-to-br from-destructive/10 via-destructive/5 to-background",
+    icon: "bg-destructive text-white shadow-destructive/30",
+    value: "text-destructive",
   },
 };
 
