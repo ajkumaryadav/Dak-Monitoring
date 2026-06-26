@@ -110,8 +110,8 @@ export async function createDak(
     await logWorkflowAction({
       dakId: inserted.id,
       userId: user.id,
-      action: "DAK Registered",
-      remarks: parsed.data.remarks?.trim() || "New correspondence registered",
+      action: "DAK created",
+      remarks: parsed.data.remarks?.trim() || "Registered by data entry operator",
     });
 
     if (attachment) {

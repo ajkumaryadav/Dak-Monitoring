@@ -7,14 +7,13 @@ export type UserRole =
   | "clerk"
   | "data_entry_operator";
 
-/** DAK workflow status values. */
+/** DAK workflow status values (DEO → Assign → DLO → Complete). */
 export type DakStatus =
   | "received"
   | "assigned"
-  | "under_process"
+  | "in_progress"
   | "pending"
-  | "escalated"
-  | "disposed"
+  | "completed"
   | "closed";
 
 /** Priority levels for DAK items. */
@@ -28,5 +27,6 @@ export interface SessionUser {
   role: UserRole;
   roleSlug: string;
   designation: string;
+  departmentId: string | null;
   permissions: string[];
 }

@@ -5,10 +5,9 @@ import type { DakStatus } from "@/types";
 const statusValues = [
   "received",
   "assigned",
-  "under_process",
+  "in_progress",
   "pending",
-  "escalated",
-  "disposed",
+  "completed",
   "closed",
 ] as const satisfies readonly DakStatus[];
 

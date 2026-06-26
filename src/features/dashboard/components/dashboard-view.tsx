@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   AlertTriangle,
   CheckCircle2,
+  ClipboardList,
   Clock,
   FileText,
   Flame,
@@ -14,6 +15,7 @@ import { DashboardSection } from "@/features/dashboard/components/dashboard-sect
 import { DashboardStatCard } from "@/features/dashboard/components/dashboard-stat-card";
 import { STATUS_LABELS } from "@/features/dak/lib/workflow";
 import type { DashboardStats } from "@/features/dak/services/get-dak-stats";
+import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
 import { appConfig } from "@/lib/constants/navigation";
 import type { SessionUser } from "@/types";
 
@@ -22,7 +24,7 @@ interface DashboardViewProps {
   stats: DashboardStats;
 }
 
-function buildStatCards(stats: DashboardStats) {
+function buildCollectorCards(stats: Extract<DashboardStats, { variant: "collector" }>) {
   return [
     {
       title: "Total DAK",
@@ -33,7 +35,7 @@ function buildStatCards(stats: DashboardStats) {
       href: "/dashboard/dak",
     },
     {
-      title: "Pending",
+      title: "Pending DAK",
       value: String(stats.pending),
       description: "Active items awaiting workflow action",
       icon: Clock,
@@ -41,7 +43,15 @@ function buildStatCards(stats: DashboardStats) {
       href: "/dashboard/dak/pending",
     },
     {
-      title: "Overdue",
+      title: "Completed DAK",
+      value: String(stats.completed),
+      description: "Completed or closed correspondence",
+      icon: CheckCircle2,
+      variant: "success" as const,
+      href: "/dashboard/dak/completed",
+    },
+    {
+      title: "Overdue DAK",
       value: String(stats.overdue),
       description: "Past due date and not yet completed",
       icon: AlertTriangle,
@@ -49,17 +59,9 @@ function buildStatCards(stats: DashboardStats) {
       href: "/dashboard/dak/pending",
     },
     {
-      title: "Completed",
-      value: String(stats.completed),
-      description: "Disposed or closed correspondence",
-      icon: CheckCircle2,
-      variant: "success" as const,
-      href: "/dashboard/dak/completed",
-    },
-    {
-      title: "High Priority",
+      title: "High Priority DAK",
       value: String(stats.highPriority),
-      description: "Urgent or immediate priority items in progress",
+      description: "Urgent or immediate items still in progress",
       icon: Flame,
       variant: "danger" as const,
       href: "/dashboard/dak/pending",
@@ -67,8 +69,51 @@ function buildStatCards(stats: DashboardStats) {
   ];
 }
 
+function buildDepartmentCards(
+  stats: Extract<DashboardStats, { variant: "department" }>
+) {
+  return [
+    {
+      title: "Assigned DAK",
+      value: String(stats.assigned),
+      description: "Correspondence allocated to your department",
+      icon: ClipboardList,
+      variant: "primary" as const,
+      href: "/dashboard/dak/pending",
+    },
+    {
+      title: "Pending Actions",
+      value: String(stats.pendingActions),
+      description: "Items requiring department officer action",
+      icon: Clock,
+      variant: "info" as const,
+      href: "/dashboard/dak/pending",
+    },
+    {
+      title: "Overdue Cases",
+      value: String(stats.overdue),
+      description: "Cases past due date in your department",
+      icon: AlertTriangle,
+      variant: "warning" as const,
+      href: "/dashboard/dak/pending",
+    },
+    {
+      title: "Completed Cases",
+      value: String(stats.completed),
+      description: "Disposed or closed department cases",
+      icon: CheckCircle2,
+      variant: "success" as const,
+      href: "/dashboard/dak/completed",
+    },
+  ];
+}
+
 export function DashboardView({ user, stats }: DashboardViewProps) {
-  const statCards = buildStatCards(stats);
+  const isDepartmentView = isDepartmentDashboardRole(user.role);
+  const statCards =
+    stats.variant === "department"
+      ? buildDepartmentCards(stats)
+      : buildCollectorCards(stats);
 
   return (
     <div className="space-y-8">
@@ -91,14 +136,17 @@ export function DashboardView({ user, stats }: DashboardViewProps) {
                 {appConfig.districtAdministration}
               </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">
-                Collector Dashboard
+                {isDepartmentView ? "Department Dashboard" : "Collector Dashboard"}
               </h1>
               <p className="mt-1.5 text-sm text-primary-foreground/80">
                 Welcome back,{" "}
                 <span className="font-medium text-primary-foreground">
                   {user.name}
                 </span>
-                . District DAK overview at a glance.
+                .{" "}
+                {isDepartmentView
+                  ? "Track assigned correspondence and pending actions."
+                  : "District DAK overview at a glance."}
               </p>
             </div>
           </div>
@@ -116,7 +164,13 @@ export function DashboardView({ user, stats }: DashboardViewProps) {
           </h2>
           <div className="h-px flex-1 bg-border" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <div
+          className={
+            stats.variant === "department"
+              ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+              : "grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
+          }
+        >
           {statCards.map((stat) => (
             <Link key={stat.title} href={stat.href} className="block">
               <DashboardStatCard {...stat} />
@@ -126,8 +180,8 @@ export function DashboardView({ user, stats }: DashboardViewProps) {
       </div>
 
       <DashboardSection
-        title="Workflow Status Reference"
-        description="Valid DAK statuses in the district monitoring workflow"
+        title="Workflow Pipeline"
+        description="DEO Entry → Collector/ADM Assignment → Department Officer → Completed → Closed"
         icon={FileText}
         variant="neutral"
       >

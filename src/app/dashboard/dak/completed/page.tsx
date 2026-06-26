@@ -3,12 +3,17 @@ import { CheckCircle2 } from "lucide-react";
 import { DakListTable } from "@/features/dak/components/dak-list-table";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
 import { getDakList } from "@/features/dak/services/get-dak-stats";
-import { PERMISSIONS, requirePermission } from "@/lib/auth";
+import { isDepartmentDashboardRole, PERMISSIONS, requirePermission } from "@/lib/auth";
+import { getSessionUser } from "@/lib/session";
 
 export default async function CompletedDakPage() {
   await requirePermission(PERMISSIONS.DAK_VIEW);
 
-  const dakEntries = await getDakList("completed");
+  const user = await getSessionUser();
+  const departmentId =
+    user && isDepartmentDashboardRole(user.role) ? user.departmentId : undefined;
+
+  const dakEntries = await getDakList("completed", departmentId);
 
   return (
     <div className="space-y-6">

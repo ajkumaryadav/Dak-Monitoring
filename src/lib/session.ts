@@ -34,7 +34,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, email, designation, role_id, roles(slug, name)")
+    .select("name, email, designation, role_id, department_id, roles(slug, name)")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -49,6 +49,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     role,
     roleSlug: roleData?.slug ?? role,
     designation: profile?.designation ?? roleData?.name ?? "Officer",
+    departmentId: (profile?.department_id as string | null) ?? null,
     permissions: [...getPermissionsForRole(role)],
   };
 }

@@ -1,5 +1,6 @@
 import { format, parseISO } from "date-fns";
 
+import { getStatusLabel, normalizeDakStatus } from "@/features/dak/lib/workflow";
 import type { DakStatus, PriorityLevel } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -14,15 +15,19 @@ export const statusStyles: Record<DakStatus, string> = {
   received: "border-primary/30 bg-primary/5 text-primary",
   assigned:
     "border-[oklch(0.45_0.11_240)]/30 bg-[oklch(0.45_0.11_240)]/10 text-[oklch(0.38_0.11_240)]",
-  under_process:
+  in_progress:
     "border-[oklch(0.55_0.12_200)]/30 bg-[oklch(0.55_0.12_200)]/10 text-[oklch(0.4_0.1_200)]",
   pending:
     "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  escalated:
-    "border-orange-600/30 bg-orange-600/10 text-orange-700 dark:text-orange-400",
-  disposed:
+  completed:
     "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   closed: "border-border bg-muted text-muted-foreground",
+};
+
+const legacyStatusStyles: Record<string, string> = {
+  under_process: statusStyles.in_progress,
+  disposed: statusStyles.completed,
+  escalated: statusStyles.pending,
 };
 
 export function formatDakDate(value: string | null | undefined) {
@@ -50,7 +55,16 @@ export function formatDakDateTime(value: string | null | undefined) {
 }
 
 export function formatDakStatus(status: string) {
-  return status.replace(/_/g, " ");
+  return getStatusLabel(status);
+}
+
+export function getStatusStyle(status: string) {
+  const normalized = normalizeDakStatus(status);
+  return (
+    statusStyles[normalized] ??
+    legacyStatusStyles[status] ??
+    "border-border bg-muted text-muted-foreground"
+  );
 }
 
 export function getDepartmentName(
@@ -65,6 +79,20 @@ export function getDepartmentName(
   }
 
   return departments.name ?? "—";
+}
+
+export function getOfficerName(
+  officer: { name: string } | { name: string }[] | null | undefined
+) {
+  if (!officer) {
+    return "Not assigned";
+  }
+
+  if (Array.isArray(officer)) {
+    return officer[0]?.name ?? "Not assigned";
+  }
+
+  return officer.name ?? "Not assigned";
 }
 
 export function getBadgeClassName(

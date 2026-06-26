@@ -6,6 +6,7 @@ export const PERMISSIONS = {
   DASHBOARD: "dashboard",
   DAK_ENTRY: "dak:entry",
   DAK_VIEW: "dak:view",
+  DAK_ASSIGN: "dak:assign",
   DAK_UPDATE: "dak:update",
   TASKS: "tasks",
   DEPARTMENT: "department",
@@ -17,10 +18,11 @@ export const PERMISSIONS = {
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
-/** Route → required permission mapping for future module guards. */
+/** Route → required permission mapping for module guards. */
 export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard": PERMISSIONS.DASHBOARD,
   "/dashboard/dak/new": PERMISSIONS.DAK_ENTRY,
+  "/dashboard/dak/assignments": PERMISSIONS.DAK_ASSIGN,
   "/dashboard/dak/pending": PERMISSIONS.DAK_VIEW,
   "/dashboard/dak/completed": PERMISSIONS.DAK_VIEW,
   "/dashboard/dak": PERMISSIONS.DAK_VIEW,
@@ -30,15 +32,15 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
 };
 
 /**
- * Role → permissions map (AGENTS.md administrative roles).
- * Collector has full access; other roles are scoped per module.
+ * Role → permissions map.
+ * DEO: create only | Collector/ADM: assign | DLO (district_officer): status updates
  */
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
   collector: [PERMISSIONS.ALL],
   adm: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_VIEW,
-    PERMISSIONS.DAK_UPDATE,
+    PERMISSIONS.DAK_ASSIGN,
     PERMISSIONS.TASKS,
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.REPORTS,
@@ -59,18 +61,19 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.TASKS,
     PERMISSIONS.UPDATES,
   ],
-  clerk: [
-    PERMISSIONS.DASHBOARD,
-    PERMISSIONS.DAK_VIEW,
-    PERMISSIONS.DAK_UPDATE,
-    PERMISSIONS.TASKS,
-  ],
+  clerk: [PERMISSIONS.DASHBOARD, PERMISSIONS.DAK_VIEW, PERMISSIONS.TASKS],
   data_entry_operator: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_ENTRY,
     PERMISSIONS.DAK_VIEW,
   ],
 };
+
+/** Roles that see department-scoped dashboard metrics. */
+export const DEPARTMENT_DASHBOARD_ROLES: readonly UserRole[] = [
+  "district_officer",
+  "block_officer",
+];
 
 /** Role hierarchy — lower number = higher authority. */
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
@@ -95,9 +98,11 @@ export function hasPermission(
 }
 
 export function canAccessRoute(role: UserRole, pathname: string): boolean {
-  const matchedRoute = Object.keys(ROUTE_PERMISSIONS).find(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  const matchedRoute = Object.keys(ROUTE_PERMISSIONS)
+    .sort((a, b) => b.length - a.length)
+    .find(
+      (route) => pathname === route || pathname.startsWith(`${route}/`)
+    );
 
   if (!matchedRoute) {
     return true;
@@ -108,4 +113,8 @@ export function canAccessRoute(role: UserRole, pathname: string): boolean {
 
 export function hasMinimumRole(userRole: UserRole, minimumRole: UserRole): boolean {
   return ROLE_HIERARCHY[userRole] <= ROLE_HIERARCHY[minimumRole];
+}
+
+export function isDepartmentDashboardRole(role: UserRole): boolean {
+  return DEPARTMENT_DASHBOARD_ROLES.includes(role);
 }

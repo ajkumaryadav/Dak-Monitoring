@@ -3,8 +3,13 @@ import { Landmark } from "lucide-react";
 import { SidebarLogout } from "@/components/layout/sidebar-logout";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { appConfig } from "@/lib/constants/navigation";
+import type { SessionUser } from "@/types";
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  user: SessionUser;
+}
+
+export function AppSidebar({ user }: AppSidebarProps) {
   return (
     <aside className="hidden h-full w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
@@ -21,7 +26,7 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <SidebarNav />
+      <SidebarNav role={user.role} />
 
       <div className="mt-auto border-t border-sidebar-border pt-2">
         <SidebarLogout />

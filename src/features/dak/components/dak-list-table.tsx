@@ -16,8 +16,8 @@ import {
   formatDakStatus,
   getBadgeClassName,
   getDepartmentName,
+  getStatusStyle,
   priorityStyles,
-  statusStyles,
 } from "@/features/dak/lib/dak-display";
 import type { DakListEntry } from "@/features/dak/services/get-dak-stats";
 import { cn } from "@/lib/utils";
@@ -102,14 +102,10 @@ export function DakListTable({
               </Badge>
             </TableCell>
             <TableCell className="px-4">
-              <Badge
-                variant="outline"
-                className={getBadgeClassName(
-                  statusStyles,
-                  entry.status,
-                  "border-border bg-muted text-muted-foreground"
-                )}
-              >
+                <Badge
+                  variant="outline"
+                  className={cn("capitalize", getStatusStyle(entry.status))}
+                >
                 {formatDakStatus(entry.status)}
               </Badge>
             </TableCell>

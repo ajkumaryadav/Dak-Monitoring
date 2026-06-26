@@ -9,7 +9,7 @@ export default async function DashboardPage() {
     return null;
   }
 
-  const stats = await getDashboardStats();
+  const stats = await getDashboardStats(user);
 
   return <DashboardView user={user} stats={stats} />;
 }

@@ -17,6 +17,7 @@ export {
   getPermissionsForRole,
   hasMinimumRole,
   hasPermission,
+  isDepartmentDashboardRole,
 } from "@/lib/auth/permissions";
 export type { Permission } from "@/lib/auth/permissions";
 

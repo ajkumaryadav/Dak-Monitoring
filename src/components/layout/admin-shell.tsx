@@ -17,8 +17,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <AppSidebar />
-      <MobileSidebar open={mobileOpen} onOpenChange={setMobileOpen} />
+      <AppSidebar user={user} />
+      <MobileSidebar open={mobileOpen} onOpenChange={setMobileOpen} user={user} />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <TopNavbar user={user} onMenuClick={() => setMobileOpen(true)} />

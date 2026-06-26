@@ -12,13 +12,15 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { appConfig } from "@/lib/constants/navigation";
+import type { SessionUser } from "@/types";
 
 interface MobileSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  user: SessionUser;
 }
 
-export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
+export function MobileSidebar({ open, onOpenChange, user }: MobileSidebarProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="flex w-72 flex-col bg-sidebar p-0">
@@ -35,7 +37,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
             </div>
           </div>
         </SheetHeader>
-        <SidebarNav onNavigate={() => onOpenChange(false)} />
+        <SidebarNav role={user.role} onNavigate={() => onOpenChange(false)} />
         <div className="mt-auto border-t border-sidebar-border pt-2">
           <SidebarLogout />
         </div>

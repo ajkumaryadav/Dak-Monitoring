@@ -4,8 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { mainNavItems } from "@/lib/constants/navigation";
+import { hasPermission } from "@/lib/auth/permissions";
+import type { UserRole } from "@/types";
+import { cn } from "@/lib/utils";
 
 function isNavItemActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") {
@@ -18,7 +20,8 @@ function isNavItemActive(pathname: string, href: string): boolean {
       (pathname.startsWith("/dashboard/dak/") &&
         !pathname.startsWith("/dashboard/dak/new") &&
         !pathname.startsWith("/dashboard/dak/pending") &&
-        !pathname.startsWith("/dashboard/dak/completed"))
+        !pathname.startsWith("/dashboard/dak/completed") &&
+        !pathname.startsWith("/dashboard/dak/assignments"))
     );
   }
 
@@ -26,15 +29,28 @@ function isNavItemActive(pathname: string, href: string): boolean {
 }
 
 interface SidebarNavProps {
+  role: UserRole;
   onNavigate?: () => void;
 }
 
-export function SidebarNav({ onNavigate }: SidebarNavProps) {
+export function SidebarNav({ role, onNavigate }: SidebarNavProps) {
   const pathname = usePathname();
+
+  const visibleItems = mainNavItems.filter((item) => {
+    if (item.disabled) {
+      return true;
+    }
+
+    if (!item.permission) {
+      return true;
+    }
+
+    return hasPermission(role, item.permission);
+  });
 
   return (
     <nav className="flex flex-1 flex-col gap-1 px-3 py-2">
-      {mainNavItems.map((item) => {
+      {visibleItems.map((item) => {
         const isActive =
           !item.disabled && isNavItemActive(pathname, item.href);
         const Icon = item.icon;

@@ -4,10 +4,9 @@ import { Loader2 } from "lucide-react";
 import { useActionState } from "react";
 
 import {
-  updateDakStatusFormAction,
-  type UpdateDakStatusFormState,
-} from "@/features/dak/actions/update-status";
-import { getStatusLabel } from "@/features/dak/lib/workflow";
+  assignDakFormAction,
+  type AssignDakFormState,
+} from "@/features/dak/actions/assign-dak";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import type { DakStatus } from "@/types";
+import type { DepartmentOption } from "@/features/dak/services/get-departments";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -26,44 +25,25 @@ const inputClassName = cn(
   "aria-invalid:border-destructive md:text-sm dark:bg-input/30"
 );
 
-const initialState: UpdateDakStatusFormState = {};
+const initialState: AssignDakFormState = {};
 
-interface DakStatusFormProps {
+interface AssignDakFormProps {
   dakId: string;
-  currentStatus: DakStatus;
-  allowedTransitions: DakStatus[];
+  departments: DepartmentOption[];
 }
 
-export function DakStatusForm({
-  dakId,
-  currentStatus,
-  allowedTransitions,
-}: DakStatusFormProps) {
+export function AssignDakForm({ dakId, departments }: AssignDakFormProps) {
   const [state, formAction, isPending] = useActionState(
-    updateDakStatusFormAction,
+    assignDakFormAction,
     initialState
   );
-
-  if (!allowedTransitions.length) {
-    return (
-      <Card className="border-border/60">
-        <CardHeader>
-          <CardTitle className="text-base">Workflow Status</CardTitle>
-          <CardDescription>
-            This DAK is {getStatusLabel(currentStatus).toLowerCase()} and cannot
-            be advanced further.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
 
   return (
     <Card className="border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background">
       <CardHeader className="border-b border-border/60">
-        <CardTitle className="text-base">Update Status</CardTitle>
+        <CardTitle className="text-base">Assign DAK</CardTitle>
         <CardDescription>
-          Advance this DAK through the district workflow
+          Allocate this correspondence to a department for action
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
@@ -71,45 +51,41 @@ export function DakStatusForm({
           <input type="hidden" name="dakId" value={dakId} />
 
           <div className="space-y-2">
-            <Label htmlFor="status">Next Status</Label>
+            <Label htmlFor="departmentId">Department</Label>
             <select
-              id="status"
-              name="status"
+              id="departmentId"
+              name="departmentId"
               required
               defaultValue=""
               className={inputClassName}
-              aria-invalid={!!state.errors?.status}
+              aria-invalid={!!state.errors?.departmentId}
             >
               <option value="" disabled>
-                Select next status
+                Select department
               </option>
-              {allowedTransitions.map((status) => (
-                <option key={status} value={status}>
-                  {getStatusLabel(status)}
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
                 </option>
               ))}
             </select>
-            {state.errors?.status?.[0] && (
-              <p className="text-xs text-destructive">{state.errors.status[0]}</p>
+            {state.errors?.departmentId?.[0] && (
+              <p className="text-xs text-destructive">
+                {state.errors.departmentId[0]}
+              </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="remarks">Remarks (optional)</Label>
+            <Label htmlFor="remarks">Assignment Remarks</Label>
             <textarea
               id="remarks"
               name="remarks"
-              placeholder="Add a note for the timeline log..."
+              placeholder="Instructions for the department officer..."
               rows={3}
               maxLength={500}
               className={cn(inputClassName, "min-h-20 resize-y py-2")}
-              aria-invalid={!!state.errors?.remarks}
             />
-            {state.errors?.remarks?.[0] && (
-              <p className="text-xs text-destructive">
-                {state.errors.remarks[0]}
-              </p>
-            )}
           </div>
 
           {state.message && (
@@ -120,16 +96,16 @@ export function DakStatusForm({
 
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || departments.length === 0}
             className={cn(buttonVariants(), "h-9 w-full sm:w-auto")}
           >
             {isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Updating...
+                Assigning...
               </>
             ) : (
-              "Update Status"
+              "Assign to Department"
             )}
           </button>
         </form>
