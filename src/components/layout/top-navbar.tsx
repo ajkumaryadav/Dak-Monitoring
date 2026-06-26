@@ -1,8 +1,8 @@
 "use client";
 
 import { Bell, LogOut, Menu, Search, Settings, User } from "lucide-react";
-import Link from "next/link";
 
+import { logoutAction } from "@/features/auth/actions/logout";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -127,7 +127,7 @@ export function TopNavbar({ user, onMenuClick }: TopNavbarProps) {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/login" />}>
+            <DropdownMenuItem onClick={() => logoutAction()}>
               <LogOut className="size-4" />
               Sign out
             </DropdownMenuItem>

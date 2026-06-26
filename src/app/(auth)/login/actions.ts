@@ -3,15 +3,17 @@
 import { redirect } from "next/navigation";
 
 import { loginSchema } from "@/features/auth/schemas/login-schema";
+import { createClient } from "@/lib/supabase/server";
 
 export type LoginFormState = {
   errors?: {
     email?: string[];
     password?: string[];
   };
+  message?: string;
 };
 
-/** Demo login — validates then redirects until Supabase Auth is connected. */
+/** Sign in with Supabase email/password and redirect to dashboard. */
 export async function loginAction(
   _prevState: LoginFormState,
   formData: FormData
@@ -23,6 +25,17 @@ export async function loginAction(
 
   if (!parsed.success) {
     return { errors: parsed.error.flatten().fieldErrors };
+  }
+
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    return { message: error.message };
   }
 
   redirect("/dashboard");

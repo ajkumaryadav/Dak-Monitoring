@@ -7,7 +7,6 @@ import {
   loginAction,
   type LoginFormState,
 } from "@/app/(auth)/login/actions";
-import { demoCredentials } from "@/features/auth/components/auth-decorations";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -47,16 +46,6 @@ export function LoginForm() {
       </CardHeader>
 
       <CardContent>
-        <div className="mb-4 rounded-lg border border-dashed border-primary/25 bg-muted/50 px-3 py-2.5 text-xs dark:bg-muted/20">
-          <p className="font-medium text-foreground">Demo login</p>
-          <p className="mt-1 font-mono text-muted-foreground">
-            {demoCredentials.email}
-          </p>
-          <p className="font-mono text-muted-foreground">
-            {demoCredentials.password}
-          </p>
-        </div>
-
         <form action={formAction} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Official Email</Label>
@@ -66,7 +55,6 @@ export function LoginForm() {
               type="email"
               className={inputClassName}
               placeholder="name@collectorate.gov.in"
-              defaultValue={demoCredentials.email}
               autoComplete="email"
               aria-invalid={!!state.errors?.email}
             />
@@ -85,7 +73,6 @@ export function LoginForm() {
               type="password"
               className={inputClassName}
               placeholder="Enter your password"
-              defaultValue={demoCredentials.password}
               autoComplete="current-password"
               aria-invalid={!!state.errors?.password}
             />
@@ -95,6 +82,12 @@ export function LoginForm() {
               </p>
             )}
           </div>
+
+          {state.message && (
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
+              {state.message}
+            </p>
+          )}
 
           <button
             type="submit"
