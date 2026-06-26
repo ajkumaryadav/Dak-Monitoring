@@ -39,7 +39,7 @@ export function DashboardSection({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-2xl border shadow-sm",
+        "rounded-2xl border shadow-sm",
         styles.wrapper,
         className
       )}

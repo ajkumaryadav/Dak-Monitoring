@@ -27,6 +27,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/dak/completed": PERMISSIONS.DAK_VIEW,
   "/dashboard/dak": PERMISSIONS.DAK_VIEW,
   "/dashboard/tasks": PERMISSIONS.TASKS,
+  "/dashboard/reports/pending": PERMISSIONS.DAK_VIEW,
   "/dashboard/reports": PERMISSIONS.REPORTS,
   "/users": PERMISSIONS.USERS,
 };

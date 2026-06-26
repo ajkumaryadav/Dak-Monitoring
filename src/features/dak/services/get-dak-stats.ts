@@ -1,12 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
-  isActiveStatus,
-  isTerminalStatus,
   LEGACY_COMPLETED_DB_STATUSES,
   normalizeDakStatus,
 } from "@/features/dak/lib/workflow";
-import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
-import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
+import { fetchDashboardStatsSummary } from "@/features/reports/services/dashboard-analytics";
 import type { SessionUser } from "@/types";
 import type { DakStatus, PriorityLevel } from "@/types";
 
@@ -57,17 +54,6 @@ const COMPLETED_DB_STATUSES = [
   ...LEGACY_COMPLETED_DB_STATUSES,
 ];
 
-function isCompletedDbStatus(status: string): boolean {
-  return (
-    isTerminalStatus(status) ||
-    COMPLETED_DB_STATUSES.includes(status)
-  );
-}
-
-function isPendingDbStatus(status: string): boolean {
-  return isActiveStatus(status) && !isCompletedDbStatus(status);
-}
-
 function normalizeEntry(entry: DakListEntry & { status: string }): DakListEntry {
   return {
     ...entry,
@@ -113,115 +99,9 @@ export async function getDakList(
   );
 }
 
-function countOverdue(
-  entries: Array<{ due_date: string | null; status: string }>,
-  today: string
-) {
-  return entries.filter(
-    (entry) =>
-      entry.due_date &&
-      entry.due_date < today &&
-      !isCompletedDbStatus(entry.status)
-  ).length;
-}
-
-/** Role-aware dashboard statistics. */
+/** Role-aware dashboard statistics — delegates to reports analytics service. */
 export async function getDashboardStats(
   user: SessionUser
 ): Promise<DashboardStats> {
-  const supabase = createAdminClient();
-  const today = getDistrictDateString();
-
-  let query = supabase
-    .from("dak_entries")
-    .select("status, priority, due_date, department_id");
-
-  if (isDepartmentDashboardRole(user.role) && user.departmentId) {
-    query = query.eq("department_id", user.departmentId);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("[getDashboardStats]", error.message);
-    return isDepartmentDashboardRole(user.role)
-      ? {
-          variant: "department",
-          assigned: 0,
-          pendingActions: 0,
-          overdue: 0,
-          completed: 0,
-        }
-      : {
-          variant: "collector",
-          total: 0,
-          pending: 0,
-          overdue: 0,
-          completed: 0,
-          highPriority: 0,
-        };
-  }
-
-  const entries = data ?? [];
-  const highPrioritySet = new Set<PriorityLevel>(["urgent", "immediate"]);
-
-  if (isDepartmentDashboardRole(user.role)) {
-    let assigned = 0;
-    let pendingActions = 0;
-    let completed = 0;
-
-    for (const entry of entries) {
-      const status = entry.status as string;
-
-      if (["assigned", "in_progress", "pending", "under_process"].includes(status)) {
-        assigned += 1;
-      }
-
-      if (["in_progress", "pending", "under_process", "assigned"].includes(status)) {
-        pendingActions += 1;
-      }
-
-      if (isCompletedDbStatus(status)) {
-        completed += 1;
-      }
-    }
-
-    return {
-      variant: "department",
-      assigned,
-      pendingActions,
-      overdue: countOverdue(entries, today),
-      completed,
-    };
-  }
-
-  let pending = 0;
-  let completed = 0;
-  let highPriority = 0;
-
-  for (const entry of entries) {
-    const status = entry.status as string;
-    const priority = entry.priority as PriorityLevel;
-
-    if (isPendingDbStatus(status)) {
-      pending += 1;
-    }
-
-    if (isCompletedDbStatus(status)) {
-      completed += 1;
-    }
-
-    if (!isCompletedDbStatus(status) && highPrioritySet.has(priority)) {
-      highPriority += 1;
-    }
-  }
-
-  return {
-    variant: "collector",
-    total: entries.length,
-    pending,
-    overdue: countOverdue(entries, today),
-    completed,
-    highPriority,
-  };
+  return fetchDashboardStatsSummary(user);
 }

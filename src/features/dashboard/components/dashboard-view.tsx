@@ -1,119 +1,23 @@
-import Link from "next/link";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  ClipboardList,
-  Clock,
-  FileText,
-  Flame,
-  Landmark,
-  Sparkles,
-} from "lucide-react";
+import { Landmark, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { DashboardSection } from "@/features/dashboard/components/dashboard-section";
-import { DashboardStatCard } from "@/features/dashboard/components/dashboard-stat-card";
-import { STATUS_LABELS } from "@/features/dak/lib/workflow";
-import type { DashboardStats } from "@/features/dak/services/get-dak-stats";
+import { CollectorStatCards } from "@/features/dashboard/components/collector-stat-cards";
+import { DashboardChartsPanel } from "@/features/dashboard/components/dashboard-charts-panel";
+import { DepartmentStatCards } from "@/features/dashboard/components/department-stat-cards";
+import { PendingDepartmentsTable } from "@/features/dashboard/components/pending-departments-table";
+import type { DashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
 import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
 import { appConfig } from "@/lib/constants/navigation";
 import type { SessionUser } from "@/types";
 
 interface DashboardViewProps {
   user: SessionUser;
-  stats: DashboardStats;
+  analytics: DashboardAnalytics;
 }
 
-function buildCollectorCards(stats: Extract<DashboardStats, { variant: "collector" }>) {
-  return [
-    {
-      title: "Total DAK",
-      value: String(stats.total),
-      description: "All correspondence registered in the district",
-      icon: FileText,
-      variant: "primary" as const,
-      href: "/dashboard/dak",
-    },
-    {
-      title: "Pending DAK",
-      value: String(stats.pending),
-      description: "Active items awaiting workflow action",
-      icon: Clock,
-      variant: "info" as const,
-      href: "/dashboard/dak/pending",
-    },
-    {
-      title: "Completed DAK",
-      value: String(stats.completed),
-      description: "Completed or closed correspondence",
-      icon: CheckCircle2,
-      variant: "success" as const,
-      href: "/dashboard/dak/completed",
-    },
-    {
-      title: "Overdue DAK",
-      value: String(stats.overdue),
-      description: "Past due date and not yet completed",
-      icon: AlertTriangle,
-      variant: "warning" as const,
-      href: "/dashboard/dak/pending",
-    },
-    {
-      title: "High Priority DAK",
-      value: String(stats.highPriority),
-      description: "Urgent or immediate items still in progress",
-      icon: Flame,
-      variant: "danger" as const,
-      href: "/dashboard/dak/pending",
-    },
-  ];
-}
-
-function buildDepartmentCards(
-  stats: Extract<DashboardStats, { variant: "department" }>
-) {
-  return [
-    {
-      title: "Assigned DAK",
-      value: String(stats.assigned),
-      description: "Correspondence allocated to your department",
-      icon: ClipboardList,
-      variant: "primary" as const,
-      href: "/dashboard/dak/pending",
-    },
-    {
-      title: "Pending Actions",
-      value: String(stats.pendingActions),
-      description: "Items requiring department officer action",
-      icon: Clock,
-      variant: "info" as const,
-      href: "/dashboard/dak/pending",
-    },
-    {
-      title: "Overdue Cases",
-      value: String(stats.overdue),
-      description: "Cases past due date in your department",
-      icon: AlertTriangle,
-      variant: "warning" as const,
-      href: "/dashboard/dak/pending",
-    },
-    {
-      title: "Completed Cases",
-      value: String(stats.completed),
-      description: "Disposed or closed department cases",
-      icon: CheckCircle2,
-      variant: "success" as const,
-      href: "/dashboard/dak/completed",
-    },
-  ];
-}
-
-export function DashboardView({ user, stats }: DashboardViewProps) {
-  const isDepartmentView = isDepartmentDashboardRole(user.role);
-  const statCards =
-    stats.variant === "department"
-      ? buildDepartmentCards(stats)
-      : buildCollectorCards(stats);
+export function DashboardView({ user, analytics }: DashboardViewProps) {
+  const isDepartmentView =
+    analytics.variant === "department" && isDepartmentDashboardRole(user.role);
 
   return (
     <div className="space-y-8">
@@ -145,8 +49,8 @@ export function DashboardView({ user, stats }: DashboardViewProps) {
                 </span>
                 .{" "}
                 {isDepartmentView
-                  ? "Track assigned correspondence and pending actions."
-                  : "District DAK overview at a glance."}
+                  ? `Monitoring ${analytics.departmentName} correspondence and actions.`
+                  : "District DAK overview, analytics, and department performance."}
               </p>
             </div>
           </div>
@@ -157,42 +61,29 @@ export function DashboardView({ user, stats }: DashboardViewProps) {
         </div>
       </div>
 
-      <div>
-        <div className="mb-4 flex items-center gap-2">
-          <h2 className="text-sm font-semibold tracking-wide text-foreground uppercase">
-            Key Metrics
-          </h2>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-        <div
-          className={
-            stats.variant === "department"
-              ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-              : "grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
-          }
-        >
-          {statCards.map((stat) => (
-            <Link key={stat.title} href={stat.href} className="block">
-              <DashboardStatCard {...stat} />
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <DashboardSection
-        title="Workflow Pipeline"
-        description="DEO Entry → Collector/ADM Assignment → Department Officer → Completed → Closed"
-        icon={FileText}
-        variant="neutral"
-      >
-        <div className="flex flex-wrap gap-2">
-          {Object.values(STATUS_LABELS).map((label) => (
-            <Badge key={label} variant="outline" className="capitalize">
-              {label}
-            </Badge>
-          ))}
-        </div>
-      </DashboardSection>
+      {analytics.variant === "department" ? (
+        <>
+          <DepartmentStatCards data={analytics} />
+          <DashboardChartsPanel
+            priorityChart={analytics.priorityChart}
+            statusChart={analytics.statusChart}
+            recentDak={analytics.recentDak}
+            recentTitle="Recent Department DAK"
+            recentDescription="Latest items assigned to your department"
+          />
+        </>
+      ) : (
+        <>
+          <CollectorStatCards stats={analytics.stats} />
+          <DashboardChartsPanel
+            priorityChart={analytics.priorityChart}
+            statusChart={analytics.statusChart}
+            recentDak={analytics.recentDak}
+            departmentPerformance={analytics.departmentPerformance}
+          />
+          <PendingDepartmentsTable rows={analytics.pendingDepartments} />
+        </>
+      )}
     </div>
   );
 }

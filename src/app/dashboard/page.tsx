@@ -1,5 +1,5 @@
-import { getDashboardStats } from "@/features/dak/services/get-dak-stats";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
+import { fetchDashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
 import { getSessionUser } from "@/lib/session";
 
 export default async function DashboardPage() {
@@ -9,7 +9,7 @@ export default async function DashboardPage() {
     return null;
   }
 
-  const stats = await getDashboardStats(user);
+  const analytics = await fetchDashboardAnalytics(user);
 
-  return <DashboardView user={user} stats={stats} />;
+  return <DashboardView user={user} analytics={analytics} />;
 }
