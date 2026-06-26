@@ -1,0 +1,41 @@
+"use client";
+
+import { Landmark } from "lucide-react";
+
+import { SidebarNav } from "@/components/layout/sidebar-nav";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { appConfig } from "@/lib/constants/navigation";
+
+interface MobileSidebarProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="left" className="w-72 bg-sidebar p-0">
+        <SheetHeader className="border-b border-sidebar-border px-4 py-4 text-left">
+          <div className="flex items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Landmark className="size-5" />
+            </div>
+            <div>
+              <SheetTitle className="text-sidebar-foreground">
+                {appConfig.name}
+              </SheetTitle>
+              <SheetDescription>{appConfig.shortName}</SheetDescription>
+            </div>
+          </div>
+        </SheetHeader>
+        <SidebarNav onNavigate={() => onOpenChange(false)} />
+      </SheetContent>
+    </Sheet>
+  );
+}
