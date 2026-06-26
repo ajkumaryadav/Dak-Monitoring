@@ -19,12 +19,10 @@ export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 /** Route → required permission mapping for future module guards. */
 export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard": PERMISSIONS.DASHBOARD,
-  "/dak": PERMISSIONS.DAK_VIEW,
-  "/workflow": PERMISSIONS.TASKS,
-  "/timeline": PERMISSIONS.DAK_VIEW,
-  "/notifications": PERMISSIONS.DASHBOARD,
-  "/escalation": PERMISSIONS.ESCALATION,
-  "/reports": PERMISSIONS.REPORTS,
+  "/dashboard/dak/new": PERMISSIONS.DAK_ENTRY,
+  "/dashboard/dak": PERMISSIONS.DAK_VIEW,
+  "/dashboard/tasks": PERMISSIONS.TASKS,
+  "/dashboard/reports": PERMISSIONS.REPORTS,
   "/users": PERMISSIONS.USERS,
 };
 

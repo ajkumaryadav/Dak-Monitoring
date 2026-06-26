@@ -1,10 +1,8 @@
 import {
-  AlertTriangle,
   BarChart3,
-  Bell,
-  Clock,
+  ClipboardList,
+  FilePlus2,
   FileText,
-  GitBranch,
   LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
@@ -17,7 +15,7 @@ export interface NavItem {
   disabled?: boolean;
 }
 
-/** Primary sidebar navigation — business routes are placeholders for future modules. */
+/** Primary sidebar navigation for the admin dashboard. */
 export const mainNavItems: NavItem[] = [
   {
     title: "Dashboard",
@@ -25,38 +23,24 @@ export const mainNavItems: NavItem[] = [
     icon: LayoutDashboard,
   },
   {
-    title: "DAK Registration",
-    href: "/dak",
+    title: "New DAK",
+    href: "/dashboard/dak/new",
+    icon: FilePlus2,
+  },
+  {
+    title: "All DAK",
+    href: "/dashboard/dak",
     icon: FileText,
-    disabled: true,
   },
   {
-    title: "Workflow",
-    href: "/workflow",
-    icon: GitBranch,
-    disabled: true,
-  },
-  {
-    title: "Timeline",
-    href: "/timeline",
-    icon: Clock,
-    disabled: true,
-  },
-  {
-    title: "Notifications",
-    href: "/notifications",
-    icon: Bell,
-    disabled: true,
-  },
-  {
-    title: "Escalation",
-    href: "/escalation",
-    icon: AlertTriangle,
+    title: "Tasks",
+    href: "/dashboard/tasks",
+    icon: ClipboardList,
     disabled: true,
   },
   {
     title: "Reports",
-    href: "/reports",
+    href: "/dashboard/reports",
     icon: BarChart3,
     disabled: true,
   },

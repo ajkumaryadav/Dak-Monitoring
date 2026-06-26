@@ -1,5 +1,6 @@
 import { Landmark } from "lucide-react";
 
+import { SidebarLogout } from "@/components/layout/sidebar-logout";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { appConfig } from "@/lib/constants/navigation";
 
@@ -22,7 +23,11 @@ export function AppSidebar() {
 
       <SidebarNav />
 
-      <div className="mt-auto border-t border-sidebar-border p-4">
+      <div className="mt-auto border-t border-sidebar-border pt-2">
+        <SidebarLogout />
+      </div>
+
+      <div className="border-t border-sidebar-border p-4">
         <p className="text-xs leading-relaxed text-muted-foreground">
           {appConfig.fullName}
         </p>
