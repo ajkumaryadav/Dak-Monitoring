@@ -11,7 +11,6 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -39,10 +38,7 @@ export function LoginForm() {
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
           <Landmark className="size-7" />
         </div>
-        <div className="space-y-1">
-          <CardTitle className="text-xl">Sign in to {appConfig.shortName}</CardTitle>
-          <CardDescription>{appConfig.districtAdministration}</CardDescription>
-        </div>
+        <CardTitle className="text-xl">{appConfig.shortName}</CardTitle>
       </CardHeader>
 
       <CardContent>
@@ -100,7 +96,7 @@ export function LoginForm() {
                 Signing in...
               </>
             ) : (
-              "Sign in to Portal"
+              "Sign in"
             )}
           </button>
 

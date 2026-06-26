@@ -1,37 +1,15 @@
 "use client";
 
-import { Bell, LogOut, Menu, Search, Settings, User } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 
-import { logoutAction } from "@/features/auth/actions/logout";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { appConfig } from "@/lib/constants/navigation";
-import { cn } from "@/lib/utils";
 import type { SessionUser } from "@/types";
 
 interface TopNavbarProps {
   user: SessionUser;
   onMenuClick: () => void;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 }
 
 export function TopNavbar({ user, onMenuClick }: TopNavbarProps) {
@@ -47,35 +25,14 @@ export function TopNavbar({ user, onMenuClick }: TopNavbarProps) {
         <Menu className="size-5" />
       </Button>
 
-      <div className="hidden min-w-0 flex-1 md:block">
+      <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{appConfig.fullName}</p>
         <p className="truncate text-xs text-muted-foreground">
           Collectorate Administration Portal
         </p>
       </div>
 
-      <div className="relative ml-auto hidden w-full max-w-sm lg:block">
-        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          placeholder="Search DAK, departments..."
-          className="pl-9"
-          disabled
-          aria-label="Search (coming soon)"
-        />
-      </div>
-
       <div className="flex items-center gap-1 sm:gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative lg:hidden"
-          disabled
-          aria-label="Search (coming soon)"
-        >
-          <Search className="size-5" />
-        </Button>
-
         <Button
           variant="ghost"
           size="icon"
@@ -87,75 +44,7 @@ export function TopNavbar({ user, onMenuClick }: TopNavbarProps) {
           <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive" />
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                className="gap-2 px-2"
-                aria-label="User menu"
-              />
-            }
-          >
-            <Avatar className="size-8">
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {getInitials(user.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="hidden text-left sm:block">
-              <p className="text-sm font-medium leading-none">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.designation}</p>
-            </div>
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>
-                <div className="flex flex-col gap-1">
-                  <span className="text-sm font-medium text-foreground">
-                    {user.name}
-                  </span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {user.email}
-                  </span>
-                  <Badge variant="secondary" className="mt-1 w-fit capitalize">
-                    {user.role.replace(/_/g, " ")}
-                  </Badge>
-                </div>
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuGroup>
-              <DropdownMenuItem disabled>
-                <User className="size-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled>
-                <Settings className="size-4" />
-                Settings
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuGroup>
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className={cn(
-                    "flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1.5 text-sm outline-none",
-                    "hover:bg-accent hover:text-accent-foreground"
-                  )}
-                >
-                  <LogOut className="size-4" />
-                  Sign out
-                </button>
-              </form>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <UserMenu user={user} />
       </div>
     </header>
   );
