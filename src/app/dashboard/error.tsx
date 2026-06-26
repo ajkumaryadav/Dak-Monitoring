@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -35,8 +36,11 @@ export default function DashboardError({
           again or contact the system administrator.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex gap-2">
         <Button onClick={reset}>Try again</Button>
+        <Button variant="outline" render={<Link href="/login" />}>
+          Back to login
+        </Button>
       </CardContent>
     </Card>
   );

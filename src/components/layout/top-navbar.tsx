@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { appConfig } from "@/lib/constants/navigation";
+import { cn } from "@/lib/utils";
 import type { SessionUser } from "@/types";
 
 interface TopNavbarProps {
@@ -105,32 +107,53 @@ export function TopNavbar({ user, onMenuClick }: TopNavbarProps) {
               <p className="text-xs text-muted-foreground">{user.designation}</p>
             </div>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>
-              <div className="flex flex-col gap-1">
-                <span>{user.name}</span>
-                <span className="text-xs font-normal text-muted-foreground">
-                  {user.email}
-                </span>
-                <Badge variant="secondary" className="mt-1 w-fit capitalize">
-                  {user.role.replace(/_/g, " ")}
-                </Badge>
-              </div>
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm font-medium text-foreground">
+                    {user.name}
+                  </span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {user.email}
+                  </span>
+                  <Badge variant="secondary" className="mt-1 w-fit capitalize">
+                    {user.role.replace(/_/g, " ")}
+                  </Badge>
+                </div>
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled>
-              <User className="size-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem disabled>
-              <Settings className="size-4" />
-              Settings
-            </DropdownMenuItem>
+
+            <DropdownMenuGroup>
+              <DropdownMenuItem disabled>
+                <User className="size-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                <Settings className="size-4" />
+                Settings
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => logoutAction()}>
-              <LogOut className="size-4" />
-              Sign out
-            </DropdownMenuItem>
+
+            <DropdownMenuGroup>
+              <form action={logoutAction}>
+                <button
+                  type="submit"
+                  className={cn(
+                    "flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1.5 text-sm outline-none",
+                    "hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <LogOut className="size-4" />
+                  Sign out
+                </button>
+              </form>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

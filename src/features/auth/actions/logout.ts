@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 
-/** Sign out the current user and redirect to login. */
+/** Sign out the current user and redirect to home. */
 export async function logoutAction() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
-  redirect("/login");
+  await supabase.auth.signOut({ scope: "global" });
+  redirect("/");
 }

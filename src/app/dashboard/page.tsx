@@ -15,8 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getSessionUser } from "@/lib/session";
 
-/** Placeholder stat cards for the dashboard shell. */
 const statCards = [
   {
     title: "Total DAK Received",
@@ -44,19 +44,22 @@ const statCards = [
   },
 ] as const;
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const user = await getSessionUser();
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
-            District overview and DAK monitoring at a glance
+            Welcome back, {user?.name}. District overview and DAK monitoring at
+            a glance.
           </p>
         </div>
-        <Badge variant="secondary" className="w-fit">
+        <Badge variant="secondary" className="w-fit capitalize">
           <TrendingUp className="size-3" />
-          Live data coming soon
+          {user?.role.replace(/_/g, " ")}
         </Badge>
       </div>
 

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { syncUserProfile } from "@/features/auth/actions/sync-user";
 import { loginSchema } from "@/features/auth/schemas/login-schema";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,7 +14,7 @@ export type LoginFormState = {
   message?: string;
 };
 
-/** Sign in with Supabase email/password and redirect to dashboard. */
+/** Sign in with Supabase email/password, sync profile, redirect to dashboard. */
 export async function loginAction(
   _prevState: LoginFormState,
   formData: FormData
@@ -37,6 +38,8 @@ export async function loginAction(
   if (error) {
     return { message: error.message };
   }
+
+  await syncUserProfile();
 
   redirect("/dashboard");
 }

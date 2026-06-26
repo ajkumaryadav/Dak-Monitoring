@@ -20,10 +20,13 @@ export type DakStatus =
 /** Priority levels for DAK items. */
 export type PriorityLevel = "routine" | "important" | "urgent" | "immediate";
 
-/** Placeholder session user for the admin shell until Auth module is wired. */
+/** Authenticated user session with role-based permissions. */
 export interface SessionUser {
+  id: string;
   name: string;
   email: string;
   role: UserRole;
+  roleSlug: string;
   designation: string;
+  permissions: string[];
 }

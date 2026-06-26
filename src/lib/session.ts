@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { getPermissionsForRole } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { SessionUser, UserRole } from "@/types";
 
@@ -16,7 +17,7 @@ function mapRoleSlug(slug: string | undefined): UserRole {
   if (slug && slug in roleSlugMap) {
     return roleSlugMap[slug];
   }
-  return "clerk";
+  return "data_entry_operator";
 }
 
 /** Load the authenticated user profile for the admin shell. */
@@ -33,18 +34,22 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, email, designation, roles(slug, name)")
+    .select("name, email, designation, role_id, roles(slug, name)")
     .eq("id", user.id)
     .maybeSingle();
 
   const roleRecord = profile?.roles;
   const roleData = Array.isArray(roleRecord) ? roleRecord[0] : roleRecord;
+  const role = mapRoleSlug(roleData?.slug as string | undefined);
 
   return {
-    name: profile?.name ?? user.user_metadata?.name ?? "User",
+    id: user.id,
+    name: profile?.name ?? (user.user_metadata?.name as string) ?? "User",
     email: profile?.email ?? user.email ?? "",
-    role: mapRoleSlug(roleData?.slug),
+    role,
+    roleSlug: roleData?.slug ?? role,
     designation: profile?.designation ?? roleData?.name ?? "Officer",
+    permissions: [...getPermissionsForRole(role)],
   };
 }
 
