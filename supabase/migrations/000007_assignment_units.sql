@@ -28,7 +28,8 @@ FROM (
     ('RTI', 'section'),
     ('Panchayati Raj', 'section'),
     ('ADM', 'section'),
-    ('Store', 'section')
+    ('Store', 'section'),
+    ('ACEM', 'section')
 ) AS v(unit_name, unit_type)
 WHERE NOT EXISTS (
   SELECT 1 FROM public.assignment_units u WHERE u.unit_name = v.unit_name

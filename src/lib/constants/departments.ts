@@ -38,6 +38,7 @@ export const INTERNAL_SECTIONS = [
   "Panchayati Raj",
   "ADM",
   "Store",
+  "ACEM",
 ] as const;
 
 export type InternalSectionName = (typeof INTERNAL_SECTIONS)[number];

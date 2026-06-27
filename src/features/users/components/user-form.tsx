@@ -117,8 +117,8 @@ export function UserForm({ mode, options, user }: UserFormProps) {
           <select id="departmentId" name="departmentId" defaultValue={user?.departmentId ?? ""} className={inputClassName}>
             <option value="">Select department</option>
             {options.departments.map((dept) => (
-              <option key={dept.departmentId} value={dept.departmentId}>
-                {dept.displayLabel}
+              <option key={dept.id} value={dept.id}>
+                {dept.name}
               </option>
             ))}
           </select>

@@ -6,6 +6,7 @@ export type DakHistoryEventType =
   | "status_changed"
   | "section_transfer"
   | "remarks_added"
+  | "atr_submitted"
   | "completed"
   | "closed";
 
@@ -16,6 +17,7 @@ export const DAK_HISTORY_EVENT_LABELS: Record<DakHistoryEventType, string> = {
   status_changed: "Status Changed",
   section_transfer: "Section Transfer",
   remarks_added: "Remarks Added",
+  atr_submitted: "ATR Submitted",
   completed: "Completed",
   closed: "Closed",
 };

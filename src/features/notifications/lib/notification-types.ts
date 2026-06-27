@@ -9,7 +9,9 @@ export type NotificationType =
   | "user_created"
   | "password_reset"
   | "user_disabled"
-  | "user_enabled";
+  | "user_enabled"
+  | "remark_added"
+  | "atr_submitted";
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   dak_created: "New DAK Registered",
@@ -22,6 +24,8 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   password_reset: "Password Reset",
   user_disabled: "User Disabled",
   user_enabled: "User Enabled",
+  remark_added: "Remark Added",
+  atr_submitted: "ATR Submitted",
 };
 
 /** Supabase Realtime channel name — subscribe per user in future. */

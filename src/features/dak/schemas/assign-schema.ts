@@ -7,6 +7,10 @@ export const ASSIGNMENT_TYPE_OPTIONS = [
 
 const baseAssignFields = {
   dakId: z.string().uuid("Invalid DAK reference"),
+  assignedUserId: z
+    .string({ error: "Please select an officer" })
+    .min(1, "Please select an officer")
+    .uuid("Please select a valid officer"),
   remarks: z
     .string()
     .max(500, "Remarks must be 500 characters or fewer")

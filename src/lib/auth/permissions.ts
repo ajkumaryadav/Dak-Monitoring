@@ -165,7 +165,12 @@ export function canManageUsers(role: UserRole): boolean {
   return DISTRICT_ADMIN_ROLES.includes(role);
 }
 
-/** Collector or ACP — district-wide admin actions (assign, reassign). */
+/** Collector or ACP — district-wide admin actions (user management). */
 export function isDistrictAdminRole(role: UserRole): boolean {
   return DISTRICT_ADMIN_ROLES.includes(role);
+}
+
+/** Collector, ACP, and ADM can reassign in-workflow DAK. */
+export function canReassignDakRole(role: UserRole): boolean {
+  return COLLECTOR_DASHBOARD_ROLES.includes(role);
 }

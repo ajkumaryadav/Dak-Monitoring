@@ -15,6 +15,7 @@ export {
   ROUTE_PERMISSIONS,
   canAccessRoute,
   canManageUsers,
+  canReassignDakRole,
   getPermissionsForRole,
   hasMinimumRole,
   hasPermission,

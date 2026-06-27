@@ -1,6 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { normalizeDakStatus } from "@/features/dak/lib/workflow";
+import {
+  formatAssignmentLabel,
+  getDepartmentName,
+  getOfficerName,
+  getSourceName,
+  getUnitName,
+} from "@/features/dak/lib/dak-display";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
+import { normalizeDakStatus } from "@/features/dak/lib/workflow";
 import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
 import {
   PENDING_DB_STATUSES,
@@ -28,6 +35,8 @@ export interface PendingReportRow {
   status: DakStatus;
   priority: PriorityLevel;
   department_name: string;
+  officer_name: string;
+  assignment_label: string;
   source_name: string;
   section_name: string;
   assignment_type: string | null;
@@ -37,36 +46,43 @@ export interface PendingReportRow {
 }
 
 const JOIN_SELECT =
-  "id, dak_number, subject, sender, status, priority, due_date, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, departments(name), dak_sources(source_name), assignment_units(unit_name)";
+  "id, dak_number, subject, sender, status, priority, due_date, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, departments(name), dak_sources(source_name), assignment_units(unit_name), assigned_officer:users!dak_entries_assigned_to_fkey(name)";
 
 const BASE_SELECT =
-  "id, dak_number, subject, sender, status, priority, due_date, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id";
+  "id, dak_number, subject, sender, status, priority, due_date, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, assigned_to";
 
-function getDepartmentName(
+function reportDepartmentName(
   departments: { name: string } | { name: string }[] | null
 ): string {
-  if (!departments) return "Unassigned";
-  if (Array.isArray(departments)) return departments[0]?.name ?? "Unassigned";
-  return departments.name ?? "Unassigned";
-}
-
-function getSourceName(
-  sources: { source_name: string } | { source_name: string }[] | null
-): string {
-  if (!sources) return "—";
-  if (Array.isArray(sources)) return sources[0]?.source_name ?? "—";
-  return sources.source_name ?? "—";
-}
-
-function getUnitName(
-  units: { unit_name: string } | { unit_name: string }[] | null
-): string {
-  if (!units) return "—";
-  if (Array.isArray(units)) return units[0]?.unit_name ?? "—";
-  return units.unit_name ?? "—";
+  const name = getDepartmentName(departments);
+  return name === "—" ? "Unassigned" : name;
 }
 
 function mapPendingRow(row: Record<string, unknown>): PendingReportRow {
+  const departmentName = reportDepartmentName(
+    row.departments as { name: string } | { name: string }[] | null
+  );
+  const sectionName = getUnitName(
+    row.assignment_units as
+      | { unit_name: string }
+      | { unit_name: string }[]
+      | null
+  );
+  const officerName = getOfficerName(
+    row.assigned_officer as { name: string } | { name: string }[] | null
+  );
+  const assignmentType = row.assignment_type as string | null;
+  const targetName =
+    assignmentType === "section"
+      ? sectionName !== "—"
+        ? sectionName
+        : "Unassigned"
+      : departmentName;
+  const assignmentLabel = formatAssignmentLabel(
+    targetName,
+    officerName === "Not assigned" ? null : officerName
+  );
+
   return {
     id: row.id as string,
     dak_number: row.dak_number as string,
@@ -74,22 +90,17 @@ function mapPendingRow(row: Record<string, unknown>): PendingReportRow {
     sender: row.sender as string,
     status: normalizeDakStatus(row.status as string),
     priority: row.priority as PriorityLevel,
-    department_name: getDepartmentName(
-      row.departments as { name: string } | { name: string }[] | null
-    ),
+    department_name: departmentName,
+    officer_name: officerName === "Not assigned" ? "—" : officerName,
+    assignment_label: assignmentLabel,
     source_name: getSourceName(
       row.dak_sources as
         | { source_name: string }
         | { source_name: string }[]
         | null
     ),
-    section_name: getUnitName(
-      row.assignment_units as
-        | { unit_name: string }
-        | { unit_name: string }[]
-        | null
-    ),
-    assignment_type: row.assignment_type as string | null,
+    section_name: sectionName,
+    assignment_type: assignmentType,
     due_date: row.due_date as string | null,
     received_date: row.received_date as string | null,
     created_at: row.created_at as string,
@@ -142,10 +153,14 @@ async function enrichFallbackRows(
       rows.map((row) => row.assignment_unit_id as string | null).filter(Boolean)
     ),
   ] as string[];
+  const officerIds = [
+    ...new Set(rows.map((row) => row.assigned_to as string | null).filter(Boolean)),
+  ] as string[];
 
   const departmentNames = new Map<string, string>();
   const sourceNames = new Map<string, string>();
   const unitNames = new Map<string, string>();
+  const officerNames = new Map<string, string>();
 
   if (deptIds.length) {
     const { data } = await supabase.from("departments").select("id, name").in("id", deptIds);
@@ -174,6 +189,16 @@ async function enrichFallbackRows(
     }
   }
 
+  if (officerIds.length) {
+    const { data } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", officerIds);
+    for (const officer of data ?? []) {
+      officerNames.set(officer.id as string, officer.name as string);
+    }
+  }
+
   return rows
     .filter((row) => !isCompletedDbStatus(row.status as string))
     .map((row) =>
@@ -187,6 +212,9 @@ async function enrichFallbackRows(
           : null,
         assignment_units: row.assignment_unit_id
           ? { unit_name: unitNames.get(row.assignment_unit_id as string) ?? "—" }
+          : null,
+        assigned_officer: row.assigned_to
+          ? { name: officerNames.get(row.assigned_to as string) ?? "—" }
           : null,
       })
     );

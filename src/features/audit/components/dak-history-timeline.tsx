@@ -35,6 +35,7 @@ const eventStyles: Record<DakHistoryEventType, string> = {
   status_changed: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
   section_transfer: "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300",
   remarks_added: "border-border bg-muted text-muted-foreground",
+  atr_submitted: "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
   completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   closed: "border-border bg-muted text-muted-foreground",
 };
@@ -46,6 +47,7 @@ const eventIcons: Record<DakHistoryEventType, typeof Clock> = {
   status_changed: Clock,
   section_transfer: ArrowRightLeft,
   remarks_added: MessageSquare,
+  atr_submitted: FileText,
   completed: CheckCircle2,
   closed: XCircle,
 };

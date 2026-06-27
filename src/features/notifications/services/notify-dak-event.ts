@@ -97,14 +97,11 @@ export async function notifyDakAssignment(
   const body = `${params.dakNumber} ${params.isReassign ? "reassigned" : "assigned"} to ${params.targetLabel} by ${params.actorName}.`;
 
   const districtIds = await getDistrictWideUserIds();
-  const recipientIds =
-    params.assignmentType === "section" || !params.assignedToUserId
-      ? uniqueUserIds([params.actorUserId, ...districtIds])
-      : uniqueUserIds([
-          params.actorUserId,
-          params.assignedToUserId,
-          ...districtIds,
-        ]);
+  const recipientIds = uniqueUserIds([
+    params.actorUserId,
+    params.assignedToUserId,
+    ...districtIds,
+  ]);
 
   await sendNotifications(
     recipientIds.map((userId) => ({

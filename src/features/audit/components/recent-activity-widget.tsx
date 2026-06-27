@@ -30,6 +30,7 @@ const eventIcons: Record<DakHistoryEventType, typeof Clock> = {
   status_changed: Clock,
   section_transfer: ArrowRightLeft,
   remarks_added: MessageSquare,
+  atr_submitted: FileText,
   completed: CheckCircle2,
   closed: XCircle,
 };

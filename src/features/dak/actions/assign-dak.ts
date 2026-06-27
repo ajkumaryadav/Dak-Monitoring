@@ -7,10 +7,14 @@ import {
   type AssignDakInput,
 } from "@/features/dak/schemas/assign-schema";
 import { canAssignStatus, canReassignStatus } from "@/features/dak/lib/workflow";
+import { formatAssignmentLabel } from "@/features/dak/lib/dak-display";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { notifyDakAssignment } from "@/features/notifications/services/notify-dak-event";
-import { getOfficerIdForDepartment } from "@/features/dak/services/get-department-officers";
-import { hasPermission, isDistrictAdminRole, PERMISSIONS } from "@/lib/auth";
+import {
+  canReassignDakRole,
+  hasPermission,
+  PERMISSIONS,
+} from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 
@@ -38,12 +42,14 @@ function revalidateDakPaths(dakId: string) {
 
 function parseAssignFormData(formData: FormData): unknown {
   const assignmentType = formData.get("assignmentType");
+  const assignedUserId = formData.get("assignedUserId");
 
   if (assignmentType === "section") {
     return {
       dakId: formData.get("dakId"),
       assignmentType: "section",
       assignmentUnitId: formData.get("assignmentUnitId"),
+      assignedUserId,
       remarks: formData.get("remarks") ?? "",
     };
   }
@@ -52,11 +58,51 @@ function parseAssignFormData(formData: FormData): unknown {
     dakId: formData.get("dakId"),
     assignmentType: "department",
     departmentId: formData.get("departmentId"),
+    assignedUserId,
     remarks: formData.get("remarks") ?? "",
   };
 }
 
-/** Assign a DAK to a department or internal section — Collector and ADM only. */
+async function validateAssignedOfficer(
+  assignedUserId: string,
+  assignmentType: "department" | "section",
+  departmentId?: string,
+  sectionId?: string
+): Promise<{ ok: true; name: string } | { ok: false; message: string }> {
+  const supabase = createAdminClient();
+
+  const { data: officer, error } = await supabase
+    .from("users")
+    .select("id, name, department_id, section_id, is_active")
+    .eq("id", assignedUserId)
+    .maybeSingle();
+
+  if (error || !officer) {
+    return { ok: false, message: "Selected officer not found." };
+  }
+
+  if (officer.is_active === false) {
+    return { ok: false, message: "Selected officer account is disabled." };
+  }
+
+  if (assignmentType === "department") {
+    if (officer.department_id !== departmentId) {
+      return {
+        ok: false,
+        message: "Selected officer does not belong to the chosen department.",
+      };
+    }
+  } else if (officer.section_id !== sectionId) {
+    return {
+      ok: false,
+      message: "Selected officer is not assigned to the chosen section.",
+    };
+  }
+
+  return { ok: true, name: officer.name as string };
+}
+
+/** Assign a DAK to a department/section officer — Collector, ACP, and ADM. */
 export async function assignDak(
   input: AssignDakInput
 ): Promise<AssignDakResult> {
@@ -99,18 +145,33 @@ export async function assignDak(
     }
 
     if (!canAssignStatus(existing.status as string)) {
-      const isCollectorReassign =
-        isDistrictAdminRole(user.role) &&
+      const canReassign =
+        canReassignDakRole(user.role) &&
         canReassignStatus(existing.status as string);
 
-      if (!isCollectorReassign) {
+      if (!canReassign) {
         return {
           success: false,
           message: canReassignStatus(existing.status as string)
-            ? "Only the Collector can reassign DAK that is already in workflow."
+            ? "Only Collector, ACP, or ADM can reassign DAK already in workflow."
             : "Only received DAK entries can be assigned.",
         };
       }
+    }
+
+    const officerCheck = await validateAssignedOfficer(
+      parsed.data.assignedUserId,
+      parsed.data.assignmentType,
+      parsed.data.assignmentType === "department"
+        ? parsed.data.departmentId
+        : undefined,
+      parsed.data.assignmentType === "section"
+        ? parsed.data.assignmentUnitId
+        : undefined
+    );
+
+    if (!officerCheck.ok) {
+      return { success: false, message: officerCheck.message };
     }
 
     const isReassign = canReassignStatus(existing.status as string);
@@ -118,15 +179,14 @@ export async function assignDak(
 
     let updatePayload: Record<string, unknown> = {
       assigned_by: user.id,
+      assigned_to: parsed.data.assignedUserId,
       status: nextStatus,
       assignment_type: parsed.data.assignmentType,
     };
 
     let logLabel = "";
     const logActionPrefix = isReassign ? "Reassigned" : "Assigned";
-
     let targetLabel = "";
-    let assignedToUserId: string | null = null;
 
     if (parsed.data.assignmentType === "department") {
       const { data: department, error: deptError } = await supabase
@@ -139,17 +199,15 @@ export async function assignDak(
         return { success: false, message: "Selected department not found." };
       }
 
-      const assignedTo = await getOfficerIdForDepartment(parsed.data.departmentId);
-      assignedToUserId = assignedTo;
-      targetLabel = department.name as string;
+      const deptName = department.name as string;
+      targetLabel = formatAssignmentLabel(deptName, officerCheck.name);
 
       updatePayload = {
         ...updatePayload,
         department_id: parsed.data.departmentId,
         assignment_unit_id: null,
-        assigned_to: assignedTo,
       };
-      logLabel = `${logActionPrefix} to ${department.name}`;
+      logLabel = `${logActionPrefix} to ${targetLabel}`;
     } else {
       const { data: unit, error: unitError } = await supabase
         .from("assignment_units")
@@ -161,15 +219,15 @@ export async function assignDak(
         return { success: false, message: "Selected section not found." };
       }
 
-      targetLabel = `${unit.unit_name} (Internal Section)`;
+      const sectionName = unit.unit_name as string;
+      targetLabel = formatAssignmentLabel(sectionName, officerCheck.name);
 
       updatePayload = {
         ...updatePayload,
         department_id: null,
         assignment_unit_id: parsed.data.assignmentUnitId,
-        assigned_to: null,
       };
-      logLabel = `${logActionPrefix} to ${unit.unit_name} (Internal Section)`;
+      logLabel = `${logActionPrefix} to ${targetLabel}`;
     }
 
     const { error: updateError } = await supabase
@@ -204,6 +262,7 @@ export async function assignDak(
       toStatus: nextStatus,
       metadata: {
         assignment_type: parsed.data.assignmentType,
+        assigned_user_id: parsed.data.assignedUserId,
         is_reassign: isReassign,
       },
     });
@@ -214,7 +273,7 @@ export async function assignDak(
       isReassign,
       assignmentType: parsed.data.assignmentType,
       targetLabel,
-      assignedToUserId,
+      assignedToUserId: parsed.data.assignedUserId,
       actorUserId: user.id,
       actorName: user.name,
     });

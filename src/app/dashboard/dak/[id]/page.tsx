@@ -2,8 +2,7 @@ import { notFound } from "next/navigation";
 
 import { DakDetailView } from "@/features/dak/components/dak-detail-view";
 import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
-import { getAssignmentUnits } from "@/features/dak/services/get-assignment-units";
-import { getDepartmentOfficers } from "@/features/dak/services/get-department-officers";
+import { getAssignFormOptions } from "@/features/dak/services/get-assign-form-options";
 import {
   getDakById,
   getDakTimeline,
@@ -12,7 +11,12 @@ import {
   canAssignStatus,
   canReassignStatus,
 } from "@/features/dak/lib/workflow";
-import { hasPermission, isDistrictAdminRole, PERMISSIONS, requirePermission } from "@/lib/auth";
+import { getRemarkPermissions } from "@/features/remarks/lib/remark-permissions";
+import {
+  getDakAtrRecords,
+  getDakRemarks,
+} from "@/features/remarks/services/get-remarks";
+import { hasPermission, canReassignDakRole, PERMISSIONS, requirePermission } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 
 interface DakDetailPageProps {
@@ -20,7 +24,7 @@ interface DakDetailPageProps {
 }
 
 export default async function DakDetailPage({ params }: DakDetailPageProps) {
-  await requirePermission(PERMISSIONS.DAK_VIEW);
+  const user = await requirePermission(PERMISSIONS.DAK_VIEW);
 
   const { id } = await params;
   const dak = await getDakById(id);
@@ -29,42 +33,42 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     notFound();
   }
 
-  const [timeline, attachments, departmentOfficers, sections, user] =
+  const [timeline, attachments, assignOptions, remarks, atrRecords] =
     await Promise.all([
       getDakTimeline(id),
       getDakAttachments(id),
-      getDepartmentOfficers(),
-      getAssignmentUnits("section"),
-      getSessionUser(),
+      getAssignFormOptions(),
+      getDakRemarks(id, user),
+      getDakAtrRecords(id),
     ]);
 
+  const remarkPermissions = getRemarkPermissions(user);
+
   const canInitialAssign =
-    !!user &&
     hasPermission(user.role, PERMISSIONS.DAK_ASSIGN) &&
     canAssignStatus(dak.status);
 
   const canReassign =
-    !!user &&
-    isDistrictAdminRole(user.role) &&
+    canReassignDakRole(user.role) &&
     hasPermission(user.role, PERMISSIONS.DAK_ASSIGN) &&
     canReassignStatus(dak.status);
 
   const showAssignForm = canInitialAssign || canReassign;
 
-  const canUpdateStatus = user
-    ? hasPermission(user.role, PERMISSIONS.DAK_UPDATE)
-    : false;
+  const canUpdateStatus = hasPermission(user.role, PERMISSIONS.DAK_UPDATE);
 
   return (
     <DakDetailView
       dak={dak}
       timeline={timeline}
       attachments={attachments}
-      departmentOfficers={departmentOfficers}
-      sections={sections}
+      assignOptions={assignOptions}
       showAssignForm={showAssignForm}
       isReassign={canReassign}
       canUpdateStatus={canUpdateStatus}
+      remarks={remarks}
+      atrRecords={atrRecords}
+      remarkPermissions={remarkPermissions}
     />
   );
 }

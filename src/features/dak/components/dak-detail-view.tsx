@@ -10,7 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DakHistoryTimeline } from "@/features/audit/components/dak-history-timeline";
+import { DakDetailTabs } from "@/features/remarks/components/dak-detail-tabs";
+import type { RemarkPermissions } from "@/features/remarks/lib/remark-permissions";
+import type {
+  DakAtrRecord,
+  DakRemarkRecord,
+} from "@/features/remarks/services/get-remarks";
 import {
   calculatePendingDays,
   formatPendingDays,
@@ -23,6 +28,7 @@ import { DakStatusForm } from "@/features/dak/components/dak-status-form";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
 import { getAllowedTransitions } from "@/features/dak/lib/workflow";
 import {
+  formatAssignmentLabel,
   formatDakDate,
   formatDakStatus,
   formatAssignmentType,
@@ -34,8 +40,7 @@ import {
   priorityStyles,
   getBadgeClassName,
 } from "@/features/dak/lib/dak-display";
-import type { AssignmentUnitOption } from "@/features/dak/services/get-assignment-units";
-import type { DepartmentOfficerOption } from "@/features/dak/services/get-department-officers";
+import type { AssignFormOptions } from "@/features/dak/services/get-assign-form-options";
 import type { DakDetail } from "@/features/dak/services/get-dak-by-id";
 import { cn } from "@/lib/utils";
 
@@ -43,11 +48,13 @@ interface DakDetailViewProps {
   dak: DakDetail;
   timeline: DakHistoryEntry[];
   attachments: DakAttachmentWithUrl[];
-  departmentOfficers: DepartmentOfficerOption[];
-  sections: AssignmentUnitOption[];
+  assignOptions: AssignFormOptions;
   showAssignForm: boolean;
   isReassign?: boolean;
   canUpdateStatus: boolean;
+  remarks: DakRemarkRecord[];
+  atrRecords: DakAtrRecord[];
+  remarkPermissions: RemarkPermissions;
 }
 
 interface DetailRowProps {
@@ -95,11 +102,13 @@ export function DakDetailView({
   dak,
   timeline,
   attachments,
-  departmentOfficers,
-  sections,
+  assignOptions,
   showAssignForm,
   isReassign = false,
   canUpdateStatus,
+  remarks,
+  atrRecords,
+  remarkPermissions,
 }: DakDetailViewProps) {
   const entries = buildTimelineEntries(dak, timeline);
   const allowedTransitions = getAllowedTransitions(dak.status);
@@ -167,6 +176,21 @@ export function DakDetailView({
               <DetailRow label="Assignment Type">
                 {formatAssignmentType(dak.assignment_type)}
               </DetailRow>
+              <DetailRow label="Assignment">
+                {dak.assignment_type === "section"
+                  ? formatAssignmentLabel(
+                      getUnitName(dak.assignment_units),
+                      getOfficerName(dak.assigned_officer) === "Not assigned"
+                        ? null
+                        : getOfficerName(dak.assigned_officer)
+                    )
+                  : formatAssignmentLabel(
+                      getDepartmentName(dak.departments),
+                      getOfficerName(dak.assigned_officer) === "Not assigned"
+                        ? null
+                        : getOfficerName(dak.assigned_officer)
+                    )}
+              </DetailRow>
               <DetailRow label="Department">
                 {getDepartmentName(dak.departments)}
               </DetailRow>
@@ -211,8 +235,7 @@ export function DakDetailView({
           {showAssignForm && (
             <AssignDakForm
               dakId={dak.id}
-              departmentOfficers={departmentOfficers}
-              sections={sections}
+              options={assignOptions}
               isReassign={isReassign}
             />
           )}
@@ -224,10 +247,16 @@ export function DakDetailView({
               allowedTransitions={allowedTransitions}
             />
           )}
-
-          <DakHistoryTimeline entries={entries} />
         </div>
       </div>
+
+      <DakDetailTabs
+        dakId={dak.id}
+        timeline={entries}
+        remarks={remarks}
+        atrRecords={atrRecords}
+        permissions={remarkPermissions}
+      />
 
       <AttachmentCard attachments={attachments} />
     </div>

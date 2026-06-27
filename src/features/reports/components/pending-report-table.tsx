@@ -28,7 +28,7 @@ type SortKey = keyof Pick<
   | "subject"
   | "sender"
   | "source_name"
-  | "department_name"
+  | "assignment_label"
   | "priority"
   | "status"
   | "due_date"
@@ -63,7 +63,7 @@ export function PendingReportTable({
         r.subject.toLowerCase().includes(q) ||
         r.sender.toLowerCase().includes(q) ||
         r.source_name.toLowerCase().includes(q) ||
-        r.department_name.toLowerCase().includes(q)
+        r.assignment_label.toLowerCase().includes(q)
     );
   }, [rows, search]);
 
@@ -92,7 +92,7 @@ export function PendingReportTable({
     <div className="space-y-4">
       <input
         type="search"
-        placeholder="Search DAK number, subject, sender, source, department…"
+        placeholder="Search DAK number, subject, sender, source, assignment…"
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
@@ -111,7 +111,7 @@ export function PendingReportTable({
                   ["subject", "Subject"],
                   ["sender", "Sender"],
                   ["source_name", "Source"],
-                  ["department_name", "Department"],
+                  ["assignment_label", "Assignment"],
                   ["priority", "Priority"],
                   ["status", "Status"],
                   ["received_date", "Received"],
@@ -153,7 +153,7 @@ export function PendingReportTable({
                   </TableCell>
                   <TableCell className="px-3">{row.sender}</TableCell>
                   <TableCell className="px-3">{row.source_name}</TableCell>
-                  <TableCell className="px-3">{row.department_name}</TableCell>
+                  <TableCell className="px-3">{row.assignment_label}</TableCell>
                   <TableCell className="px-3">
                     <Badge
                       variant="secondary"

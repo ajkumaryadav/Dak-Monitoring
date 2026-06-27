@@ -8,7 +8,9 @@ import {
   CheckCircle2,
   ClipboardList,
   FilePlus2,
+  FileText,
   KeyRound,
+  MessageSquare,
   UserCheck,
   UserPlus,
   UserX,
@@ -35,6 +37,8 @@ const typeIcons: Record<NotificationType, typeof Bell> = {
   password_reset: KeyRound,
   user_disabled: UserX,
   user_enabled: UserCheck,
+  remark_added: MessageSquare,
+  atr_submitted: FileText,
 };
 
 interface NotificationListProps {

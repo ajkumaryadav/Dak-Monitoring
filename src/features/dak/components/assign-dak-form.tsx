@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useActionState } from "react";
 
@@ -18,8 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import type { AssignmentUnitOption } from "@/features/dak/services/get-assignment-units";
-import type { DepartmentOfficerOption } from "@/features/dak/services/get-department-officers";
+import type { AssignFormOptions } from "@/features/dak/services/get-assign-form-options";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -32,24 +31,38 @@ const initialState: AssignDakFormState = {};
 
 interface AssignDakFormProps {
   dakId: string;
-  departmentOfficers: DepartmentOfficerOption[];
-  sections: AssignmentUnitOption[];
+  options: AssignFormOptions;
   isReassign?: boolean;
 }
 
 export function AssignDakForm({
   dakId,
-  departmentOfficers,
-  sections,
+  options,
   isReassign = false,
 }: AssignDakFormProps) {
   const [assignmentType, setAssignmentType] = useState<"department" | "section">(
     "department"
   );
+  const [departmentId, setDepartmentId] = useState("");
+  const [sectionId, setSectionId] = useState("");
   const [state, formAction, isPending] = useActionState(
     assignDakFormAction,
     initialState
   );
+
+  const officerOptions = useMemo(() => {
+    if (assignmentType === "department") {
+      if (!departmentId) return [];
+      return options.officers.filter((o) => o.departmentId === departmentId);
+    }
+    if (!sectionId) return [];
+    return options.officers.filter((o) => o.sectionId === sectionId);
+  }, [assignmentType, departmentId, sectionId, options.officers]);
+
+  const canSubmit =
+    assignmentType === "department"
+      ? options.departments.length > 0
+      : options.sections.length > 0;
 
   return (
     <Card className="border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background">
@@ -59,8 +72,8 @@ export function AssignDakForm({
         </CardTitle>
         <CardDescription>
           {isReassign
-            ? "Change department or internal section allocation"
-            : "Allocate to an external department or internal Collectorate section"}
+            ? "Change department/section and assigned officer"
+            : "Select department or internal section, then choose the responsible officer"}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
@@ -81,9 +94,11 @@ export function AssignDakForm({
                     name="assignmentTypeChoice"
                     value={option.value}
                     checked={assignmentType === option.value}
-                    onChange={() =>
-                      setAssignmentType(option.value as "department" | "section")
-                    }
+                    onChange={() => {
+                      setAssignmentType(option.value as "department" | "section");
+                      setDepartmentId("");
+                      setSectionId("");
+                    }}
                     className="size-4"
                   />
                   {option.label}
@@ -93,57 +108,120 @@ export function AssignDakForm({
           </fieldset>
 
           {assignmentType === "department" ? (
-            <div className="space-y-2">
-              <Label htmlFor="departmentId">Department — Officer</Label>
-              <select
-                id="departmentId"
-                name="departmentId"
-                required
-                defaultValue=""
-                className={inputClassName}
-                aria-invalid={!!state.errors?.departmentId}
-              >
-                <option value="" disabled>
-                  Select department
-                </option>
-                {departmentOfficers.map((option) => (
-                  <option key={option.departmentId} value={option.departmentId}>
-                    {option.displayLabel}
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="departmentId">Department</Label>
+                <select
+                  id="departmentId"
+                  name="departmentId"
+                  required
+                  value={departmentId}
+                  onChange={(e) => setDepartmentId(e.target.value)}
+                  className={inputClassName}
+                  aria-invalid={!!state.errors?.departmentId}
+                >
+                  <option value="" disabled>
+                    Select department
                   </option>
-                ))}
-              </select>
-              {state.errors?.departmentId?.[0] && (
-                <p className="text-xs text-destructive">
-                  {state.errors.departmentId[0]}
-                </p>
-              )}
-            </div>
+                  {options.departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+                {state.errors?.departmentId?.[0] && (
+                  <p className="text-xs text-destructive">
+                    {state.errors.departmentId[0]}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assignedUserIdDept">Officer</Label>
+                <select
+                  id="assignedUserIdDept"
+                  key={departmentId}
+                  name="assignedUserId"
+                  required
+                  disabled={!departmentId || officerOptions.length === 0}
+                  defaultValue=""
+                  className={inputClassName}
+                  aria-invalid={!!state.errors?.assignedUserId}
+                >
+                  <option value="" disabled>
+                    {!departmentId
+                      ? "Select a department first"
+                      : officerOptions.length === 0
+                        ? "No officers in this department"
+                        : "Select officer"}
+                  </option>
+                  {officerOptions.map((officer) => (
+                    <option key={officer.id} value={officer.id}>
+                      {officer.name}
+                    </option>
+                  ))}
+                </select>
+                {state.errors?.assignedUserId?.[0] && (
+                  <p className="text-xs text-destructive">
+                    {state.errors.assignedUserId[0]}
+                  </p>
+                )}
+              </div>
+            </>
           ) : (
-            <div className="space-y-2">
-              <Label htmlFor="assignmentUnitId">Internal Section</Label>
-              <select
-                id="assignmentUnitId"
-                name="assignmentUnitId"
-                required
-                defaultValue=""
-                className={inputClassName}
-                aria-invalid={!!state.errors?.assignmentUnitId}
-              >
-                <option value="" disabled>
-                  Select internal section
-                </option>
-                {sections.map((section) => (
-                  <option key={section.id} value={section.id}>
-                    {section.unit_name}
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="assignmentUnitId">Internal Section</Label>
+                <select
+                  id="assignmentUnitId"
+                  name="assignmentUnitId"
+                  required
+                  value={sectionId}
+                  onChange={(e) => setSectionId(e.target.value)}
+                  className={inputClassName}
+                  aria-invalid={!!state.errors?.assignmentUnitId}
+                >
+                  <option value="" disabled>
+                    Select internal section
                   </option>
-                ))}
-              </select>
-              {state.errors?.assignmentUnitId?.[0] && (
-                <p className="text-xs text-destructive">
-                  {state.errors.assignmentUnitId[0]}
-                </p>
-              )}
-            </div>
+                  {options.sections.map((section) => (
+                    <option key={section.id} value={section.id}>
+                      {section.unit_name}
+                    </option>
+                  ))}
+                </select>
+                {state.errors?.assignmentUnitId?.[0] && (
+                  <p className="text-xs text-destructive">
+                    {state.errors.assignmentUnitId[0]}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assignedUserIdSection">Officer</Label>
+                <select
+                  id="assignedUserIdSection"
+                  key={sectionId}
+                  name="assignedUserId"
+                  required
+                  disabled={!sectionId || officerOptions.length === 0}
+                  defaultValue=""
+                  className={inputClassName}
+                  aria-invalid={!!state.errors?.assignedUserId}
+                >
+                  <option value="" disabled>
+                    {!sectionId
+                      ? "Select a section first"
+                      : officerOptions.length === 0
+                        ? "No officers in this section"
+                        : "Select officer"}
+                  </option>
+                  {officerOptions.map((officer) => (
+                    <option key={officer.id} value={officer.id}>
+                      {officer.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
 
           <div className="space-y-2">
@@ -151,7 +229,7 @@ export function AssignDakForm({
             <textarea
               id="remarks"
               name="remarks"
-              placeholder="Instructions for the assigned officer or section..."
+              placeholder="Instructions for the assigned officer..."
               rows={3}
               maxLength={500}
               className={cn(inputClassName, "min-h-20 resize-y py-2")}
@@ -166,12 +244,7 @@ export function AssignDakForm({
 
           <button
             type="submit"
-            disabled={
-              isPending ||
-              (assignmentType === "department"
-                ? departmentOfficers.length === 0
-                : sections.length === 0)
-            }
+            disabled={isPending || !canSubmit}
             className={cn(buttonVariants(), "h-9 w-full sm:w-auto")}
           >
             {isPending ? (

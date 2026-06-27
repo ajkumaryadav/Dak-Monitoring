@@ -127,6 +127,17 @@ export function getUnitName(
   return unit.unit_name ?? "—";
 }
 
+export function formatAssignmentLabel(
+  target: string,
+  officerName: string | null | undefined
+): string {
+  const trimmed = officerName?.trim();
+  if (!trimmed || trimmed === "Not assigned") {
+    return target;
+  }
+  return `${target} → ${trimmed}`;
+}
+
 export function formatAssignmentType(
   assignmentType: string | null | undefined
 ) {
