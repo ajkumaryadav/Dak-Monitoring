@@ -1,6 +1,6 @@
 "use client";
 
-import { Landmark, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useActionState } from "react";
 
 import {
@@ -12,10 +12,9 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { appConfig } from "@/lib/constants/navigation";
+import { LoginBrandTitle } from "@/features/auth/components/login-brand-title";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -34,11 +33,8 @@ export function LoginForm() {
 
   return (
     <Card className="w-full max-w-md border-border/60 shadow-xl">
-      <CardHeader className="space-y-4 pb-2 text-center">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md shadow-primary/20">
-          <Landmark className="size-7" />
-        </div>
-        <CardTitle className="text-xl">{appConfig.shortName}</CardTitle>
+      <CardHeader className="space-y-1 pb-2 text-center">
+        <LoginBrandTitle />
       </CardHeader>
 
       <CardContent>

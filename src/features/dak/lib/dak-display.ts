@@ -95,6 +95,45 @@ export function getOfficerName(
   return officer.name ?? "Not assigned";
 }
 
+export function getSourceName(
+  source:
+    | { source_name: string }
+    | { source_name: string }[]
+    | null
+    | undefined
+) {
+  if (!source) {
+    return "—";
+  }
+
+  if (Array.isArray(source)) {
+    return source[0]?.source_name ?? "—";
+  }
+
+  return source.source_name ?? "—";
+}
+
+export function getUnitName(
+  unit: { unit_name: string } | { unit_name: string }[] | null | undefined
+) {
+  if (!unit) {
+    return "—";
+  }
+
+  if (Array.isArray(unit)) {
+    return unit[0]?.unit_name ?? "—";
+  }
+
+  return unit.unit_name ?? "—";
+}
+
+export function formatAssignmentType(
+  assignmentType: string | null | undefined
+) {
+  if (!assignmentType) return "—";
+  return assignmentType === "section" ? "Internal Section" : "Department";
+}
+
 export function getBadgeClassName(
   map: Record<string, string>,
   key: string,

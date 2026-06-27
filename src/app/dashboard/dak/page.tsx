@@ -2,9 +2,15 @@ import Link from "next/link";
 import { FileText, Plus } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { DakListFiltersPanel } from "@/features/dak/components/dak-list-filters-panel";
 import { DakListSearchBar } from "@/features/dak/components/dak-list-search-bar";
 import { DakListTable } from "@/features/dak/components/dak-list-table";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import {
+  hasActiveListFilters,
+  parseDakListParams,
+  type DakListSearchParams,
+} from "@/features/dak/lib/parse-dak-list-params";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
 import {
   isDepartmentDashboardRole,
@@ -16,7 +22,7 @@ import { getSessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 interface AllDakPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<DakListSearchParams>;
 }
 
 export const dynamic = "force-dynamic";
@@ -29,21 +35,31 @@ export default async function AllDakPage({ searchParams }: AllDakPageProps) {
     ? hasPermission(user.role, PERMISSIONS.DAK_ENTRY)
     : false;
 
-  const { q } = await searchParams;
-  const searchTerm = q?.trim() ?? "";
+  const params = await searchParams;
+  const { searchQuery, filters } = parseDakListParams(params);
+  const filtersActive = hasActiveListFilters(filters);
 
   const departmentId =
     user && isDepartmentDashboardRole(user.role) ? user.departmentId : undefined;
 
-  const dakEntries = await getFilteredDakList("all", searchTerm, departmentId);
+  const showDepartmentFilter = !isDepartmentDashboardRole(user?.role ?? "clerk");
+
+  const dakEntries = await getFilteredDakList(
+    "all",
+    searchQuery,
+    departmentId,
+    filters
+  );
+
+  const hasQuery = Boolean(searchQuery || filtersActive);
 
   return (
     <div className="space-y-6">
       <DakPageHeader
-        title={searchTerm ? "Search Results" : "All DAK"}
+        title={hasQuery ? "Search Results" : "All DAK"}
         description={
-          searchTerm
-            ? `Showing matches for "${searchTerm}".`
+          hasQuery
+            ? "Filtered registered correspondence entries."
             : "View and manage registered district correspondence entries."
         }
         icon={FileText}
@@ -51,16 +67,22 @@ export default async function AllDakPage({ searchParams }: AllDakPageProps) {
 
       <DakListSearchBar basePath="/dashboard/dak" />
 
+      <DakListFiltersPanel
+        basePath="/dashboard/dak"
+        showDepartmentFilter={showDepartmentFilter}
+        statusMode="all"
+      />
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
-          {dakEntries.length} {searchTerm ? "matching" : "registered"} entr
+          {dakEntries.length} {hasQuery ? "matching" : "registered"} entr
           {dakEntries.length === 1 ? "y" : "ies"}
-          {searchTerm && (
+          {hasQuery && (
             <>
               {" "}
               ·{" "}
               <Link href="/dashboard/dak" className="text-primary hover:underline">
-                Clear search
+                Clear filters
               </Link>
             </>
           )}
@@ -79,13 +101,13 @@ export default async function AllDakPage({ searchParams }: AllDakPageProps) {
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.04] via-background to-background shadow-sm">
         <DakListTable
           entries={dakEntries}
-          emptyTitle={searchTerm ? "No matching DAK entries" : "No DAK entries yet"}
+          emptyTitle={hasQuery ? "No matching DAK entries" : "No DAK entries yet"}
           emptyDescription={
-            searchTerm
-              ? "Try a different DAK number, subject, sender, or department name."
+            hasQuery
+              ? "Try different filters or search terms."
               : "Register the first correspondence to begin tracking."
           }
-          showRegisterAction={canCreate && !searchTerm}
+          showRegisterAction={canCreate && !hasQuery}
         />
       </div>
     </div>

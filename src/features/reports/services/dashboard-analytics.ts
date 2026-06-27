@@ -7,9 +7,10 @@ import {
   getStatusLabel,
 } from "@/features/dak/lib/workflow";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
+import { DAK_SOURCE_WIDGETS } from "@/lib/constants/dak-sources";
 import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
 import type { SessionUser } from "@/types";
-import type { DakStatus, PriorityLevel } from "@/types";
+import type { AssignmentType, DakStatus, PriorityLevel } from "@/types";
 
 const COMPLETED_DB_STATUSES = [
   "completed",
@@ -32,6 +33,13 @@ export interface DashboardStatSummary {
   overdue: number;
   highPriority: number;
   completed: number;
+  cmoDak: number;
+  janSunwaiDak: number;
+  mlaReferences: number;
+  chiefSecretaryRefs: number;
+  courtCases: number;
+  internalSectionPending: number;
+  departmentPending: number;
 }
 
 export interface DepartmentDashboardStatSummary {
@@ -48,6 +56,7 @@ export interface RecentDakRow {
   status: DakStatus;
   priority: PriorityLevel;
   department_name: string;
+  source_name: string;
   due_date: string | null;
   created_at: string;
 }
@@ -55,6 +64,15 @@ export interface RecentDakRow {
 export interface DepartmentPerformanceRow {
   department_id: string;
   department_name: string;
+  total: number;
+  pending: number;
+  overdue: number;
+  completed: number;
+}
+
+export interface SectionPerformanceRow {
+  unit_id: string;
+  unit_name: string;
   total: number;
   pending: number;
   overdue: number;
@@ -72,8 +90,11 @@ export interface CollectorDashboardData {
   recentDak: RecentDakRow[];
   departmentPerformance: DepartmentPerformanceRow[];
   pendingDepartments: DepartmentPerformanceRow[];
+  sectionPerformance: SectionPerformanceRow[];
+  pendingSections: SectionPerformanceRow[];
   priorityChart: ChartCountRow[];
   statusChart: ChartCountRow[];
+  sourceChart: ChartCountRow[];
 }
 
 export interface DepartmentDashboardData {
@@ -96,7 +117,15 @@ type RawEntry = {
   due_date: string | null;
   created_at: string;
   department_id: string | null;
+  source_id: string | null;
+  assignment_type: AssignmentType | null;
+  assignment_unit_id: string | null;
   departments: { name: string } | { name: string }[] | null;
+  dak_sources: { source_name: string } | { source_name: string }[] | null;
+  assignment_units:
+    | { unit_name: string }
+    | { unit_name: string }[]
+    | null;
 };
 
 function isCompletedDbStatus(status: string): boolean {
@@ -117,6 +146,27 @@ function getDepartmentName(
   return departments.name ?? "Unassigned";
 }
 
+function getSourceName(entry: RawEntry): string {
+  const source = entry.dak_sources;
+  if (!source) return "Unknown";
+  if (Array.isArray(source)) return source[0]?.source_name ?? "Unknown";
+  return source.source_name ?? "Unknown";
+}
+
+function getUnitName(entry: RawEntry): string {
+  const unit = entry.assignment_units;
+  if (!unit) return "Unassigned";
+  if (Array.isArray(unit)) return unit[0]?.unit_name ?? "Unassigned";
+  return unit.unit_name ?? "Unassigned";
+}
+
+function countBySource(entries: RawEntry[], sourceName: string): number {
+  return entries.filter(
+    (entry) =>
+      getSourceName(entry) === sourceName && isPendingDbStatus(entry.status)
+  ).length;
+}
+
 function toRecentRow(entry: RawEntry): RecentDakRow {
   return {
     id: entry.id,
@@ -125,6 +175,7 @@ function toRecentRow(entry: RawEntry): RecentDakRow {
     status: normalizeDakStatus(entry.status),
     priority: entry.priority,
     department_name: getDepartmentName(entry.departments),
+    source_name: getSourceName(entry),
     due_date: entry.due_date,
     created_at: entry.created_at,
   };
@@ -137,6 +188,8 @@ function buildDepartmentPerformance(
   const map = new Map<string, DepartmentPerformanceRow>();
 
   for (const entry of entries) {
+    if (entry.assignment_type === "section") continue;
+
     const deptId = entry.department_id ?? "unassigned";
     const deptName = getDepartmentName(entry.departments);
     const status = entry.status as string;
@@ -166,6 +219,45 @@ function buildDepartmentPerformance(
   }
 
   return Array.from(map.values()).sort((a, b) => b.total - a.total);
+}
+
+function buildSectionPerformance(
+  entries: RawEntry[],
+  today: string
+): SectionPerformanceRow[] {
+  const map = new Map<string, SectionPerformanceRow>();
+
+  for (const entry of entries) {
+    if (entry.assignment_type !== "section") continue;
+
+    const unitId = entry.assignment_unit_id ?? "unassigned";
+    const unitName = getUnitName(entry);
+    const status = entry.status as string;
+
+    const row = map.get(unitId) ?? {
+      unit_id: unitId,
+      unit_name: unitName,
+      total: 0,
+      pending: 0,
+      overdue: 0,
+      completed: 0,
+    };
+
+    row.total += 1;
+    if (isPendingDbStatus(status)) row.pending += 1;
+    if (isCompletedDbStatus(status)) row.completed += 1;
+    if (
+      entry.due_date &&
+      entry.due_date < today &&
+      !isCompletedDbStatus(status)
+    ) {
+      row.overdue += 1;
+    }
+
+    map.set(unitId, row);
+  }
+
+  return Array.from(map.values()).sort((a, b) => b.pending - a.pending);
 }
 
 function buildPriorityChart(entries: RawEntry[]): ChartCountRow[] {
@@ -209,6 +301,21 @@ function buildStatusChart(entries: RawEntry[]): ChartCountRow[] {
   }));
 }
 
+function buildSourceChart(entries: RawEntry[]): ChartCountRow[] {
+  const counts = new Map<string, number>();
+
+  for (const entry of entries) {
+    if (isCompletedDbStatus(entry.status)) continue;
+    const label = getSourceName(entry);
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 10);
+}
+
 /** Fetch DAK rows for dashboard analytics with join fallback. */
 async function fetchDashboardEntries(
   supabase: ReturnType<typeof createAdminClient>,
@@ -217,7 +324,7 @@ async function fetchDashboardEntries(
   let query = supabase
     .from("dak_entries")
     .select(
-      "id, dak_number, subject, status, priority, due_date, created_at, department_id, departments(name)"
+      "id, dak_number, subject, status, priority, due_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, departments(name), dak_sources(source_name), assignment_units(unit_name)"
     )
     .order("created_at", { ascending: false });
 
@@ -238,7 +345,7 @@ async function fetchDashboardEntries(
   let fallbackQuery = supabase
     .from("dak_entries")
     .select(
-      "id, dak_number, subject, status, priority, due_date, created_at, department_id"
+      "id, dak_number, subject, status, priority, due_date, created_at, department_id, source_id, assignment_type, assignment_unit_id"
     )
     .order("created_at", { ascending: false });
 
@@ -261,7 +368,25 @@ async function fetchDashboardEntries(
     ),
   ] as string[];
 
+  const sourceIds = [
+    ...new Set(
+      (fallback.data ?? [])
+        .map((row) => row.source_id as string | null)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
+  const unitIds = [
+    ...new Set(
+      (fallback.data ?? [])
+        .map((row) => row.assignment_unit_id as string | null)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
   const departmentNames = new Map<string, string>();
+  const sourceNames = new Map<string, string>();
+  const unitNames = new Map<string, string>();
 
   if (departmentIds.length) {
     const { data: departments } = await supabase
@@ -274,6 +399,28 @@ async function fetchDashboardEntries(
     }
   }
 
+  if (sourceIds.length) {
+    const { data: sources } = await supabase
+      .from("dak_sources")
+      .select("id, source_name")
+      .in("id", sourceIds);
+
+    for (const source of sources ?? []) {
+      sourceNames.set(source.id as string, source.source_name as string);
+    }
+  }
+
+  if (unitIds.length) {
+    const { data: units } = await supabase
+      .from("assignment_units")
+      .select("id, unit_name")
+      .in("id", unitIds);
+
+    for (const unit of units ?? []) {
+      unitNames.set(unit.id as string, unit.unit_name as string);
+    }
+  }
+
   return (fallback.data ?? []).map((row) => ({
     id: row.id as string,
     dak_number: row.dak_number as string,
@@ -283,8 +430,17 @@ async function fetchDashboardEntries(
     due_date: row.due_date as string | null,
     created_at: row.created_at as string,
     department_id: row.department_id as string | null,
+    source_id: row.source_id as string | null,
+    assignment_type: row.assignment_type as AssignmentType | null,
+    assignment_unit_id: row.assignment_unit_id as string | null,
     departments: row.department_id
       ? { name: departmentNames.get(row.department_id as string) ?? "Department" }
+      : null,
+    dak_sources: row.source_id
+      ? { source_name: sourceNames.get(row.source_id as string) ?? "Unknown" }
+      : null,
+    assignment_units: row.assignment_unit_id
+      ? { unit_name: unitNames.get(row.assignment_unit_id as string) ?? "Section" }
       : null,
   }));
 }
@@ -349,10 +505,18 @@ export async function fetchDashboardAnalytics(
   let completed = 0;
   let highPriority = 0;
   let overdue = 0;
+  let internalSectionPending = 0;
+  let departmentPending = 0;
 
   for (const entry of entries) {
     const status = entry.status;
-    if (isPendingDbStatus(status)) pending += 1;
+    if (isPendingDbStatus(status)) {
+      pending += 1;
+      if (entry.assignment_type === "section") internalSectionPending += 1;
+      if (entry.assignment_type === "department" || entry.department_id) {
+        departmentPending += 1;
+      }
+    }
     if (isCompletedDbStatus(status)) completed += 1;
     if (
       entry.due_date &&
@@ -371,6 +535,11 @@ export async function fetchDashboardAnalytics(
     .filter((d) => d.pending > 0)
     .sort((a, b) => b.pending - a.pending);
 
+  const sectionPerformance = buildSectionPerformance(entries, today);
+  const pendingSections = [...sectionPerformance]
+    .filter((s) => s.pending > 0)
+    .sort((a, b) => b.pending - a.pending);
+
   return {
     variant: "collector",
     stats: {
@@ -379,12 +548,25 @@ export async function fetchDashboardAnalytics(
       overdue,
       highPriority,
       completed,
+      cmoDak: countBySource(entries, DAK_SOURCE_WIDGETS.CMO),
+      janSunwaiDak: countBySource(entries, DAK_SOURCE_WIDGETS.JAN_SUNWAI),
+      mlaReferences: countBySource(entries, DAK_SOURCE_WIDGETS.MLA),
+      chiefSecretaryRefs: countBySource(
+        entries,
+        DAK_SOURCE_WIDGETS.CHIEF_SECRETARY
+      ),
+      courtCases: countBySource(entries, DAK_SOURCE_WIDGETS.COURT),
+      internalSectionPending,
+      departmentPending,
     },
     recentDak: entries.slice(0, 8).map(toRecentRow),
     departmentPerformance,
     pendingDepartments,
+    sectionPerformance,
+    pendingSections,
     priorityChart: buildPriorityChart(entries),
     statusChart: buildStatusChart(entries),
+    sourceChart: buildSourceChart(entries),
   };
 }
 
@@ -409,6 +591,13 @@ export async function fetchDashboardStatsSummary(user: SessionUser) {
     overdue: data.stats.overdue,
     completed: data.stats.completed,
     highPriority: data.stats.highPriority,
+    cmoDak: data.stats.cmoDak,
+    janSunwaiDak: data.stats.janSunwaiDak,
+    mlaReferences: data.stats.mlaReferences,
+    chiefSecretaryRefs: data.stats.chiefSecretaryRefs,
+    courtCases: data.stats.courtCases,
+    internalSectionPending: data.stats.internalSectionPending,
+    departmentPending: data.stats.departmentPending,
   };
 }
 

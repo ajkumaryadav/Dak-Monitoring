@@ -1,14 +1,20 @@
 import Link from "next/link";
 import { ClipboardList } from "lucide-react";
 
+import { DakListFiltersPanel } from "@/features/dak/components/dak-list-filters-panel";
 import { DakListSearchBar } from "@/features/dak/components/dak-list-search-bar";
 import { DakListTable } from "@/features/dak/components/dak-list-table";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import {
+  hasActiveListFilters,
+  parseDakListParams,
+  type DakListSearchParams,
+} from "@/features/dak/lib/parse-dak-list-params";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
 import { PERMISSIONS, requirePermission } from "@/lib/auth";
 
 interface AssignmentsPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<DakListSearchParams>;
 }
 
 export const dynamic = "force-dynamic";
@@ -18,18 +24,26 @@ export default async function AssignmentsPage({
 }: AssignmentsPageProps) {
   await requirePermission(PERMISSIONS.DAK_ASSIGN);
 
-  const { q } = await searchParams;
-  const searchTerm = q?.trim() ?? "";
+  const params = await searchParams;
+  const { searchQuery, filters } = parseDakListParams(params);
+  const filtersActive = hasActiveListFilters(filters);
 
-  const dakEntries = await getFilteredDakList("assignments", searchTerm);
+  const dakEntries = await getFilteredDakList(
+    "assignments",
+    searchQuery,
+    undefined,
+    filters
+  );
+
+  const hasQuery = Boolean(searchQuery || filtersActive);
 
   return (
     <div className="space-y-6">
       <DakPageHeader
-        title={searchTerm ? "Assignments — Search Results" : "Assignments"}
+        title={hasQuery ? "Assignments — Filtered" : "Assignments"}
         description={
-          searchTerm
-            ? `Filtered assignment queue matching "${searchTerm}".`
+          hasQuery
+            ? "Received DAK matching your filters."
             : "Received DAK awaiting Collector or ADM department allocation."
         }
         icon={ClipboardList}
@@ -37,11 +51,17 @@ export default async function AssignmentsPage({
 
       <DakListSearchBar basePath="/dashboard/dak/assignments" />
 
+      <DakListFiltersPanel
+        basePath="/dashboard/dak/assignments"
+        showDepartmentFilter
+        statusMode="pending"
+      />
+
       <p className="text-sm text-muted-foreground">
         {dakEntries.length}{" "}
-        {searchTerm ? "matching" : "DAK"} entr{dakEntries.length === 1 ? "y" : "ies"}
-        {!searchTerm && " awaiting assignment"}
-        {searchTerm && (
+        {hasQuery ? "matching" : "DAK"} entr{dakEntries.length === 1 ? "y" : "ies"}
+        {!hasQuery && " awaiting assignment"}
+        {hasQuery && (
           <>
             {" "}
             ·{" "}
@@ -49,7 +69,7 @@ export default async function AssignmentsPage({
               href="/dashboard/dak/assignments"
               className="text-primary hover:underline"
             >
-              Clear search
+              Clear filters
             </Link>
           </>
         )}
@@ -59,13 +79,13 @@ export default async function AssignmentsPage({
         <DakListTable
           entries={dakEntries}
           emptyTitle={
-            searchTerm
+            hasQuery
               ? "No matching DAK awaiting assignment"
               : "No DAK awaiting assignment"
           }
           emptyDescription={
-            searchTerm
-              ? "Try a different search term within the assignment queue."
+            hasQuery
+              ? "Try different filters or search terms."
               : "All received correspondence has been allocated to departments."
           }
         />

@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { Clock } from "lucide-react";
 
+import { DakListFiltersPanel } from "@/features/dak/components/dak-list-filters-panel";
 import { DakListSearchBar } from "@/features/dak/components/dak-list-search-bar";
 import { DakListTable } from "@/features/dak/components/dak-list-table";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import {
+  hasActiveListFilters,
+  parseDakListParams,
+  type DakListSearchParams,
+} from "@/features/dak/lib/parse-dak-list-params";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
 import {
   isDepartmentDashboardRole,
@@ -13,7 +19,7 @@ import {
 import { getSessionUser } from "@/lib/session";
 
 interface PendingDakPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<DakListSearchParams>;
 }
 
 export const dynamic = "force-dynamic";
@@ -24,25 +30,31 @@ export default async function PendingDakPage({
   await requirePermission(PERMISSIONS.DAK_VIEW);
 
   const user = await getSessionUser();
-  const { q } = await searchParams;
-  const searchTerm = q?.trim() ?? "";
+  const params = await searchParams;
+  const { searchQuery, filters } = parseDakListParams(params);
+  const filtersActive = hasActiveListFilters(filters);
 
   const departmentId =
     user && isDepartmentDashboardRole(user.role) ? user.departmentId : undefined;
 
+  const showDepartmentFilter = !isDepartmentDashboardRole(user?.role ?? "clerk");
+
   const dakEntries = await getFilteredDakList(
     "pending",
-    searchTerm,
-    departmentId
+    searchQuery,
+    departmentId,
+    filters
   );
+
+  const hasQuery = Boolean(searchQuery || filtersActive);
 
   return (
     <div className="space-y-6">
       <DakPageHeader
-        title={searchTerm ? "Pending DAK — Search Results" : "Pending DAK"}
+        title={hasQuery ? "Pending DAK — Filtered" : "Pending DAK"}
         description={
-          searchTerm
-            ? `Filtered pending items matching "${searchTerm}".`
+          hasQuery
+            ? "Active correspondence matching your filters."
             : "Active correspondence awaiting assignment, processing, or review."
         }
         icon={Clock}
@@ -50,10 +62,16 @@ export default async function PendingDakPage({
 
       <DakListSearchBar basePath="/dashboard/dak/pending" />
 
+      <DakListFiltersPanel
+        basePath="/dashboard/dak/pending"
+        showDepartmentFilter={showDepartmentFilter}
+        statusMode="pending"
+      />
+
       <p className="text-sm text-muted-foreground">
-        {dakEntries.length} {searchTerm ? "matching" : "active"} entr
+        {dakEntries.length} {hasQuery ? "matching" : "active"} entr
         {dakEntries.length === 1 ? "y" : "ies"}
-        {searchTerm && (
+        {hasQuery && (
           <>
             {" "}
             ·{" "}
@@ -61,7 +79,7 @@ export default async function PendingDakPage({
               href="/dashboard/dak/pending"
               className="text-primary hover:underline"
             >
-              Clear search
+              Clear filters
             </Link>
           </>
         )}
@@ -71,11 +89,11 @@ export default async function PendingDakPage({
         <DakListTable
           entries={dakEntries}
           emptyTitle={
-            searchTerm ? "No matching pending DAK" : "No pending DAK entries"
+            hasQuery ? "No matching pending DAK" : "No pending DAK entries"
           }
           emptyDescription={
-            searchTerm
-              ? "Try a different search term within pending items."
+            hasQuery
+              ? "Try different filters or search terms."
               : "All registered correspondence has been completed or disposed."
           }
         />

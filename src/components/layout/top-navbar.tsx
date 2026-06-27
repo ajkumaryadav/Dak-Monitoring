@@ -1,32 +1,26 @@
 "use client";
 
-import { Bell, Menu } from "lucide-react";
+import { Bell } from "lucide-react";
 
 import { UserMenu } from "@/components/layout/user-menu";
 import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { appConfig } from "@/lib/constants/navigation";
 import type { SessionUser } from "@/types";
 
 interface TopNavbarProps {
   user: SessionUser;
-  onMenuClick: () => void;
 }
 
-export function TopNavbar({ user, onMenuClick }: TopNavbarProps) {
+export function TopNavbar({ user }: TopNavbarProps) {
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:px-6">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden"
-        onClick={onMenuClick}
-        aria-label="Open navigation menu"
-      >
-        <Menu className="size-5" />
-      </Button>
+    <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:gap-4 md:px-6">
+      <SidebarTrigger className="md:hidden" />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{appConfig.fullName}</p>
+        <p className="truncate text-sm font-semibold tracking-tight">
+          {appConfig.fullName}
+        </p>
         <p className="truncate text-xs text-muted-foreground">
           Collectorate Administration Portal
         </p>

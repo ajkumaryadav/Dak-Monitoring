@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { LogOut, Settings, User } from "lucide-react";
 
 import { logoutAction } from "@/features/auth/actions/logout";
@@ -16,8 +15,6 @@ interface UserMenuProps {
   user: SessionUser;
 }
 
-const MENU_WIDTH = 224;
-
 function getInitials(name: string): string {
   return name
     .split(" ")
@@ -29,48 +26,17 @@ function getInitials(name: string): string {
 
 export function UserMenu({ user }: UserMenuProps) {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [menuStyle, setMenuStyle] = useState<{ top: number; left: number }>({
-    top: 0,
-    left: 0,
-  });
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    function updatePosition() {
-      const rect = triggerRef.current?.getBoundingClientRect();
-      if (!rect) {
-        return;
+    function handlePointerDown(event: PointerEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
       }
-
-      setMenuStyle({
-        top: rect.bottom + 8,
-        left: Math.max(8, rect.right - MENU_WIDTH),
-      });
-    }
-
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    window.addEventListener("scroll", updatePosition, true);
-
-    function handlePointerDown(event: MouseEvent) {
-      const target = event.target as Node;
-      if (
-        menuRef.current?.contains(target) ||
-        triggerRef.current?.contains(target)
-      ) {
-        return;
-      }
-      setOpen(false);
     }
 
     function handleEscape(event: KeyboardEvent) {
@@ -79,83 +45,22 @@ export function UserMenu({ user }: UserMenuProps) {
       }
     }
 
-    document.addEventListener("mousedown", handlePointerDown);
+    const closeTimer = window.setTimeout(() => {
+      document.addEventListener("pointerdown", handlePointerDown);
+    }, 0);
+
     document.addEventListener("keydown", handleEscape);
 
     return () => {
-      window.removeEventListener("resize", updatePosition);
-      window.removeEventListener("scroll", updatePosition, true);
-      document.removeEventListener("mousedown", handlePointerDown);
+      window.clearTimeout(closeTimer);
+      document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
     };
   }, [open]);
 
-  const menu = open ? (
-    <div
-      ref={menuRef}
-      role="menu"
-      aria-label="User account menu"
-      style={{ top: menuStyle.top, left: menuStyle.left, width: MENU_WIDTH }}
-      className="fixed z-[200] overflow-hidden rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10"
-    >
-      <div className="px-2 py-2">
-        <p className="text-sm font-medium text-foreground">{user.name}</p>
-        <p className="text-xs text-muted-foreground">{user.email}</p>
-        <Badge variant="secondary" className="mt-2 capitalize">
-          {user.role.replace(/_/g, " ")}
-        </Badge>
-      </div>
-
-      <div className="my-1 h-px bg-border" />
-
-      <Link
-        href="/dashboard/profile"
-        role="menuitem"
-        className={cn(
-          "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm",
-          "hover:bg-accent hover:text-accent-foreground"
-        )}
-        onClick={() => setOpen(false)}
-      >
-        <User className="size-4" />
-        Profile
-      </Link>
-
-      <Link
-        href="/dashboard/settings"
-        role="menuitem"
-        className={cn(
-          "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm",
-          "hover:bg-accent hover:text-accent-foreground"
-        )}
-        onClick={() => setOpen(false)}
-      >
-        <Settings className="size-4" />
-        Settings
-      </Link>
-
-      <div className="my-1 h-px bg-border" />
-
-      <form action={logoutAction}>
-        <button
-          type="submit"
-          role="menuitem"
-          className={cn(
-            "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-destructive",
-            "hover:bg-destructive/10"
-          )}
-        >
-          <LogOut className="size-4" />
-          Sign out
-        </button>
-      </form>
-    </div>
-  ) : null;
-
   return (
-    <>
+    <div ref={rootRef} className="relative">
       <Button
-        ref={triggerRef}
         type="button"
         variant="ghost"
         className="h-auto gap-2 px-2 py-1.5"
@@ -175,7 +80,65 @@ export function UserMenu({ user }: UserMenuProps) {
         </div>
       </Button>
 
-      {mounted && menu ? createPortal(menu, document.body) : null}
-    </>
+      {open && (
+        <div
+          role="menu"
+          aria-label="User account menu"
+          className="absolute top-[calc(100%+0.5rem)] right-0 z-[200] w-56 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10"
+        >
+          <div className="px-2 py-2">
+            <p className="text-sm font-medium text-foreground">{user.name}</p>
+            <p className="text-xs text-muted-foreground">{user.email}</p>
+            <Badge variant="secondary" className="mt-2 capitalize">
+              {user.role.replace(/_/g, " ")}
+            </Badge>
+          </div>
+
+          <div className="my-1 h-px bg-border" />
+
+          <Link
+            href="/dashboard/profile"
+            role="menuitem"
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm",
+              "hover:bg-accent hover:text-accent-foreground"
+            )}
+            onClick={() => setOpen(false)}
+          >
+            <User className="size-4 shrink-0" />
+            Profile
+          </Link>
+
+          <Link
+            href="/dashboard/settings"
+            role="menuitem"
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm",
+              "hover:bg-accent hover:text-accent-foreground"
+            )}
+            onClick={() => setOpen(false)}
+          >
+            <Settings className="size-4 shrink-0" />
+            Settings
+          </Link>
+
+          <div className="my-1 h-px bg-border" />
+
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              role="menuitem"
+              className={cn(
+                "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-destructive",
+                "hover:bg-destructive/10"
+              )}
+            >
+              <LogOut className="size-4 shrink-0" />
+              Sign out
+            </button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 }

@@ -2,12 +2,16 @@ import { notFound } from "next/navigation";
 
 import { DakDetailView } from "@/features/dak/components/dak-detail-view";
 import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
-import { getDepartments } from "@/features/dak/services/get-departments";
+import { getAssignmentUnits } from "@/features/dak/services/get-assignment-units";
+import { getDepartmentOfficers } from "@/features/dak/services/get-department-officers";
 import {
   getDakById,
   getDakTimeline,
 } from "@/features/dak/services/get-dak-by-id";
-import { canAssignStatus } from "@/features/dak/lib/workflow";
+import {
+  canAssignStatus,
+  canReassignStatus,
+} from "@/features/dak/lib/workflow";
 import { hasPermission, PERMISSIONS, requirePermission } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 
@@ -25,17 +29,27 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     notFound();
   }
 
-  const [timeline, attachments, departments, user] = await Promise.all([
-    getDakTimeline(id),
-    getDakAttachments(id),
-    getDepartments(),
-    getSessionUser(),
-  ]);
+  const [timeline, attachments, departmentOfficers, sections, user] =
+    await Promise.all([
+      getDakTimeline(id),
+      getDakAttachments(id),
+      getDepartmentOfficers(),
+      getAssignmentUnits("section"),
+      getSessionUser(),
+    ]);
 
-  const canAssign =
+  const canInitialAssign =
     !!user &&
     hasPermission(user.role, PERMISSIONS.DAK_ASSIGN) &&
     canAssignStatus(dak.status);
+
+  const canReassign =
+    !!user &&
+    user.role === "collector" &&
+    hasPermission(user.role, PERMISSIONS.DAK_ASSIGN) &&
+    canReassignStatus(dak.status);
+
+  const showAssignForm = canInitialAssign || canReassign;
 
   const canUpdateStatus = user
     ? hasPermission(user.role, PERMISSIONS.DAK_UPDATE)
@@ -46,8 +60,10 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
       dak={dak}
       timeline={timeline}
       attachments={attachments}
-      departments={departments}
-      canAssign={canAssign}
+      departmentOfficers={departmentOfficers}
+      sections={sections}
+      showAssignForm={showAssignForm}
+      isReassign={canReassign}
       canUpdateStatus={canUpdateStatus}
     />
   );

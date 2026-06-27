@@ -17,19 +17,22 @@ import { DakStatusForm } from "@/features/dak/components/dak-status-form";
 import { DakTimeline } from "@/features/dak/components/dak-timeline";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
 import {
-  canAssignStatus,
   getAllowedTransitions,
 } from "@/features/dak/lib/workflow";
 import {
   formatDakDate,
   formatDakStatus,
+  formatAssignmentType,
   getDepartmentName,
   getOfficerName,
+  getSourceName,
+  getUnitName,
   getStatusStyle,
   priorityStyles,
   getBadgeClassName,
 } from "@/features/dak/lib/dak-display";
-import type { DepartmentOption } from "@/features/dak/services/get-departments";
+import type { AssignmentUnitOption } from "@/features/dak/services/get-assignment-units";
+import type { DepartmentOfficerOption } from "@/features/dak/services/get-department-officers";
 import type {
   DakDetail,
   DakTimelineEntry,
@@ -40,8 +43,10 @@ interface DakDetailViewProps {
   dak: DakDetail;
   timeline: DakTimelineEntry[];
   attachments: DakAttachmentWithUrl[];
-  departments: DepartmentOption[];
-  canAssign: boolean;
+  departmentOfficers: DepartmentOfficerOption[];
+  sections: AssignmentUnitOption[];
+  showAssignForm: boolean;
+  isReassign?: boolean;
   canUpdateStatus: boolean;
 }
 
@@ -84,13 +89,15 @@ export function DakDetailView({
   dak,
   timeline,
   attachments,
-  departments,
-  canAssign,
+  departmentOfficers,
+  sections,
+  showAssignForm,
+  isReassign = false,
   canUpdateStatus,
 }: DakDetailViewProps) {
   const entries = buildTimelineEntries(dak, timeline);
   const allowedTransitions = getAllowedTransitions(dak.status);
-  const showAssignForm = canAssign && canAssignStatus(dak.status);
+  const showAssignFormPanel = showAssignForm;
 
   return (
     <div className="space-y-6">
@@ -136,8 +143,17 @@ export function DakDetailView({
                   {formatDakStatus(dak.status)}
                 </Badge>
               </DetailRow>
+              <DetailRow label="DAK Source">
+                {getSourceName(dak.dak_sources)}
+              </DetailRow>
+              <DetailRow label="Assignment Type">
+                {formatAssignmentType(dak.assignment_type)}
+              </DetailRow>
               <DetailRow label="Assigned Department">
                 {getDepartmentName(dak.departments)}
+              </DetailRow>
+              <DetailRow label="Assigned Section">
+                {getUnitName(dak.assignment_units)}
               </DetailRow>
               <DetailRow label="Assigned Officer">
                 {getOfficerName(dak.assigned_officer)}
@@ -171,8 +187,13 @@ export function DakDetailView({
         </Card>
 
         <div className="space-y-5 lg:col-span-2">
-          {showAssignForm && (
-            <AssignDakForm dakId={dak.id} departments={departments} />
+          {showAssignFormPanel && (
+            <AssignDakForm
+              dakId={dak.id}
+              departmentOfficers={departmentOfficers}
+              sections={sections}
+              isReassign={isReassign}
+            />
           )}
 
           {canUpdateStatus && allowedTransitions.length > 0 && (

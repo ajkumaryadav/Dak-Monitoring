@@ -22,6 +22,11 @@ export interface NavItem {
   disabled?: boolean;
 }
 
+export interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
 /** Primary sidebar navigation for the admin dashboard. */
 export const mainNavItems: NavItem[] = [
   {
@@ -65,6 +70,22 @@ export const mainNavItems: NavItem[] = [
     href: "/dashboard/reports",
     icon: BarChart3,
     permission: PERMISSIONS.REPORTS,
+  },
+];
+
+/** Sidebar sections with grouped navigation labels. */
+export const mainNavGroups: NavGroup[] = [
+  {
+    label: "Overview",
+    items: [mainNavItems[0]],
+  },
+  {
+    label: "DAK Operations",
+    items: mainNavItems.slice(1, 6),
+  },
+  {
+    label: "Analytics",
+    items: [mainNavItems[6]],
   },
 ];
 

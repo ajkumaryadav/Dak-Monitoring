@@ -6,8 +6,9 @@ import {
   assignDakSchema,
   type AssignDakInput,
 } from "@/features/dak/schemas/assign-schema";
-import { canAssignStatus, getStatusLabel } from "@/features/dak/lib/workflow";
+import { canAssignStatus, canReassignStatus } from "@/features/dak/lib/workflow";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
+import { getOfficerIdForDepartment } from "@/features/dak/services/get-department-officers";
 import { hasPermission, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
@@ -18,7 +19,7 @@ export type AssignDakResult =
 
 export type AssignDakFormState = {
   message?: string;
-  errors?: Partial<Record<keyof AssignDakInput, string[]>>;
+  errors?: Record<string, string[]>;
 };
 
 function revalidateDakPaths(dakId: string) {
@@ -28,9 +29,31 @@ function revalidateDakPaths(dakId: string) {
   revalidatePath("/dashboard/dak/pending");
   revalidatePath("/dashboard/dak/completed");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/reports");
+  revalidatePath("/dashboard/reports/pending");
 }
 
-/** Assign a DAK to a department — Collector and ADM only. */
+function parseAssignFormData(formData: FormData): unknown {
+  const assignmentType = formData.get("assignmentType");
+
+  if (assignmentType === "section") {
+    return {
+      dakId: formData.get("dakId"),
+      assignmentType: "section",
+      assignmentUnitId: formData.get("assignmentUnitId"),
+      remarks: formData.get("remarks") ?? "",
+    };
+  }
+
+  return {
+    dakId: formData.get("dakId"),
+    assignmentType: "department",
+    departmentId: formData.get("departmentId"),
+    remarks: formData.get("remarks") ?? "",
+  };
+}
+
+/** Assign a DAK to a department or internal section — Collector and ADM only. */
 export async function assignDak(
   input: AssignDakInput
 ): Promise<AssignDakResult> {
@@ -73,32 +96,75 @@ export async function assignDak(
     }
 
     if (!canAssignStatus(existing.status as string)) {
-      return {
-        success: false,
-        message: "Only received DAK entries can be assigned.",
+      const isCollectorReassign =
+        user.role === "collector" &&
+        canReassignStatus(existing.status as string);
+
+      if (!isCollectorReassign) {
+        return {
+          success: false,
+          message: canReassignStatus(existing.status as string)
+            ? "Only the Collector can reassign DAK that is already in workflow."
+            : "Only received DAK entries can be assigned.",
+        };
+      }
+    }
+
+    const isReassign = canReassignStatus(existing.status as string);
+    const nextStatus = isReassign ? (existing.status as string) : "assigned";
+
+    let updatePayload: Record<string, unknown> = {
+      assigned_by: user.id,
+      status: nextStatus,
+      assignment_type: parsed.data.assignmentType,
+    };
+
+    let logLabel = "";
+    const logActionPrefix = isReassign ? "Reassigned" : "Assigned";
+
+    if (parsed.data.assignmentType === "department") {
+      const { data: department, error: deptError } = await supabase
+        .from("departments")
+        .select("name")
+        .eq("id", parsed.data.departmentId)
+        .maybeSingle();
+
+      if (deptError || !department) {
+        return { success: false, message: "Selected department not found." };
+      }
+
+      const assignedTo = await getOfficerIdForDepartment(parsed.data.departmentId);
+
+      updatePayload = {
+        ...updatePayload,
+        department_id: parsed.data.departmentId,
+        assignment_unit_id: null,
+        assigned_to: assignedTo,
       };
+      logLabel = `${logActionPrefix} to ${department.name}`;
+    } else {
+      const { data: unit, error: unitError } = await supabase
+        .from("assignment_units")
+        .select("unit_name")
+        .eq("id", parsed.data.assignmentUnitId)
+        .maybeSingle();
+
+      if (unitError || !unit) {
+        return { success: false, message: "Selected section not found." };
+      }
+
+      updatePayload = {
+        ...updatePayload,
+        department_id: null,
+        assignment_unit_id: parsed.data.assignmentUnitId,
+        assigned_to: null,
+      };
+      logLabel = `${logActionPrefix} to ${unit.unit_name} (Internal Section)`;
     }
-
-    const { data: department, error: deptError } = await supabase
-      .from("departments")
-      .select("name")
-      .eq("id", parsed.data.departmentId)
-      .maybeSingle();
-
-    if (deptError || !department) {
-      return { success: false, message: "Selected department not found." };
-    }
-
-    const assignedTo = parsed.data.assignedTo?.trim() || null;
 
     const { error: updateError } = await supabase
       .from("dak_entries")
-      .update({
-        department_id: parsed.data.departmentId,
-        assigned_to: assignedTo,
-        assigned_by: user.id,
-        status: "assigned",
-      })
+      .update(updatePayload)
       .eq("id", parsed.data.dakId);
 
     if (updateError) {
@@ -112,12 +178,12 @@ export async function assignDak(
     await logWorkflowAction({
       dakId: parsed.data.dakId,
       userId: user.id,
-      action: `Assigned to ${department.name}`,
+      action: logLabel,
       remarks:
         parsed.data.remarks?.trim() ||
-        `Department allocation for ${existing.dak_number}`,
+        `Allocation for ${existing.dak_number}`,
       fromStatus: existing.status as string,
-      toStatus: "assigned",
+      toStatus: nextStatus,
     });
 
     revalidateDakPaths(parsed.data.dakId);
@@ -140,17 +206,12 @@ export async function assignDakFormAction(
   _prevState: AssignDakFormState,
   formData: FormData
 ): Promise<AssignDakFormState> {
-  const parsed = assignDakSchema.safeParse({
-    dakId: formData.get("dakId"),
-    departmentId: formData.get("departmentId"),
-    assignedTo: formData.get("assignedTo") ?? "",
-    remarks: formData.get("remarks") ?? "",
-  });
+  const parsed = assignDakSchema.safeParse(parseAssignFormData(formData));
 
   if (!parsed.success) {
     return {
       message: parsed.error.issues[0]?.message ?? "Invalid form data",
-      errors: parsed.error.flatten().fieldErrors as AssignDakFormState["errors"],
+      errors: parsed.error.flatten().fieldErrors,
     };
   }
 

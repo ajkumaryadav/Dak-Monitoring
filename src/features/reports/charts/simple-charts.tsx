@@ -135,3 +135,21 @@ export function SimpleStatusChart({ data }: SimpleStatusChartProps) {
     />
   );
 }
+
+interface SimpleSourceChartProps {
+  data: ChartCountRow[];
+  emptyMessage?: string;
+}
+
+export function SimpleSourceChart({
+  data,
+  emptyMessage = "No source data available.",
+}: SimpleSourceChartProps) {
+  return (
+    <SimpleBarChart
+      data={data}
+      barClassName="bg-primary"
+      emptyMessage={emptyMessage}
+    />
+  );
+}

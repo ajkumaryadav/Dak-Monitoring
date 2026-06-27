@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
+import { DakListFiltersPanel } from "@/features/dak/components/dak-list-filters-panel";
 import { DakListSearchBar } from "@/features/dak/components/dak-list-search-bar";
 import { DakListTable } from "@/features/dak/components/dak-list-table";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import {
+  hasActiveListFilters,
+  parseDakListParams,
+  type DakListSearchParams,
+} from "@/features/dak/lib/parse-dak-list-params";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
 import {
   isDepartmentDashboardRole,
@@ -13,7 +19,7 @@ import {
 import { getSessionUser } from "@/lib/session";
 
 interface CompletedDakPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<DakListSearchParams>;
 }
 
 export const dynamic = "force-dynamic";
@@ -24,25 +30,31 @@ export default async function CompletedDakPage({
   await requirePermission(PERMISSIONS.DAK_VIEW);
 
   const user = await getSessionUser();
-  const { q } = await searchParams;
-  const searchTerm = q?.trim() ?? "";
+  const params = await searchParams;
+  const { searchQuery, filters } = parseDakListParams(params);
+  const filtersActive = hasActiveListFilters(filters);
 
   const departmentId =
     user && isDepartmentDashboardRole(user.role) ? user.departmentId : undefined;
 
+  const showDepartmentFilter = !isDepartmentDashboardRole(user?.role ?? "clerk");
+
   const dakEntries = await getFilteredDakList(
     "completed",
-    searchTerm,
-    departmentId
+    searchQuery,
+    departmentId,
+    filters
   );
+
+  const hasQuery = Boolean(searchQuery || filtersActive);
 
   return (
     <div className="space-y-6">
       <DakPageHeader
-        title={searchTerm ? "Completed DAK — Search Results" : "Completed DAK"}
+        title={hasQuery ? "Completed DAK — Filtered" : "Completed DAK"}
         description={
-          searchTerm
-            ? `Filtered completed items matching "${searchTerm}".`
+          hasQuery
+            ? "Completed items matching your filters."
             : "Disposed and closed correspondence records."
         }
         icon={CheckCircle2}
@@ -50,10 +62,16 @@ export default async function CompletedDakPage({
 
       <DakListSearchBar basePath="/dashboard/dak/completed" />
 
+      <DakListFiltersPanel
+        basePath="/dashboard/dak/completed"
+        showDepartmentFilter={showDepartmentFilter}
+        statusMode="completed"
+      />
+
       <p className="text-sm text-muted-foreground">
-        {dakEntries.length} {searchTerm ? "matching" : "completed"} entr
+        {dakEntries.length} {hasQuery ? "matching" : "completed"} entr
         {dakEntries.length === 1 ? "y" : "ies"}
-        {searchTerm && (
+        {hasQuery && (
           <>
             {" "}
             ·{" "}
@@ -61,7 +79,7 @@ export default async function CompletedDakPage({
               href="/dashboard/dak/completed"
               className="text-primary hover:underline"
             >
-              Clear search
+              Clear filters
             </Link>
           </>
         )}
@@ -71,11 +89,11 @@ export default async function CompletedDakPage({
         <DakListTable
           entries={dakEntries}
           emptyTitle={
-            searchTerm ? "No matching completed DAK" : "No completed DAK entries"
+            hasQuery ? "No matching completed DAK" : "No completed DAK entries"
           }
           emptyDescription={
-            searchTerm
-              ? "Try a different search term within completed items."
+            hasQuery
+              ? "Try different filters or search terms."
               : "Completed and disposed items will appear here."
           }
         />

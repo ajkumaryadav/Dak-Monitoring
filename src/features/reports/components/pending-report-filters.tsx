@@ -3,23 +3,28 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Label } from "@/components/ui/label";
+import type { AssignmentUnitOption } from "@/features/dak/services/get-assignment-units";
 import type { DepartmentOption } from "@/features/dak/services/get-departments";
+import type { DakSourceOption } from "@/features/dak/services/get-dak-sources";
 import { PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
 import { STATUS_LABELS } from "@/features/dak/lib/workflow";
 import type { DakStatus } from "@/types";
 
 interface PendingReportFiltersProps {
   departments: DepartmentOption[];
+  sources: DakSourceOption[];
+  sections: AssignmentUnitOption[];
   showDepartmentFilter: boolean;
 }
 
 const STATUS_FILTER_OPTIONS = Object.entries(STATUS_LABELS).filter(
-  ([value]) =>
-    !["completed", "closed"].includes(value)
+  ([value]) => !["completed", "closed"].includes(value)
 ) as [DakStatus, string][];
 
 export function PendingReportFilters({
   departments,
+  sources,
+  sections,
   showDepartmentFilter,
 }: PendingReportFiltersProps) {
   const router = useRouter();
@@ -33,7 +38,7 @@ export function PendingReportFilters({
   }
 
   return (
-    <div className="grid gap-4 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
       {showDepartmentFilter && (
         <div className="space-y-2">
           <Label htmlFor="department">Department</Label>
@@ -52,6 +57,40 @@ export function PendingReportFilters({
           </select>
         </div>
       )}
+
+      <div className="space-y-2">
+        <Label htmlFor="source">Source</Label>
+        <select
+          id="source"
+          defaultValue={searchParams.get("source") ?? ""}
+          onChange={(e) => updateParam("source", e.target.value)}
+          className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
+        >
+          <option value="">All sources</option>
+          {sources.map((source) => (
+            <option key={source.id} value={source.id}>
+              {source.source_name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="section">Section</Label>
+        <select
+          id="section"
+          defaultValue={searchParams.get("section") ?? ""}
+          onChange={(e) => updateParam("section", e.target.value)}
+          className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
+        >
+          <option value="">All sections</option>
+          {sections.map((section) => (
+            <option key={section.id} value={section.id}>
+              {section.unit_name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="priority">Priority</Label>
@@ -109,8 +148,8 @@ export function PendingReportFilters({
         />
       </div>
 
-      <div className="flex items-end space-y-2">
-        <label className="flex h-9 cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm dark:bg-input/30">
+      <div className="flex items-end space-y-2 sm:col-span-2 lg:col-span-1">
+        <label className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm dark:bg-input/30">
           <input
             type="checkbox"
             defaultChecked={searchParams.get("overdue") === "1"}

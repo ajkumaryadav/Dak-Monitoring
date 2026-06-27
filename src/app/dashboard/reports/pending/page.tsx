@@ -9,7 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import { getAssignmentUnits } from "@/features/dak/services/get-assignment-units";
 import { getDepartments } from "@/features/dak/services/get-departments";
+import { getDakSources } from "@/features/dak/services/get-dak-sources";
 import { PendingReportFilters } from "@/features/reports/components/pending-report-filters";
 import { PendingReportTable } from "@/features/reports/components/pending-report-table";
 import { fetchPendingReport } from "@/features/reports/services/pending-report";
@@ -24,6 +26,8 @@ import type { DakStatus, PriorityLevel } from "@/types";
 interface PendingReportPageProps {
   searchParams: Promise<{
     department?: string;
+    source?: string;
+    section?: string;
     priority?: string;
     status?: string;
     dateFrom?: string;
@@ -51,6 +55,8 @@ export default async function PendingReportPage({
 
   const filters = {
     departmentId: params.department,
+    sourceId: params.source,
+    assignmentUnitId: params.section,
     priority: (params.priority ?? "") as PriorityLevel | "",
     status: (params.status ?? "") as DakStatus | "",
     dateFrom: params.dateFrom,
@@ -58,9 +64,11 @@ export default async function PendingReportPage({
     overdueOnly: params.overdue === "1",
   };
 
-  const [rows, departments] = await Promise.all([
+  const [rows, departments, sources, sections] = await Promise.all([
     fetchPendingReport(user, filters),
     showDepartmentFilter ? getDepartments() : Promise.resolve([]),
+    getDakSources(),
+    getAssignmentUnits("section"),
   ]);
 
   const isOverdueView = filters.overdueOnly;
@@ -71,8 +79,8 @@ export default async function PendingReportPage({
         title={isOverdueView ? "Overdue Report" : "Pending Report"}
         description={
           isOverdueView
-            ? "Active DAK past due date — sortable, filterable, export-ready."
-            : "All pending workflow DAK — filter by department, priority, status, and date."
+            ? "Active DAK past due date — filter by source, department, section, status, and date."
+            : "All pending workflow DAK — filter by source, department, section, priority, status, and date."
         }
         icon={isOverdueView ? AlertTriangle : Clock}
       />
@@ -80,6 +88,8 @@ export default async function PendingReportPage({
       <Suspense fallback={<FiltersSkeleton />}>
         <PendingReportFilters
           departments={departments}
+          sources={sources}
+          sections={sections}
           showDepartmentFilter={showDepartmentFilter}
         />
       </Suspense>

@@ -24,7 +24,13 @@ import { cn } from "@/lib/utils";
 
 type SortKey = keyof Pick<
   RecentDakRow,
-  "dak_number" | "subject" | "status" | "priority" | "department_name" | "due_date"
+  | "dak_number"
+  | "subject"
+  | "status"
+  | "priority"
+  | "department_name"
+  | "source_name"
+  | "due_date"
 >;
 
 interface RecentDakTableProps {
@@ -77,6 +83,7 @@ export function RecentDakTable({ rows, pageSize = 5 }: RecentDakTableProps) {
                 [
                   ["dak_number", "DAK No."],
                   ["subject", "Subject"],
+                  ["source_name", "Source"],
                   ["department_name", "Department"],
                   ["priority", "Priority"],
                   ["status", "Status"],
@@ -109,6 +116,7 @@ export function RecentDakTable({ rows, pageSize = 5 }: RecentDakTableProps) {
                 <TableCell className="max-w-[180px] truncate px-3">
                   {row.subject}
                 </TableCell>
+                <TableCell className="px-3">{row.source_name}</TableCell>
                 <TableCell className="px-3">{row.department_name}</TableCell>
                 <TableCell className="px-3">
                   <Badge

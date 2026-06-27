@@ -1,9 +1,10 @@
-import { Building2, Clock, FileText, Flame } from "lucide-react";
+import { Building2, Clock, FileText, Flame, Layers } from "lucide-react";
 
 import { DashboardSection } from "@/features/dashboard/components/dashboard-section";
 import { SimpleDepartmentChart } from "@/features/reports/charts/simple-department-chart";
 import {
   SimplePriorityChart,
+  SimpleSourceChart,
   SimpleStatusChart,
 } from "@/features/reports/charts/simple-charts";
 import { RecentDakTable } from "@/features/reports/components/recent-dak-table";
@@ -16,6 +17,7 @@ import type {
 interface DashboardChartsPanelProps {
   priorityChart: ChartCountRow[];
   statusChart: ChartCountRow[];
+  sourceChart?: ChartCountRow[];
   recentDak: RecentDakRow[];
   departmentPerformance?: DepartmentPerformanceRow[];
   recentTitle?: string;
@@ -26,6 +28,7 @@ interface DashboardChartsPanelProps {
 export function DashboardChartsPanel({
   priorityChart,
   statusChart,
+  sourceChart,
   recentDak,
   departmentPerformance,
   recentTitle = "Recent DAK",
@@ -52,6 +55,17 @@ export function DashboardChartsPanel({
           <SimpleStatusChart data={statusChart} />
         </DashboardSection>
       </div>
+
+      {sourceChart && (
+        <DashboardSection
+          title="Source-wise DAK"
+          description="Pending correspondence by originating source"
+          icon={Layers}
+          variant="primary"
+        >
+          <SimpleSourceChart data={sourceChart} />
+        </DashboardSection>
+      )}
 
       <DashboardSection
         title={recentTitle}

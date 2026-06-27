@@ -96,3 +96,9 @@ export function isActiveStatus(status: string): boolean {
 export function canAssignStatus(status: string): boolean {
   return normalizeDakStatus(status) === "received";
 }
+
+/** Active statuses where the Collector may change department/section allocation. */
+export function canReassignStatus(status: string): boolean {
+  const normalized = normalizeDakStatus(status);
+  return ["assigned", "in_progress", "pending"].includes(normalized);
+}

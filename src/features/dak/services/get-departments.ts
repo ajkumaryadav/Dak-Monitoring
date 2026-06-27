@@ -1,27 +1,15 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DISTRICT_DEPARTMENTS } from "@/lib/constants/departments";
 
 export interface DepartmentOption {
   id: string;
   name: string;
 }
 
-const DEFAULT_DEPARTMENTS = [
-  "Collectorate",
-  "General Administration",
-  "Revenue",
-  "Development",
-  "Panchayat Raj",
-  "Education",
-  "Health",
-  "Agriculture",
-  "Social Welfare",
-  "Police (District)",
-] as const;
-
 async function seedDepartmentsIfEmpty() {
   const supabase = createAdminClient();
 
-  const rows = DEFAULT_DEPARTMENTS.map((name) => ({
+  const rows = DISTRICT_DEPARTMENTS.map((name) => ({
     name,
     is_active: true,
   }));
@@ -29,7 +17,7 @@ async function seedDepartmentsIfEmpty() {
   await supabase.from("departments").insert(rows);
 }
 
-/** Load active departments for DAK forms and filters. */
+/** Load active departments alphabetically for DAK forms and filters. */
 export async function getDepartments(): Promise<DepartmentOption[]> {
   try {
     const supabase = createAdminClient();
@@ -38,7 +26,7 @@ export async function getDepartments(): Promise<DepartmentOption[]> {
       .from("departments")
       .select("id, name")
       .eq("is_active", true)
-      .order("name");
+      .order("name", { ascending: true });
 
     if (error) {
       console.error("[getDepartments]", error.message);
@@ -52,7 +40,7 @@ export async function getDepartments(): Promise<DepartmentOption[]> {
         .from("departments")
         .select("id, name")
         .eq("is_active", true)
-        .order("name");
+        .order("name", { ascending: true });
 
       data = retry.data;
       error = retry.error;
@@ -63,7 +51,9 @@ export async function getDepartments(): Promise<DepartmentOption[]> {
       return [];
     }
 
-    return data ?? [];
+    return (data ?? []).sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+    );
   } catch (error) {
     console.error("[getDepartments]", error);
     return [];

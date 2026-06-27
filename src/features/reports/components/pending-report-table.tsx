@@ -27,6 +27,7 @@ type SortKey = keyof Pick<
   | "dak_number"
   | "subject"
   | "sender"
+  | "source_name"
   | "department_name"
   | "priority"
   | "status"
@@ -56,6 +57,7 @@ export function PendingReportTable({
         r.dak_number.toLowerCase().includes(q) ||
         r.subject.toLowerCase().includes(q) ||
         r.sender.toLowerCase().includes(q) ||
+        r.source_name.toLowerCase().includes(q) ||
         r.department_name.toLowerCase().includes(q)
     );
   }, [rows, search]);
@@ -85,7 +87,7 @@ export function PendingReportTable({
     <div className="space-y-4">
       <input
         type="search"
-        placeholder="Search DAK number, subject, sender, department…"
+        placeholder="Search DAK number, subject, sender, source, department…"
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
@@ -103,6 +105,7 @@ export function PendingReportTable({
                   ["dak_number", "DAK No."],
                   ["subject", "Subject"],
                   ["sender", "Sender"],
+                  ["source_name", "Source"],
                   ["department_name", "Department"],
                   ["priority", "Priority"],
                   ["status", "Status"],
@@ -125,7 +128,7 @@ export function PendingReportTable({
           <TableBody>
             {!pageRows.length ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                   No matching pending DAK entries.
                 </TableCell>
               </TableRow>
@@ -144,6 +147,7 @@ export function PendingReportTable({
                     {row.subject}
                   </TableCell>
                   <TableCell className="px-3">{row.sender}</TableCell>
+                  <TableCell className="px-3">{row.source_name}</TableCell>
                   <TableCell className="px-3">{row.department_name}</TableCell>
                   <TableCell className="px-3">
                     <Badge

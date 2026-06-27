@@ -36,6 +36,10 @@ export const createDakSchema = z.object({
     .string({ error: "Please select a department" })
     .min(1, "Please select a department")
     .uuid("Please select a valid department"),
+  sourceId: z
+    .string({ error: "Please select a DAK source" })
+    .min(1, "Please select a DAK source")
+    .uuid("Please select a valid DAK source"),
   dueDate: z
     .string()
     .min(1, "Due date is required")
@@ -60,6 +64,7 @@ export type CreateDakFormValues = {
   senderAddress: string;
   priority: string;
   departmentId: string;
+  sourceId: string;
   dueDate: string;
   remarks: string;
 };

@@ -13,6 +13,7 @@ import { AttachmentUpload } from "@/features/dak/components/attachment-upload";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
 import type { DepartmentOption } from "@/features/dak/services/get-departments";
+import type { DakSourceOption } from "@/features/dak/services/get-dak-sources";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -27,9 +28,10 @@ const initialState: CreateDakFormState = {};
 
 interface DakEntryFormProps {
   departments: DepartmentOption[];
+  sources: DakSourceOption[];
 }
 
-export function DakEntryForm({ departments }: DakEntryFormProps) {
+export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
   const [state, formAction, isPending] = useActionState(
     createDakFormAction,
     initialState
@@ -163,6 +165,33 @@ export function DakEntryForm({ departments }: DakEntryFormProps) {
           </div>
 
           <div className="grid gap-2">
+            <Label htmlFor="sourceId">DAK Source *</Label>
+            <select
+              id="sourceId"
+              name="sourceId"
+              required
+              defaultValue=""
+              className={inputClassName}
+              disabled={sources.length === 0}
+              aria-invalid={!!state.errors?.sourceId}
+            >
+              <option value="" disabled>
+                Select DAK source
+              </option>
+              {sources.map((source) => (
+                <option key={source.id} value={source.id}>
+                  {source.source_name}
+                </option>
+              ))}
+            </select>
+            {state.errors?.sourceId?.[0] && (
+              <p className="text-sm text-destructive" role="alert">
+                {state.errors.sourceId[0]}
+              </p>
+            )}
+          </div>
+
+          <div className="grid gap-2">
             <Label htmlFor="departmentId">Department</Label>
             <select
               id="departmentId"
@@ -236,7 +265,7 @@ export function DakEntryForm({ departments }: DakEntryFormProps) {
           </button>
           <button
             type="submit"
-            disabled={isPending || departments.length === 0}
+            disabled={isPending || departments.length === 0 || sources.length === 0}
             className={cn(buttonVariants(), "h-9 px-4 sm:min-w-40")}
           >
             {isPending ? (

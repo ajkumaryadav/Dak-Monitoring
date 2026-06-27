@@ -16,6 +16,7 @@ import {
   formatDakStatus,
   getBadgeClassName,
   getDepartmentName,
+  getSourceName,
   getStatusStyle,
   priorityStyles,
 } from "@/features/dak/lib/dak-display";
@@ -65,6 +66,7 @@ export function DakListTable({
           <TableHead className="px-4">DAK Number</TableHead>
           <TableHead className="px-4">Subject</TableHead>
           <TableHead className="px-4">Sender</TableHead>
+          <TableHead className="px-4">Source</TableHead>
           <TableHead className="px-4">Department</TableHead>
           <TableHead className="px-4">Priority</TableHead>
           <TableHead className="px-4">Status</TableHead>
@@ -86,6 +88,9 @@ export function DakListTable({
               {entry.subject}
             </TableCell>
             <TableCell className="px-4">{entry.sender}</TableCell>
+            <TableCell className="px-4">
+              {getSourceName(entry.dak_sources)}
+            </TableCell>
             <TableCell className="px-4">
               {getDepartmentName(entry.departments)}
             </TableCell>

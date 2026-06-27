@@ -3,8 +3,11 @@ import { Landmark, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CollectorStatCards } from "@/features/dashboard/components/collector-stat-cards";
 import { DashboardChartsPanel } from "@/features/dashboard/components/dashboard-charts-panel";
+import { DashboardInsightsPanel } from "@/features/dashboard/components/dashboard-insights-panel";
 import { DepartmentStatCards } from "@/features/dashboard/components/department-stat-cards";
 import { PendingDepartmentsTable } from "@/features/dashboard/components/pending-departments-table";
+import { PendingSectionsTable } from "@/features/dashboard/components/pending-sections-table";
+import { SectionPerformancePanel } from "@/features/dashboard/components/section-performance-panel";
 import type { DashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
 import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
 import { appConfig } from "@/lib/constants/navigation";
@@ -78,10 +81,17 @@ export function DashboardView({ user, analytics }: DashboardViewProps) {
           <DashboardChartsPanel
             priorityChart={analytics.priorityChart}
             statusChart={analytics.statusChart}
+            sourceChart={analytics.sourceChart}
             recentDak={analytics.recentDak}
             departmentPerformance={analytics.departmentPerformance}
           />
           <PendingDepartmentsTable rows={analytics.pendingDepartments} />
+          <DashboardInsightsPanel
+            stats={analytics.stats}
+            sourceChart={analytics.sourceChart}
+          />
+          <SectionPerformancePanel rows={analytics.sectionPerformance} />
+          <PendingSectionsTable rows={analytics.pendingSections} />
         </>
       )}
     </div>

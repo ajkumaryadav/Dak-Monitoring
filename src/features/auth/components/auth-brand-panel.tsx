@@ -9,8 +9,6 @@ import {
 import { appConfig } from "@/lib/constants/navigation";
 import { cn } from "@/lib/utils";
 
-import { AuthDecorations } from "./auth-decorations";
-
 const highlights = [
   {
     icon: FileCheck,
@@ -55,8 +53,7 @@ const highlights = [
 
 export function AuthBrandPanel() {
   return (
-    <div className="relative hidden flex-1 flex-col justify-between overflow-hidden border-r border-border/60 bg-gradient-to-br from-muted/50 via-background to-secondary/30 p-10 text-foreground lg:flex">
-      <AuthDecorations variant="light" />
+    <div className="relative hidden flex-1 flex-col justify-between overflow-hidden border-r border-border/60 bg-muted/30 p-10 text-foreground dark:bg-background lg:flex">
 
       <div className="relative z-10 flex min-w-0 items-center gap-3">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
