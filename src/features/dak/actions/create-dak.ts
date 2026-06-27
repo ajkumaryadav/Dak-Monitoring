@@ -11,6 +11,7 @@ import { syncUserProfile } from "@/features/auth/actions/sync-user";
 import { uploadDakAttachment } from "@/features/dak/actions/upload-attachment";
 import { validateAttachmentFile } from "@/features/dak/lib/attachment-validation";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
+import { calculateSlaDate } from "@/features/sla/services/calculate-sla";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { createActivityLog } from "@/features/activity/services/activity-log";
 import { notifyDakCreated } from "@/features/notifications/services/notify-dak-event";
@@ -82,6 +83,11 @@ export async function createDak(
 
     const supabase = createAdminClient();
     const receivedDate = getDistrictDateString();
+    const slaDueDate = await calculateSlaDate({
+      priority: parsed.data.priority,
+      receivedDate,
+      departmentId: parsed.data.departmentId,
+    });
 
     const { data: inserted, error } = await supabase
       .from("dak_entries")
@@ -94,6 +100,8 @@ export async function createDak(
         department_id: parsed.data.departmentId,
         source_id: parsed.data.sourceId,
         due_date: parsed.data.dueDate.slice(0, 10),
+        sla_due_date: slaDueDate,
+        escalation_level: 0,
         description: parsed.data.remarks?.trim() || null,
         status: "received",
         received_date: receivedDate,
@@ -117,6 +125,19 @@ export async function createDak(
       timelineActionType: "dak_created",
       action: "DAK Registered",
       remarks: parsed.data.remarks?.trim() || "Registered by data entry operator",
+    });
+
+    await logWorkflowAction({
+      dakId: inserted.id,
+      userId: user.id,
+      eventType: "status_changed",
+      timelineActionType: "sla_assigned",
+      action: "SLA Assigned",
+      remarks: `SLA due date set to ${slaDueDate} based on ${parsed.data.priority} priority.`,
+      metadata: {
+        sla_due_date: slaDueDate,
+        priority: parsed.data.priority,
+      },
     });
 
     await createActivityLog({

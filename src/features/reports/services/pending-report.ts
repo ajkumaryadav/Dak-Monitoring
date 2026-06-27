@@ -7,6 +7,7 @@ import {
   getUnitName,
 } from "@/features/dak/lib/dak-display";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
+import { getEffectiveSlaDate } from "@/features/sla/lib/sla-display";
 import { normalizeDakStatus } from "@/features/dak/lib/workflow";
 import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
 import {
@@ -46,10 +47,10 @@ export interface PendingReportRow {
 }
 
 const JOIN_SELECT =
-  "id, dak_number, subject, sender, status, priority, due_date, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, departments(name), dak_sources(source_name), assignment_units(unit_name), assigned_officer:users!dak_entries_assigned_to_fkey(name)";
+  "id, dak_number, subject, sender, status, priority, due_date, sla_due_date, escalation_level, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, departments(name), dak_sources(source_name), assignment_units(unit_name), assigned_officer:users!dak_entries_assigned_to_fkey(name)";
 
 const BASE_SELECT =
-  "id, dak_number, subject, sender, status, priority, due_date, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, assigned_to";
+  "id, dak_number, subject, sender, status, priority, due_date, sla_due_date, escalation_level, received_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, assigned_to";
 
 function reportDepartmentName(
   departments: { name: string } | { name: string }[] | null
@@ -133,7 +134,6 @@ function applyPendingReportFilters(query: any, user: SessionUser, filters: Pendi
 
   if (filters.dateFrom) q = q.gte("received_date", filters.dateFrom);
   if (filters.dateTo) q = q.lte("received_date", filters.dateTo);
-  if (filters.overdueOnly) q = q.lt("due_date", getDistrictDateString());
 
   return q;
 }
@@ -238,8 +238,17 @@ export async function fetchPendingReport(
   const { data, error } = await query;
 
   if (!error && data) {
+    const today = getDistrictDateString();
     return data
       .filter((row) => !isCompletedDbStatus(row.status as string))
+      .filter((row) => {
+        if (!filters.overdueOnly) return true;
+        const slaDate = getEffectiveSlaDate({
+          slaDueDate: (row.sla_due_date as string | null) ?? null,
+          dueDate: (row.due_date as string | null) ?? null,
+        });
+        return !!slaDate && slaDate < today;
+      })
       .map((row) => mapPendingRow(row as Record<string, unknown>));
   }
 
@@ -262,7 +271,20 @@ export async function fetchPendingReport(
     return [];
   }
 
-  return enrichFallbackRows(supabase, (fallback.data ?? []) as Record<string, unknown>[]);
+  const fallbackRows = await enrichFallbackRows(
+    supabase,
+    (fallback.data ?? []) as Record<string, unknown>[]
+  );
+
+  if (!filters.overdueOnly) {
+    return fallbackRows;
+  }
+
+  const today = getDistrictDateString();
+  return fallbackRows.filter((row) => {
+    const slaDate = getEffectiveSlaDate({ dueDate: row.due_date });
+    return !!slaDate && slaDate < today;
+  });
 }
 
 /** Fetch report rows filtered by DAK source name. */

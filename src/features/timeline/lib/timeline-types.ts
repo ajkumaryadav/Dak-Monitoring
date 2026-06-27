@@ -7,7 +7,10 @@ export type DakTimelineActionType =
   | "remark_added"
   | "file_uploaded"
   | "atr_submitted"
-  | "closed";
+  | "closed"
+  | "sla_assigned"
+  | "sla_expired"
+  | "escalated";
 
 export const TIMELINE_ACTION_LABELS: Record<DakTimelineActionType, string> = {
   dak_created: "DAK Created",
@@ -18,6 +21,9 @@ export const TIMELINE_ACTION_LABELS: Record<DakTimelineActionType, string> = {
   file_uploaded: "File Uploaded",
   atr_submitted: "ATR Submitted",
   closed: "Closed",
+  sla_assigned: "SLA Assigned",
+  sla_expired: "SLA Expired",
+  escalated: "Escalated",
 };
 
 export function getTimelineActionLabel(type: DakTimelineActionType): string {

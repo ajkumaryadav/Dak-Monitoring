@@ -31,6 +31,8 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/dak": PERMISSIONS.DAK_VIEW,
   "/dashboard/tasks": PERMISSIONS.TASKS,
   "/dashboard/reports/pending": PERMISSIONS.DAK_VIEW,
+  "/dashboard/reports/sla": PERMISSIONS.REPORTS,
+  "/dashboard/reports/escalation": PERMISSIONS.REPORTS,
   "/dashboard/reports/source": PERMISSIONS.REPORTS,
   "/dashboard/reports/departments": PERMISSIONS.REPORTS,
   "/dashboard/reports/sections": PERMISSIONS.REPORTS,

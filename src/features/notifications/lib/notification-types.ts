@@ -6,6 +6,8 @@ export type NotificationType =
   | "dak_completed"
   | "status_updated"
   | "dak_overdue"
+  | "sla_due_tomorrow"
+  | "dak_escalated"
   | "user_created"
   | "password_reset"
   | "user_disabled"
@@ -20,6 +22,8 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   dak_completed: "DAK Completed",
   status_updated: "Status Updated",
   dak_overdue: "Overdue DAK",
+  sla_due_tomorrow: "SLA Due Tomorrow",
+  dak_escalated: "DAK Escalated",
   user_created: "User Created",
   password_reset: "Password Reset",
   user_disabled: "User Disabled",

@@ -67,8 +67,8 @@ export function mapHistoryEventToTimelineAction(
   if (eventType === "reassigned" || eventType === "section_transfer") {
     return "dak_reassigned";
   }
-  if (eventType === "atr_submitted") return "atr_submitted";
   if (eventType === "closed") return "closed";
+  if (eventType === "atr_submitted") return "atr_submitted";
   if (eventType === "remarks_added") {
     const label = actionLabel?.toLowerCase() ?? "";
     if (label.includes("attachment") || label.includes("upload")) {

@@ -346,6 +346,16 @@ export async function hasRecentOverdueNotification(
   dakId: string,
   withinHours = 24
 ): Promise<boolean> {
+  return hasRecentNotification(userId, dakId, "dak_overdue", withinHours);
+}
+
+/** Generic dedup check for notification type per user/dak. */
+export async function hasRecentNotification(
+  userId: string,
+  dakId: string,
+  type: NotificationType,
+  withinHours = 24
+): Promise<boolean> {
   const supabase = createAdminClient();
   const since = new Date(Date.now() - withinHours * 60 * 60 * 1000).toISOString();
 
@@ -354,13 +364,12 @@ export async function hasRecentOverdueNotification(
     .select("id")
     .eq("user_id", userId)
     .eq("dak_id", dakId)
-    .eq("type", "dak_overdue")
+    .eq("type", type)
     .gte("created_at", since)
     .limit(1);
 
   if (error) {
-    logNotificationError("hasRecentOverdueNotification", error);
-    // Allow retry when schema/enum is incomplete — do not block overdue sync.
+    logNotificationError("hasRecentNotification", error);
     return false;
   }
 

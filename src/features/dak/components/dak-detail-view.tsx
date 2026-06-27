@@ -38,6 +38,8 @@ import type { AssignFormOptions } from "@/features/dak/services/get-assign-form-
 import type { DakDetail } from "@/features/dak/services/get-dak-by-id";
 import { DakTimelinePanel } from "@/features/timeline/components/dak-timeline-panel";
 import type { DakTimelineEvent } from "@/features/timeline/services/timeline";
+import { SlaStatusBadge } from "@/features/sla/lib/sla-display";
+import { getEscalationLevelLabel } from "@/features/sla/lib/sla-constants";
 import { cn } from "@/lib/utils";
 
 interface DakDetailViewProps {
@@ -152,6 +154,23 @@ export function DakDetailView({
               </DetailRow>
               <DetailRow label="Received Date">
                 {formatDakDate(dak.received_date)}
+              </DetailRow>
+              <DetailRow label="SLA Due Date">
+                <div className="flex flex-wrap items-center gap-2">
+                  {formatDakDate(dak.sla_due_date ?? dak.due_date)}
+                  <SlaStatusBadge
+                    entry={{
+                      slaDueDate: dak.sla_due_date,
+                      dueDate: dak.due_date,
+                      escalationLevel: dak.escalation_level,
+                    }}
+                  />
+                  {dak.escalation_level >= 1 && (
+                    <Badge variant="outline" className="border-red-950/30 bg-red-950/10 text-red-950 dark:text-red-300">
+                      {getEscalationLevelLabel(dak.escalation_level)}
+                    </Badge>
+                  )}
+                </div>
               </DetailRow>
               <DetailRow label="Due Date">
                 {formatDakDate(dak.due_date)}

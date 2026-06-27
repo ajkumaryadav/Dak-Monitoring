@@ -5,10 +5,10 @@ import {
   getUserNotifications,
 } from "@/features/notifications/services/notifications";
 import {
-  getOverdueDakEntries,
   getHighPriorityDakEntries,
   getImmediateDakEntries,
 } from "@/features/notifications/services/notify-dak-event";
+import { fetchSlaDashboardData } from "@/features/sla/services/sla-report";
 import { fetchDashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
 import { getUserStats } from "@/features/users/services/get-users";
 import {
@@ -29,9 +29,12 @@ export default async function DashboardPage() {
   const isOperator = isOperatorDashboardRole(user.role);
   const isDepartment = isDepartmentDashboardRole(user.role);
   const isCollector = isCollectorDashboardRole(user.role);
+  const isSection = isSectionDashboardRole(user.role);
 
   const departmentScope =
-    isDepartment && user.departmentId ? user.departmentId : undefined;
+    (isDepartment || isSection) && user.departmentId
+      ? user.departmentId
+      : undefined;
 
   const showUserStats = isCollectorDashboardRole(user.role);
   const showDistrictAlerts = isCollector;
@@ -42,7 +45,7 @@ export default async function DashboardPage() {
     recentActivity,
     notifications,
     unreadCount,
-    overdueEntries,
+    slaData,
     highPriorityEntries,
     immediateEntries,
     userStats,
@@ -52,8 +55,13 @@ export default async function DashboardPage() {
     getUserNotifications(user, { limit: 8 }),
     getUnreadNotificationCount(user),
     showDistrictAlerts || showScopedAlerts
-      ? getOverdueDakEntries(departmentScope)
-      : Promise.resolve([]),
+      ? fetchSlaDashboardData(user)
+      : Promise.resolve({
+          overdueEntries: [],
+          escalatedEntries: [],
+          dueTodayEntries: [],
+          dueSoonEntries: [],
+        }),
     showDistrictAlerts || showScopedAlerts
       ? getHighPriorityDakEntries(departmentScope)
       : Promise.resolve([]),
@@ -70,7 +78,10 @@ export default async function DashboardPage() {
       recentActivity={recentActivity}
       notifications={notifications}
       unreadCount={unreadCount}
-      overdueEntries={overdueEntries}
+      overdueEntries={slaData.overdueEntries}
+      escalatedEntries={slaData.escalatedEntries}
+      dueTodayEntries={slaData.dueTodayEntries}
+      dueSoonEntries={slaData.dueSoonEntries}
       highPriorityEntries={highPriorityEntries}
       immediateEntries={immediateEntries}
       userStats={userStats}

@@ -16,10 +16,9 @@ import {
   OverdueAlertCards,
 } from "@/features/notifications/components/notification-widgets";
 import type { NotificationRecord } from "@/features/notifications/services/notifications";
-import type {
-  OverdueDakRow,
-  PriorityDakRow,
-} from "@/features/notifications/services/notify-dak-event";
+import type { PriorityDakRow } from "@/features/notifications/services/notify-dak-event";
+import type { SlaDakRow } from "@/features/sla/lib/sla-types";
+import { SlaDashboardWidgets } from "@/features/sla/components/sla-dashboard-widgets";
 import type { CollectorDashboardData } from "@/features/reports/services/dashboard-analytics";
 import { UserStatsCards } from "@/features/users/components/user-stats-cards";
 import type { UserStatsSummary } from "@/features/users/services/get-users";
@@ -31,7 +30,9 @@ interface CollectorDashboardProps {
   recentActivity: DakHistoryEntry[];
   notifications: NotificationRecord[];
   unreadCount: number;
-  overdueEntries: OverdueDakRow[];
+  overdueEntries: SlaDakRow[];
+  escalatedEntries: SlaDakRow[];
+  dueTodayEntries: SlaDakRow[];
   highPriorityEntries: PriorityDakRow[];
   immediateEntries: PriorityDakRow[];
   userStats?: UserStatsSummary | null;
@@ -45,6 +46,8 @@ export function CollectorDashboard({
   notifications,
   unreadCount,
   overdueEntries,
+  escalatedEntries,
+  dueTodayEntries,
   highPriorityEntries,
   immediateEntries,
   userStats,
@@ -69,6 +72,20 @@ export function CollectorDashboard({
           <UserStatsCards stats={userStats} />
         </DashboardSection>
       ) : null}
+
+      <DashboardSection
+        title="SLA Monitoring"
+        description="Overdue, escalated, and due-today DAK requiring district action"
+        icon={AlertTriangle}
+        variant="primary"
+      >
+        <SlaDashboardWidgets
+          variant="collector"
+          overdueEntries={overdueEntries}
+          escalatedEntries={escalatedEntries}
+          dueTodayEntries={dueTodayEntries}
+        />
+      </DashboardSection>
 
       <DashboardSection
         title="Alerts"

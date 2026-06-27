@@ -2,12 +2,13 @@
 
 import {
   ArrowRightLeft,
-  CheckCircle2,
   Clock,
   FilePlus2,
   FileUp,
+  Gauge,
   MessageSquare,
   Paperclip,
+  ShieldAlert,
   UserPlus,
   XCircle,
 } from "lucide-react";
@@ -37,6 +38,9 @@ const actionIcons: Record<DakTimelineActionType, typeof Clock> = {
   file_uploaded: Paperclip,
   atr_submitted: FileUp,
   closed: XCircle,
+  sla_assigned: Gauge,
+  sla_expired: Clock,
+  escalated: ShieldAlert,
 };
 
 const actionStyles: Record<DakTimelineActionType, string> = {
@@ -48,6 +52,9 @@ const actionStyles: Record<DakTimelineActionType, string> = {
   file_uploaded: "border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300",
   atr_submitted: "border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
   closed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  sla_assigned: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  sla_expired: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400",
+  escalated: "border-red-950/40 bg-red-950/15 text-red-950 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300",
 };
 
 interface DakTimelinePanelProps {

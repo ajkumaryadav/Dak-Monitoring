@@ -3,10 +3,8 @@ import { CollectorDashboard } from "@/features/dashboard/components/collector-da
 import { DepartmentDashboard } from "@/features/dashboard/components/department-dashboard";
 import { OperatorDashboard } from "@/features/dashboard/components/operator-dashboard";
 import type { NotificationRecord } from "@/features/notifications/services/notifications";
-import type {
-  OverdueDakRow,
-  PriorityDakRow,
-} from "@/features/notifications/services/notify-dak-event";
+import type { PriorityDakRow } from "@/features/notifications/services/notify-dak-event";
+import type { SlaDakRow } from "@/features/sla/lib/sla-types";
 import type { DashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
 import type { UserStatsSummary } from "@/features/users/services/get-users";
 import type { SessionUser } from "@/types";
@@ -17,7 +15,10 @@ interface DashboardViewProps {
   recentActivity: DakHistoryEntry[];
   notifications: NotificationRecord[];
   unreadCount: number;
-  overdueEntries: OverdueDakRow[];
+  overdueEntries: SlaDakRow[];
+  escalatedEntries: SlaDakRow[];
+  dueTodayEntries: SlaDakRow[];
+  dueSoonEntries: SlaDakRow[];
   highPriorityEntries: PriorityDakRow[];
   immediateEntries: PriorityDakRow[];
   userStats?: UserStatsSummary | null;
@@ -31,6 +32,9 @@ export function DashboardView({
   notifications,
   unreadCount,
   overdueEntries,
+  escalatedEntries,
+  dueTodayEntries,
+  dueSoonEntries,
   highPriorityEntries,
   immediateEntries,
   userStats,
@@ -55,6 +59,7 @@ export function DashboardView({
         notifications={notifications}
         unreadCount={unreadCount}
         overdueEntries={overdueEntries}
+        dueSoonEntries={dueSoonEntries}
         highPriorityEntries={highPriorityEntries}
         immediateEntries={immediateEntries}
       />
@@ -69,6 +74,8 @@ export function DashboardView({
       notifications={notifications}
       unreadCount={unreadCount}
       overdueEntries={overdueEntries}
+      escalatedEntries={escalatedEntries}
+      dueTodayEntries={dueTodayEntries}
       highPriorityEntries={highPriorityEntries}
       immediateEntries={immediateEntries}
       userStats={userStats}

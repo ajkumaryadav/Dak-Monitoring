@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:apply-audit-history": "node scripts/apply-dak-history-migration.mjs",
-    "db:apply-notifications": "node scripts/apply-notifications-migration.mjs"
+    "db:apply-notifications": "node scripts/apply-notifications-migration.mjs",
+    "sla:monitor": "node scripts/run-sla-monitor.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

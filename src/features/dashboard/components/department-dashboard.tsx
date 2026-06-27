@@ -13,10 +13,9 @@ import {
   OverdueAlertCards,
 } from "@/features/notifications/components/notification-widgets";
 import type { NotificationRecord } from "@/features/notifications/services/notifications";
-import type {
-  OverdueDakRow,
-  PriorityDakRow,
-} from "@/features/notifications/services/notify-dak-event";
+import type { PriorityDakRow } from "@/features/notifications/services/notify-dak-event";
+import type { SlaDakRow } from "@/features/sla/lib/sla-types";
+import { SlaDashboardWidgets } from "@/features/sla/components/sla-dashboard-widgets";
 import type {
   DepartmentDashboardData,
   SectionDashboardData,
@@ -29,7 +28,8 @@ interface DepartmentDashboardProps {
   recentActivity: DakHistoryEntry[];
   notifications: NotificationRecord[];
   unreadCount: number;
-  overdueEntries: OverdueDakRow[];
+  overdueEntries: SlaDakRow[];
+  dueSoonEntries: SlaDakRow[];
   highPriorityEntries: PriorityDakRow[];
   immediateEntries: PriorityDakRow[];
 }
@@ -42,6 +42,7 @@ export function DepartmentDashboard({
   notifications,
   unreadCount,
   overdueEntries,
+  dueSoonEntries,
   highPriorityEntries,
   immediateEntries,
 }: DepartmentDashboardProps) {
@@ -67,6 +68,20 @@ export function DepartmentDashboard({
 
       {analytics.variant === "department" && (
         <>
+          <DashboardSection
+            title="SLA Monitoring"
+            description="Department overdue and due-soon DAK"
+            icon={AlertTriangle}
+            variant="primary"
+          >
+            <SlaDashboardWidgets
+              variant="department"
+              overdueEntries={overdueEntries}
+              escalatedEntries={[]}
+              dueTodayEntries={[]}
+              dueSoonEntries={dueSoonEntries}
+            />
+          </DashboardSection>
           <DashboardSection
             title="Alerts"
             description="Overdue, priority, immediate, and unread notifications"

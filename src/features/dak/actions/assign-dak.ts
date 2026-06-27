@@ -183,6 +183,7 @@ export async function assignDak(
       assigned_to: parsed.data.assignedUserId,
       status: nextStatus,
       assignment_type: parsed.data.assignmentType,
+      escalation_level: 0,
     };
 
     let logLabel = "";
