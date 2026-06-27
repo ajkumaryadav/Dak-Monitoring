@@ -3,14 +3,15 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Label } from "@/components/ui/label";
+import { STATUS_LABELS } from "@/features/dak/lib/workflow";
+import { PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
 import type { AssignmentUnitOption } from "@/features/dak/services/get-assignment-units";
 import type { DepartmentOption } from "@/features/dak/services/get-departments";
 import type { DakSourceOption } from "@/features/dak/services/get-dak-sources";
-import { PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
-import { STATUS_LABELS } from "@/features/dak/lib/workflow";
 import type { DakStatus } from "@/types";
 
 interface PendingReportFiltersProps {
+  basePath: string;
   departments: DepartmentOption[];
   sources: DakSourceOption[];
   sections: AssignmentUnitOption[];
@@ -21,7 +22,9 @@ const STATUS_FILTER_OPTIONS = Object.entries(STATUS_LABELS).filter(
   ([value]) => !["completed", "closed"].includes(value)
 ) as [DakStatus, string][];
 
+/** Client filters — updates URL via router.push (same pattern as DakListFilters). */
 export function PendingReportFilters({
+  basePath,
   departments,
   sources,
   sections,
@@ -34,7 +37,7 @@ export function PendingReportFilters({
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set(key, value);
     else params.delete(key);
-    router.push(`/dashboard/reports/pending?${params.toString()}`);
+    router.push(`${basePath}?${params.toString()}`);
   }
 
   return (
@@ -148,7 +151,7 @@ export function PendingReportFilters({
         />
       </div>
 
-      <div className="flex items-end space-y-2 sm:col-span-2 lg:col-span-1">
+      <div className="flex items-end sm:col-span-2 lg:col-span-1">
         <label className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm dark:bg-input/30">
           <input
             type="checkbox"

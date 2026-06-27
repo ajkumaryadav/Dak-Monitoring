@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/layout/admin-shell";
+import { AppToaster } from "@/components/ui/sonner";
 import { syncUserProfile } from "@/features/auth/actions/sync-user";
 import { PERMISSIONS, requirePermission } from "@/lib/auth";
 
@@ -13,5 +14,10 @@ export default async function DashboardLayout({
 
   await syncUserProfile();
 
-  return <AdminShell user={user}>{children}</AdminShell>;
+  return (
+    <>
+      <AdminShell user={user}>{children}</AdminShell>
+      <AppToaster />
+    </>
+  );
 }

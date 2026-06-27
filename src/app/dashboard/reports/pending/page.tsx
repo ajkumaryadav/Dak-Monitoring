@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import Link from "next/link";
 import { AlertTriangle, Clock } from "lucide-react";
 
 import {
@@ -9,38 +9,31 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
-import { getAssignmentUnits } from "@/features/dak/services/get-assignment-units";
-import { getDepartments } from "@/features/dak/services/get-departments";
-import { getDakSources } from "@/features/dak/services/get-dak-sources";
-import { PendingReportFilters } from "@/features/reports/components/pending-report-filters";
+import { PendingReportFiltersPanel } from "@/features/reports/components/pending-report-filters-panel";
 import { PendingReportTable } from "@/features/reports/components/pending-report-table";
+import { ReportExportButtons } from "@/features/reports/components/report-export-buttons";
+import {
+  hasActiveReportFilters,
+  parseReportFilters,
+  type ReportSearchParams,
+} from "@/features/reports/lib/parse-report-filters";
 import { fetchPendingReport } from "@/features/reports/services/pending-report";
+import {
+  canExportReportKind,
+  canExportReports,
+} from "@/lib/auth/report-permissions";
 import {
   isDepartmentDashboardRole,
   PERMISSIONS,
   requirePermission,
 } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
-import type { DakStatus, PriorityLevel } from "@/types";
 
 interface PendingReportPageProps {
-  searchParams: Promise<{
-    department?: string;
-    source?: string;
-    section?: string;
-    priority?: string;
-    status?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    overdue?: string;
-  }>;
+  searchParams: Promise<ReportSearchParams>;
 }
 
-function FiltersSkeleton() {
-  return (
-    <div className="h-24 animate-pulse rounded-xl border border-border/60 bg-muted/30" />
-  );
-}
+export const dynamic = "force-dynamic";
 
 export default async function PendingReportPage({
   searchParams,
@@ -52,26 +45,12 @@ export default async function PendingReportPage({
 
   const params = await searchParams;
   const showDepartmentFilter = !isDepartmentDashboardRole(user.role);
-
-  const filters = {
-    departmentId: params.department,
-    sourceId: params.source,
-    assignmentUnitId: params.section,
-    priority: (params.priority ?? "") as PriorityLevel | "",
-    status: (params.status ?? "") as DakStatus | "",
-    dateFrom: params.dateFrom,
-    dateTo: params.dateTo,
-    overdueOnly: params.overdue === "1",
-  };
-
-  const [rows, departments, sources, sections] = await Promise.all([
-    fetchPendingReport(user, filters),
-    showDepartmentFilter ? getDepartments() : Promise.resolve([]),
-    getDakSources(),
-    getAssignmentUnits("section"),
-  ]);
-
+  const filters = parseReportFilters(params);
+  const filtersActive = hasActiveReportFilters(params);
   const isOverdueView = filters.overdueOnly;
+  const reportKind = isOverdueView ? "overdue" : "pending";
+
+  const rows = await fetchPendingReport(user, filters);
 
   return (
     <div className="space-y-6">
@@ -85,24 +64,42 @@ export default async function PendingReportPage({
         icon={isOverdueView ? AlertTriangle : Clock}
       />
 
-      <Suspense fallback={<FiltersSkeleton />}>
-        <PendingReportFilters
-          departments={departments}
-          sources={sources}
-          sections={sections}
-          showDepartmentFilter={showDepartmentFilter}
-        />
-      </Suspense>
+      <PendingReportFiltersPanel
+        basePath="/dashboard/reports/pending"
+        showDepartmentFilter={showDepartmentFilter}
+      />
+
+      {filtersActive && (
+        <p className="text-sm text-muted-foreground">
+          Filters active ·{" "}
+          <Link
+            href="/dashboard/reports/pending"
+            className="text-primary hover:underline"
+          >
+            Clear filters
+          </Link>
+        </p>
+      )}
 
       <Card className="border-primary/15">
-        <CardHeader>
-          <CardTitle>
-            {isOverdueView ? "Overdue DAK Entries" : "Pending DAK Entries"}
-          </CardTitle>
-          <CardDescription>
-            {rows.length} record{rows.length === 1 ? "" : "s"} matching filters.
-            Excel and PDF export will be added in a future release.
-          </CardDescription>
+        <CardHeader className="gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle>
+              {isOverdueView ? "Overdue DAK Entries" : "Pending DAK Entries"}
+            </CardTitle>
+            <CardDescription>
+              {rows.length} record{rows.length === 1 ? "" : "s"} matching filters.
+            </CardDescription>
+          </div>
+          <ReportExportButtons
+            reportKind={reportKind}
+            filterValues={params}
+            canExport={
+              canExportReports(user.role) &&
+              canExportReportKind(user.role, reportKind)
+            }
+            rowCount={rows.length}
+          />
         </CardHeader>
         <CardContent>
           <PendingReportTable rows={rows} />

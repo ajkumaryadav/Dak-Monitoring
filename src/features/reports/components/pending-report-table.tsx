@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -48,6 +48,11 @@ export function PendingReportTable({
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    setPage(0);
+    setSearch("");
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -186,9 +191,6 @@ export function PendingReportTable({
         <p className="text-xs text-muted-foreground">
           {sorted.length} result{sorted.length === 1 ? "" : "s"} · Page {page + 1}{" "}
           of {totalPages}
-          <span className="ml-2 text-muted-foreground/70">
-            (Export to Excel/PDF coming soon)
-          </span>
         </p>
         <div className="flex gap-2">
           <button
