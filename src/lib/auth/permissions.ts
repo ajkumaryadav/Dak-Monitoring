@@ -12,6 +12,7 @@ export const PERMISSIONS = {
   DEPARTMENT: "department",
   UPDATES: "updates",
   REPORTS: "reports",
+  AUDIT: "audit",
   ESCALATION: "escalation",
   USERS: "users",
 } as const;
@@ -32,6 +33,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/reports/departments": PERMISSIONS.REPORTS,
   "/dashboard/reports/sections": PERMISSIONS.REPORTS,
   "/dashboard/reports": PERMISSIONS.REPORTS,
+  "/dashboard/audit": PERMISSIONS.AUDIT,
   "/users": PERMISSIONS.USERS,
 };
 
@@ -48,12 +50,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.TASKS,
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.REPORTS,
+    PERMISSIONS.AUDIT,
     PERMISSIONS.ESCALATION,
   ],
   district_officer: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_VIEW,
     PERMISSIONS.DAK_UPDATE,
+    PERMISSIONS.AUDIT,
     PERMISSIONS.TASKS,
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.UPDATES,
@@ -62,6 +66,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_VIEW,
     PERMISSIONS.DAK_UPDATE,
+    PERMISSIONS.AUDIT,
     PERMISSIONS.TASKS,
     PERMISSIONS.UPDATES,
   ],

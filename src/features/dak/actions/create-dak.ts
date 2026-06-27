@@ -111,7 +111,8 @@ export async function createDak(
     await logWorkflowAction({
       dakId: inserted.id,
       userId: user.id,
-      action: "DAK created",
+      eventType: "dak_registered",
+      action: "DAK Registered",
       remarks: parsed.data.remarks?.trim() || "Registered by data entry operator",
     });
 
@@ -132,6 +133,7 @@ export async function createDak(
       await logWorkflowAction({
         dakId: inserted.id,
         userId: user.id,
+        eventType: "remarks_added",
         action: "Attachment uploaded",
         remarks: attachment.name,
       });
@@ -196,6 +198,7 @@ export async function createDakFormAction(
   revalidatePath("/dashboard/dak");
   revalidatePath("/dashboard/dak/pending");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/audit");
   revalidatePath(`/dashboard/dak/${result.dakId}`);
   redirect(`/dashboard/dak/${result.dakId}`);
 }

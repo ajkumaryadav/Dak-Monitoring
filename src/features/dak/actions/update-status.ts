@@ -33,6 +33,7 @@ function revalidateDakPaths(dakId: string) {
   revalidatePath("/dashboard/dak/pending");
   revalidatePath("/dashboard/dak/completed");
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/audit");
 }
 
 /** Update DAK workflow status — District/Block Officers (DLO). */
@@ -132,13 +133,30 @@ export async function updateDakStatus(
       };
     }
 
+    const historyEventType =
+      nextStatus === "completed"
+        ? "completed"
+        : nextStatus === "closed"
+          ? "closed"
+          : "status_changed";
+
+    const historyAction =
+      nextStatus === "completed"
+        ? "Completed"
+        : nextStatus === "closed"
+          ? "Closed"
+          : `Status Changed to ${getStatusLabel(nextStatus)}`;
+
+    const historyRemarks =
+      parsed.data.remarks?.trim() ||
+      `Changed from ${getStatusLabel(currentStatus)} to ${getStatusLabel(nextStatus)}`;
+
     await logWorkflowAction({
       dakId: parsed.data.dakId,
       userId: user.id,
-      action: `Marked ${getStatusLabel(nextStatus)}`,
-      remarks:
-        parsed.data.remarks?.trim() ||
-        `Changed from ${getStatusLabel(currentStatus)} to ${getStatusLabel(nextStatus)}`,
+      eventType: historyEventType,
+      action: historyAction,
+      remarks: historyRemarks,
       fromStatus: currentStatus,
       toStatus: nextStatus,
     });

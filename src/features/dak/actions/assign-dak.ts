@@ -31,6 +31,7 @@ function revalidateDakPaths(dakId: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/reports");
   revalidatePath("/dashboard/reports/pending");
+  revalidatePath("/dashboard/audit");
 }
 
 function parseAssignFormData(formData: FormData): unknown {
@@ -175,15 +176,27 @@ export async function assignDak(
       };
     }
 
+    const historyEventType =
+      parsed.data.assignmentType === "section"
+        ? "section_transfer"
+        : isReassign
+          ? "reassigned"
+          : "assigned";
+
     await logWorkflowAction({
       dakId: parsed.data.dakId,
       userId: user.id,
+      eventType: historyEventType,
       action: logLabel,
       remarks:
         parsed.data.remarks?.trim() ||
         `Allocation for ${existing.dak_number}`,
       fromStatus: existing.status as string,
       toStatus: nextStatus,
+      metadata: {
+        assignment_type: parsed.data.assignmentType,
+        is_reassign: isReassign,
+      },
     });
 
     revalidateDakPaths(parsed.data.dakId);

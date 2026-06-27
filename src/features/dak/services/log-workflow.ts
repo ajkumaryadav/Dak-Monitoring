@@ -1,5 +1,5 @@
-import { createAdminClient } from "@/lib/supabase/admin";
-import type { DakStatus } from "@/types";
+import { recordHistory } from "@/features/audit/services/dak-history";
+import type { DakHistoryEventType } from "@/features/audit/lib/history-events";
 
 interface LogWorkflowParams {
   dakId: string;
@@ -8,9 +8,11 @@ interface LogWorkflowParams {
   remarks?: string | null;
   fromStatus?: string | null;
   toStatus?: string | null;
+  eventType?: DakHistoryEventType;
+  metadata?: Record<string, unknown>;
 }
 
-/** Persist a workflow timeline entry for audit and display. */
+/** Persist a workflow timeline entry — delegates to dak_history audit table. */
 export async function logWorkflowAction({
   dakId,
   userId,
@@ -18,33 +20,17 @@ export async function logWorkflowAction({
   remarks,
   fromStatus,
   toStatus,
+  eventType = "status_changed",
+  metadata,
 }: LogWorkflowParams): Promise<{ success: boolean; message?: string }> {
-  const supabase = createAdminClient();
-
-  const payload: Record<string, unknown> = {
-    dak_id: dakId,
-    created_by: userId,
-    action,
-    remarks: remarks?.trim() || null,
-  };
-
-  if (fromStatus) {
-    payload.from_status = fromStatus;
-  }
-
-  if (toStatus) {
-    payload.to_status = toStatus;
-  }
-
-  const { error } = await supabase.from("workflow_logs").insert(payload);
-
-  if (error) {
-    console.error("[logWorkflowAction]", error);
-    return {
-      success: false,
-      message: error.message ?? "Failed to record workflow log.",
-    };
-  }
-
-  return { success: true };
+  return recordHistory({
+    dakId,
+    performedBy: userId,
+    eventType,
+    actionLabel: action,
+    remarks,
+    fromStatus,
+    toStatus,
+    metadata,
+  });
 }

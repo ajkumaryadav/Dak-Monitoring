@@ -1,6 +1,9 @@
-import { Landmark, Sparkles } from "lucide-react";
+import { Landmark, Sparkles, History } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { RecentActivityWidget } from "@/features/audit/components/recent-activity-widget";
+import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
+import { DashboardSection } from "@/features/dashboard/components/dashboard-section";
 import { CollectorStatCards } from "@/features/dashboard/components/collector-stat-cards";
 import { DashboardChartsPanel } from "@/features/dashboard/components/dashboard-charts-panel";
 import { DashboardInsightsPanel } from "@/features/dashboard/components/dashboard-insights-panel";
@@ -16,9 +19,10 @@ import type { SessionUser } from "@/types";
 interface DashboardViewProps {
   user: SessionUser;
   analytics: DashboardAnalytics;
+  recentActivity: DakHistoryEntry[];
 }
 
-export function DashboardView({ user, analytics }: DashboardViewProps) {
+export function DashboardView({ user, analytics, recentActivity }: DashboardViewProps) {
   const isDepartmentView =
     analytics.variant === "department" && isDepartmentDashboardRole(user.role);
 
@@ -74,6 +78,14 @@ export function DashboardView({ user, analytics }: DashboardViewProps) {
             recentTitle="Recent Department DAK"
             recentDescription="Latest items assigned to your department"
           />
+          <DashboardSection
+            title="Recent Activity"
+            description="Latest workflow actions in your department"
+            icon={History}
+            variant="neutral"
+          >
+            <RecentActivityWidget entries={recentActivity} />
+          </DashboardSection>
         </>
       ) : (
         <>
@@ -85,6 +97,14 @@ export function DashboardView({ user, analytics }: DashboardViewProps) {
             recentDak={analytics.recentDak}
             departmentPerformance={analytics.departmentPerformance}
           />
+          <DashboardSection
+            title="Recent Activity"
+            description="Latest DAK registrations, assignments, and status changes"
+            icon={History}
+            variant="neutral"
+          >
+            <RecentActivityWidget entries={recentActivity} />
+          </DashboardSection>
           <PendingDepartmentsTable rows={analytics.pendingDepartments} />
           <DashboardInsightsPanel
             stats={analytics.stats}

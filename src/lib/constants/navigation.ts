@@ -5,6 +5,7 @@ import {
   Clock,
   FilePlus2,
   FileText,
+  History,
   LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
@@ -71,6 +72,12 @@ export const mainNavItems: NavItem[] = [
     icon: BarChart3,
     permission: PERMISSIONS.REPORTS,
   },
+  {
+    title: "Audit History",
+    href: "/dashboard/audit",
+    icon: History,
+    permission: PERMISSIONS.AUDIT,
+  },
 ];
 
 /** Sidebar sections with grouped navigation labels. */
@@ -85,7 +92,7 @@ export const mainNavGroups: NavGroup[] = [
   },
   {
     label: "Analytics",
-    items: [mainNavItems[6]],
+    items: mainNavItems.slice(6),
   },
 ];
 

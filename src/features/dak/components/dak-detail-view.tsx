@@ -10,15 +10,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DakHistoryTimeline } from "@/features/audit/components/dak-history-timeline";
+import {
+  calculatePendingDays,
+  formatPendingDays,
+} from "@/features/audit/lib/pending-days";
+import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
 import { AssignDakForm } from "@/features/dak/components/assign-dak-form";
 import { AttachmentCard } from "@/features/dak/components/attachment-card";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
 import { DakStatusForm } from "@/features/dak/components/dak-status-form";
-import { DakTimeline } from "@/features/dak/components/dak-timeline";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
-import {
-  getAllowedTransitions,
-} from "@/features/dak/lib/workflow";
+import { getAllowedTransitions } from "@/features/dak/lib/workflow";
 import {
   formatDakDate,
   formatDakStatus,
@@ -33,15 +36,12 @@ import {
 } from "@/features/dak/lib/dak-display";
 import type { AssignmentUnitOption } from "@/features/dak/services/get-assignment-units";
 import type { DepartmentOfficerOption } from "@/features/dak/services/get-department-officers";
-import type {
-  DakDetail,
-  DakTimelineEntry,
-} from "@/features/dak/services/get-dak-by-id";
+import type { DakDetail } from "@/features/dak/services/get-dak-by-id";
 import { cn } from "@/lib/utils";
 
 interface DakDetailViewProps {
   dak: DakDetail;
-  timeline: DakTimelineEntry[];
+  timeline: DakHistoryEntry[];
   attachments: DakAttachmentWithUrl[];
   departmentOfficers: DepartmentOfficerOption[];
   sections: AssignmentUnitOption[];
@@ -68,19 +68,25 @@ function DetailRow({ label, children }: DetailRowProps) {
 
 function buildTimelineEntries(
   dak: DakDetail,
-  logs: DakTimelineEntry[]
-): DakTimelineEntry[] {
+  logs: DakHistoryEntry[]
+): DakHistoryEntry[] {
   if (logs.length > 0) {
     return logs;
   }
 
   return [
     {
-      id: "registered",
-      action: "DAK created",
+      id: "registered-fallback",
+      dakId: dak.id,
+      eventType: "dak_registered",
+      actionLabel: "DAK Registered",
       remarks: dak.description,
-      created_at: dak.created_at,
-      actor_name: null,
+      fromStatus: null,
+      toStatus: null,
+      metadata: {},
+      createdAt: dak.created_at,
+      performerName: null,
+      performerRole: null,
     },
   ];
 }
@@ -97,7 +103,13 @@ export function DakDetailView({
 }: DakDetailViewProps) {
   const entries = buildTimelineEntries(dak, timeline);
   const allowedTransitions = getAllowedTransitions(dak.status);
-  const showAssignFormPanel = showAssignForm;
+  const pendingDays = calculatePendingDays({
+    receivedDate: dak.received_date,
+    createdAt: dak.created_at,
+    status: dak.status,
+    disposedDate: dak.disposed_date,
+    closedDate: dak.closed_date,
+  });
 
   return (
     <div className="space-y-6">
@@ -112,6 +124,9 @@ export function DakDetailView({
           <ArrowLeft className="size-4" />
           Back to All DAK
         </Link>
+        <Badge variant="secondary" className="w-fit capitalize">
+          {formatPendingDays(pendingDays)}
+        </Badge>
       </div>
 
       <DakPageHeader
@@ -125,7 +140,7 @@ export function DakDetailView({
           <CardHeader className="border-b border-border/60">
             <CardTitle>DAK Details</CardTitle>
             <CardDescription>
-              Current status, assignment, and correspondence information
+              Source, assignment, priority, status, and correspondence information
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -143,26 +158,24 @@ export function DakDetailView({
                   {formatDakStatus(dak.status)}
                 </Badge>
               </DetailRow>
+              <DetailRow label="Pending Days">
+                <span className="font-medium">{pendingDays} day{pendingDays === 1 ? "" : "s"}</span>
+              </DetailRow>
               <DetailRow label="DAK Source">
                 {getSourceName(dak.dak_sources)}
               </DetailRow>
               <DetailRow label="Assignment Type">
                 {formatAssignmentType(dak.assignment_type)}
               </DetailRow>
-              <DetailRow label="Assigned Department">
+              <DetailRow label="Department">
                 {getDepartmentName(dak.departments)}
               </DetailRow>
-              <DetailRow label="Assigned Section">
+              <DetailRow label="Section">
                 {getUnitName(dak.assignment_units)}
               </DetailRow>
               <DetailRow label="Assigned Officer">
                 {getOfficerName(dak.assigned_officer)}
               </DetailRow>
-              <DetailRow label="Due Date">
-                {formatDakDate(dak.due_date)}
-              </DetailRow>
-              <DetailRow label="Subject">{dak.subject}</DetailRow>
-              <DetailRow label="Sender">{dak.sender}</DetailRow>
               <DetailRow label="Priority">
                 <Badge
                   variant="secondary"
@@ -175,7 +188,15 @@ export function DakDetailView({
                   {dak.priority}
                 </Badge>
               </DetailRow>
-              <DetailRow label="Remarks">
+              <DetailRow label="Received Date">
+                {formatDakDate(dak.received_date)}
+              </DetailRow>
+              <DetailRow label="Due Date">
+                {formatDakDate(dak.due_date)}
+              </DetailRow>
+              <DetailRow label="Subject">{dak.subject}</DetailRow>
+              <DetailRow label="Sender">{dak.sender}</DetailRow>
+              <DetailRow label="Registration Remarks">
                 {dak.description?.trim() ? (
                   <span className="whitespace-pre-wrap">{dak.description}</span>
                 ) : (
@@ -187,7 +208,7 @@ export function DakDetailView({
         </Card>
 
         <div className="space-y-5 lg:col-span-2">
-          {showAssignFormPanel && (
+          {showAssignForm && (
             <AssignDakForm
               dakId={dak.id}
               departmentOfficers={departmentOfficers}
@@ -204,7 +225,7 @@ export function DakDetailView({
             />
           )}
 
-          <DakTimeline entries={entries} />
+          <DakHistoryTimeline entries={entries} />
         </div>
       </div>
 
