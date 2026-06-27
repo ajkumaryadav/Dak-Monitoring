@@ -97,3 +97,6 @@ BEGIN
     );
   END IF;
 END $$;
+
+-- Refresh PostgREST schema cache so the API sees dak_history immediately
+NOTIFY pgrst, 'reload schema';

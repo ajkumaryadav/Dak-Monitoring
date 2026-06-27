@@ -54,6 +54,41 @@ const HISTORY_SELECT = `
   dak:dak_entries!dak_history_dak_id_fkey(dak_number, subject, department_id)
 `;
 
+const MIGRATION_HINT =
+  "Run supabase/migrations/000010_dak_history.sql in the Supabase SQL Editor (Dashboard → SQL → New query), then wait a few seconds and refresh the app.";
+
+let historyTableMissingLogged = false;
+
+function isMissingHistoryTableError(error: {
+  message?: string;
+  code?: string;
+}): boolean {
+  const message = error.message ?? "";
+  return (
+    error.code === "PGRST205" ||
+    message.includes("dak_history") ||
+    message.includes("schema cache")
+  );
+}
+
+function logHistoryTableMissing(context: string): void {
+  if (historyTableMissingLogged) {
+    return;
+  }
+
+  historyTableMissingLogged = true;
+  console.warn(`[${context}] dak_history table is not available. ${MIGRATION_HINT}`);
+}
+
+function logHistoryError(context: string, error: { message?: string; code?: string }): void {
+  if (isMissingHistoryTableError(error)) {
+    logHistoryTableMissing(context);
+    return;
+  }
+
+  console.error(`[${context}]`, error.message ?? error);
+}
+
 function mapHistoryRow(row: Record<string, unknown>): DakHistoryEntry {
   const performer = row.performer;
   const performerData = Array.isArray(performer) ? performer[0] : performer;
@@ -103,10 +138,12 @@ export async function recordHistory(
   const { error } = await supabase.from("dak_history").insert(payload);
 
   if (error) {
-    console.error("[recordHistory]", error);
+    logHistoryError("recordHistory", error);
     return {
       success: false,
-      message: error.message ?? "Failed to record audit history.",
+      message: isMissingHistoryTableError(error)
+        ? "Audit history table is not set up. Ask an administrator to run migration 000010."
+        : (error.message ?? "Failed to record audit history."),
     };
   }
 
@@ -124,7 +161,7 @@ export async function getDakHistory(dakId: string): Promise<DakHistoryEntry[]> {
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("[getDakHistory]", error.message);
+    logHistoryError("getDakHistory", error);
     return [];
   }
 
@@ -167,7 +204,7 @@ export async function getRecentActivity(
   const { data, error } = await query;
 
   if (error) {
-    console.error("[getRecentActivity]", error.message);
+    logHistoryError("getRecentActivity", error);
     return [];
   }
 
@@ -223,7 +260,7 @@ export async function getAuditLog(
   const { data, error } = await query;
 
   if (error) {
-    console.error("[getAuditLog]", error.message);
+    logHistoryError("getAuditLog", error);
     return [];
   }
 
