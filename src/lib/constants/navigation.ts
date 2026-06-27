@@ -8,6 +8,7 @@ import {
   FileText,
   History,
   LayoutDashboard,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -85,6 +86,12 @@ export const mainNavItems: NavItem[] = [
     icon: Bell,
     permission: PERMISSIONS.NOTIFICATIONS,
   },
+  {
+    title: "User Management",
+    href: "/dashboard/admin/users",
+    icon: Users,
+    permission: PERMISSIONS.USERS,
+  },
 ];
 
 /** Sidebar sections with grouped navigation labels. */
@@ -99,7 +106,11 @@ export const mainNavGroups: NavGroup[] = [
   },
   {
     label: "Analytics",
-    items: mainNavItems.slice(6),
+    items: mainNavItems.slice(6, 9),
+  },
+  {
+    label: "Administration",
+    items: mainNavItems.slice(9),
   },
 ];
 

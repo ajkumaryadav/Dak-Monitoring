@@ -37,7 +37,7 @@ export default async function CompletedDakPage({
   const departmentId =
     user && isDepartmentDashboardRole(user.role) ? user.departmentId : undefined;
 
-  const showDepartmentFilter = !isDepartmentDashboardRole(user?.role ?? "clerk");
+  const showDepartmentFilter = !isDepartmentDashboardRole(user?.role ?? "dak_operator");
 
   const dakEntries = await getFilteredDakList(
     "completed",

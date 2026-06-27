@@ -13,7 +13,7 @@ import {
 } from "@/features/dak/schemas/status-schema";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { notifyDakStatusChange } from "@/features/notifications/services/notify-dak-event";
-import { hasPermission, PERMISSIONS } from "@/lib/auth";
+import { hasPermission, isDistrictAdminRole, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 import type { DakStatus } from "@/types";
@@ -101,7 +101,8 @@ export async function updateDakStatus(
       user.departmentId &&
       existing.department_id &&
       user.departmentId !== existing.department_id &&
-      user.role !== "collector"
+      user.role !== "collector" &&
+      user.role !== "acp"
     ) {
       return {
         success: false,

@@ -5,7 +5,11 @@ export type NotificationType =
   | "dak_reassigned"
   | "dak_completed"
   | "status_updated"
-  | "dak_overdue";
+  | "dak_overdue"
+  | "user_created"
+  | "password_reset"
+  | "user_disabled"
+  | "user_enabled";
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   dak_created: "New DAK Registered",
@@ -14,6 +18,10 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   dak_completed: "DAK Completed",
   status_updated: "Status Updated",
   dak_overdue: "Overdue DAK",
+  user_created: "User Created",
+  password_reset: "Password Reset",
+  user_disabled: "User Disabled",
+  user_enabled: "User Enabled",
 };
 
 /** Supabase Realtime channel name — subscribe per user in future. */

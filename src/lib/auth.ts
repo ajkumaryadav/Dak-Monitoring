@@ -14,10 +14,15 @@ export {
   ROLE_PERMISSIONS,
   ROUTE_PERMISSIONS,
   canAccessRoute,
+  canManageUsers,
   getPermissionsForRole,
   hasMinimumRole,
   hasPermission,
   isDepartmentDashboardRole,
+  isDistrictAdminRole,
+  isOperatorDashboardRole,
+  isCollectorDashboardRole,
+  isSectionDashboardRole,
 } from "@/lib/auth/permissions";
 export type { Permission } from "@/lib/auth/permissions";
 

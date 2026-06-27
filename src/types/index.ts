@@ -1,11 +1,11 @@
-/** Administrative roles defined for the DAK monitoring system. */
+/** Administrative roles for Stage 14 user management. */
 export type UserRole =
   | "collector"
+  | "acp"
   | "adm"
-  | "district_officer"
-  | "block_officer"
-  | "clerk"
-  | "data_entry_operator";
+  | "dak_operator"
+  | "department_user"
+  | "section_user";
 
 /** DAK workflow status values (DEO → Assign → DLO → Complete). */
 export type DakStatus =
@@ -45,5 +45,9 @@ export interface SessionUser {
   roleSlug: string;
   designation: string;
   departmentId: string | null;
+  sectionId: string | null;
+  mobile: string | null;
+  employeeCode: string | null;
+  isActive: boolean;
   permissions: string[];
 }

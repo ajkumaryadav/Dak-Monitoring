@@ -9,9 +9,12 @@ export interface DepartmentOfficerOption {
 }
 
 const OFFICER_ROLES = [
+  "department_user",
+  "section_user",
+  "adm",
+  "dak_operator",
   "district_officer",
   "block_officer",
-  "adm",
   "clerk",
 ] as const;
 

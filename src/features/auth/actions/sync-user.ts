@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
-const DEFAULT_ROLE_SLUG = "data_entry_operator";
+const DEFAULT_ROLE_SLUG = "dak_operator";
 
 /**
  * Sync auth.users → public.users after login.
@@ -57,6 +57,7 @@ export async function syncUserProfile(): Promise<void> {
       name: displayName,
       role_id: roleId,
       is_active: true,
+      last_login: new Date().toISOString(),
     },
     { onConflict: "id" }
   );

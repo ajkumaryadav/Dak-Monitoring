@@ -8,7 +8,7 @@ import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { DakStatus } from "@/types";
 
-const DISTRICT_WIDE_ROLES = ["collector", "adm"] as const;
+const DISTRICT_WIDE_ROLES = ["collector", "acp", "adm"] as const;
 
 async function getDistrictWideUserIds(): Promise<string[]> {
   const supabase = createAdminClient();

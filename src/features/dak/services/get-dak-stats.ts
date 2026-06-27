@@ -64,7 +64,25 @@ export interface DepartmentDashboardStats {
   completed: number;
 }
 
-export type DashboardStats = CollectorDashboardStats | DepartmentDashboardStats;
+export interface OperatorDashboardStats {
+  variant: "operator";
+  registered: number;
+  todayEntries: number;
+  returned: number;
+}
+
+export interface SectionDashboardStats {
+  variant: "section";
+  assigned: number;
+  pendingActions: number;
+  completed: number;
+}
+
+export type DashboardStats =
+  | CollectorDashboardStats
+  | DepartmentDashboardStats
+  | SectionDashboardStats
+  | OperatorDashboardStats;
 
 const PENDING_DB_STATUSES = [
   "received",

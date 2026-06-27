@@ -9,7 +9,12 @@ export type ReportExportKind =
 
 /** Whether the role may export reports at all. */
 export function canExportReports(role: UserRole): boolean {
-  return role === "collector" || role === "adm" || role === "district_officer";
+  return (
+    role === "collector" ||
+    role === "acp" ||
+    role === "adm" ||
+    role === "department_user"
+  );
 }
 
 /** Whether the role may export a specific report kind. */
@@ -17,11 +22,11 @@ export function canExportReportKind(
   role: UserRole,
   kind: ReportExportKind
 ): boolean {
-  if (role === "data_entry_operator" || role === "clerk" || role === "block_officer") {
+  if (role === "dak_operator" || role === "section_user") {
     return false;
   }
 
-  if (role === "collector") {
+  if (role === "collector" || role === "acp") {
     return true;
   }
 
@@ -31,7 +36,7 @@ export function canExportReportKind(
     );
   }
 
-  if (role === "district_officer") {
+  if (role === "department_user") {
     return ["pending", "overdue", "department"].includes(kind);
   }
 

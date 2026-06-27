@@ -12,7 +12,7 @@ import {
   canAssignStatus,
   canReassignStatus,
 } from "@/features/dak/lib/workflow";
-import { hasPermission, PERMISSIONS, requirePermission } from "@/lib/auth";
+import { hasPermission, isDistrictAdminRole, PERMISSIONS, requirePermission } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 
 interface DakDetailPageProps {
@@ -45,7 +45,7 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
 
   const canReassign =
     !!user &&
-    user.role === "collector" &&
+    isDistrictAdminRole(user.role) &&
     hasPermission(user.role, PERMISSIONS.DAK_ASSIGN) &&
     canReassignStatus(dak.status);
 

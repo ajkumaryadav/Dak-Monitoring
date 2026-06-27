@@ -8,6 +8,10 @@ import {
   CheckCircle2,
   ClipboardList,
   FilePlus2,
+  KeyRound,
+  UserCheck,
+  UserPlus,
+  UserX,
 } from "lucide-react";
 
 import {
@@ -27,6 +31,10 @@ const typeIcons: Record<NotificationType, typeof Bell> = {
   dak_completed: CheckCircle2,
   status_updated: Bell,
   dak_overdue: AlertTriangle,
+  user_created: UserPlus,
+  password_reset: KeyRound,
+  user_disabled: UserX,
+  user_enabled: UserCheck,
 };
 
 interface NotificationListProps {
@@ -71,9 +79,19 @@ export function NotificationList({
         {notifications.map((notification) => {
           const Icon = typeIcons[notification.type] ?? Bell;
           const isUnread = !notification.readAt;
+          const targetUserId =
+            typeof notification.metadata?.target_user_id === "string"
+              ? notification.metadata.target_user_id
+              : null;
+          const isUserNotification = notification.type.startsWith("user_") ||
+            notification.type === "password_reset";
           const href = notification.dakId
             ? `/dashboard/dak/${notification.dakId}`
-            : "/dashboard/notifications";
+            : targetUserId
+              ? `/dashboard/admin/users/${targetUserId}`
+              : isUserNotification
+                ? "/dashboard/admin/users"
+                : "/dashboard/notifications";
 
           return (
             <li key={notification.id}>

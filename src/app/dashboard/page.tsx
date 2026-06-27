@@ -10,7 +10,13 @@ import {
   getImmediateDakEntries,
 } from "@/features/notifications/services/notify-dak-event";
 import { fetchDashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
-import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
+import { getUserStats } from "@/features/users/services/get-users";
+import {
+  isCollectorDashboardRole,
+  isDepartmentDashboardRole,
+  isOperatorDashboardRole,
+  isSectionDashboardRole,
+} from "@/lib/auth/permissions";
 import { getSessionUser } from "@/lib/session";
 
 export default async function DashboardPage() {
@@ -20,10 +26,16 @@ export default async function DashboardPage() {
     return null;
   }
 
+  const isOperator = isOperatorDashboardRole(user.role);
+  const isDepartment = isDepartmentDashboardRole(user.role);
+  const isCollector = isCollectorDashboardRole(user.role);
+
   const departmentScope =
-    isDepartmentDashboardRole(user.role) && user.departmentId
-      ? user.departmentId
-      : undefined;
+    isDepartment && user.departmentId ? user.departmentId : undefined;
+
+  const showUserStats = isCollectorDashboardRole(user.role);
+  const showDistrictAlerts = isCollector;
+  const showScopedAlerts = isDepartment;
 
   const [
     analytics,
@@ -33,14 +45,22 @@ export default async function DashboardPage() {
     overdueEntries,
     highPriorityEntries,
     immediateEntries,
+    userStats,
   ] = await Promise.all([
     fetchDashboardAnalytics(user),
-    getRecentActivity(user, 8),
+    isOperator ? Promise.resolve([]) : getRecentActivity(user, 8),
     getUserNotifications(user, { limit: 8 }),
     getUnreadNotificationCount(user),
-    getOverdueDakEntries(departmentScope),
-    getHighPriorityDakEntries(departmentScope),
-    getImmediateDakEntries(departmentScope),
+    showDistrictAlerts || showScopedAlerts
+      ? getOverdueDakEntries(departmentScope)
+      : Promise.resolve([]),
+    showDistrictAlerts || showScopedAlerts
+      ? getHighPriorityDakEntries(departmentScope)
+      : Promise.resolve([]),
+    showDistrictAlerts || showScopedAlerts
+      ? getImmediateDakEntries(departmentScope)
+      : Promise.resolve([]),
+    showUserStats ? getUserStats() : Promise.resolve(null),
   ]);
 
   return (
@@ -53,7 +73,7 @@ export default async function DashboardPage() {
       overdueEntries={overdueEntries}
       highPriorityEntries={highPriorityEntries}
       immediateEntries={immediateEntries}
+      userStats={userStats}
     />
   );
 }
-

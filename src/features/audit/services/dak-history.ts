@@ -2,7 +2,7 @@ import {
   getHistoryEventLabel,
   type DakHistoryEventType,
 } from "@/features/audit/lib/history-events";
-import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
+import { isDepartmentDashboardRole, isOperatorDashboardRole, isSectionDashboardRole } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SessionUser } from "@/types";
 
@@ -181,7 +181,35 @@ export async function getRecentActivity(
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  if (isDepartmentDashboardRole(user.role) && user.departmentId) {
+  if (isOperatorDashboardRole(user.role)) {
+    const { data: dakIds, error: dakError } = await supabase
+      .from("dak_entries")
+      .select("id")
+      .eq("created_by", user.id);
+
+    if (dakError) {
+      console.error("[getRecentActivity]", dakError.message);
+      return [];
+    }
+
+    const ids = (dakIds ?? []).map((row) => row.id as string);
+    if (!ids.length) return [];
+    query = query.in("dak_id", ids);
+  } else if (isSectionDashboardRole(user.role) && user.sectionId) {
+    const { data: dakIds, error: dakError } = await supabase
+      .from("dak_entries")
+      .select("id")
+      .eq("assignment_unit_id", user.sectionId);
+
+    if (dakError) {
+      console.error("[getRecentActivity]", dakError.message);
+      return [];
+    }
+
+    const ids = (dakIds ?? []).map((row) => row.id as string);
+    if (!ids.length) return [];
+    query = query.in("dak_id", ids);
+  } else if (isDepartmentDashboardRole(user.role) && user.departmentId) {
     const { data: dakIds, error: dakError } = await supabase
       .from("dak_entries")
       .select("id")

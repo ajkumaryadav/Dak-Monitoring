@@ -36,15 +36,19 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/reports": PERMISSIONS.REPORTS,
   "/dashboard/audit": PERMISSIONS.AUDIT,
   "/dashboard/notifications": PERMISSIONS.NOTIFICATIONS,
-  "/users": PERMISSIONS.USERS,
+  "/dashboard/admin/users": PERMISSIONS.USERS,
 };
+
+/** Collector and ACP — equal district-wide privileges. */
+export const DISTRICT_ADMIN_ROLES: readonly UserRole[] = ["collector", "acp"];
 
 /**
  * Role → permissions map.
- * DEO: create only | Collector/ADM: assign | DLO (district_officer): status updates
+ * ACP has equal privileges as Collector.
  */
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
   collector: [PERMISSIONS.ALL],
+  acp: [PERMISSIONS.ALL],
   adm: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_VIEW,
@@ -56,7 +60,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.NOTIFICATIONS,
     PERMISSIONS.ESCALATION,
   ],
-  district_officer: [
+  dak_operator: [
+    PERMISSIONS.DASHBOARD,
+    PERMISSIONS.DAK_ENTRY,
+    PERMISSIONS.DAK_VIEW,
+    PERMISSIONS.NOTIFICATIONS,
+  ],
+  department_user: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_VIEW,
     PERMISSIONS.DAK_UPDATE,
@@ -66,43 +76,42 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.UPDATES,
   ],
-  block_officer: [
+  section_user: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_VIEW,
     PERMISSIONS.DAK_UPDATE,
-    PERMISSIONS.AUDIT,
     PERMISSIONS.NOTIFICATIONS,
     PERMISSIONS.TASKS,
     PERMISSIONS.UPDATES,
   ],
-  clerk: [
-    PERMISSIONS.DASHBOARD,
-    PERMISSIONS.DAK_VIEW,
-    PERMISSIONS.TASKS,
-    PERMISSIONS.NOTIFICATIONS,
-  ],
-  data_entry_operator: [
-    PERMISSIONS.DASHBOARD,
-    PERMISSIONS.DAK_ENTRY,
-    PERMISSIONS.DAK_VIEW,
-    PERMISSIONS.NOTIFICATIONS,
-  ],
 };
+
+/** Roles that see operator-scoped dashboard (own registrations only). */
+export const OPERATOR_DASHBOARD_ROLES: readonly UserRole[] = ["dak_operator"];
+
+/** Roles that see full district dashboard (analytics, reports widgets). */
+export const COLLECTOR_DASHBOARD_ROLES: readonly UserRole[] = [
+  "collector",
+  "acp",
+  "adm",
+];
 
 /** Roles that see department-scoped dashboard metrics. */
 export const DEPARTMENT_DASHBOARD_ROLES: readonly UserRole[] = [
-  "district_officer",
-  "block_officer",
+  "department_user",
 ];
+
+/** Roles that see section-scoped views. */
+export const SECTION_DASHBOARD_ROLES: readonly UserRole[] = ["section_user"];
 
 /** Role hierarchy — lower number = higher authority. */
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
   collector: 1,
+  acp: 1,
   adm: 2,
-  district_officer: 3,
-  block_officer: 4,
-  clerk: 5,
-  data_entry_operator: 6,
+  department_user: 3,
+  section_user: 4,
+  dak_operator: 5,
 };
 
 export function getPermissionsForRole(role: UserRole): readonly Permission[] {
@@ -137,4 +146,26 @@ export function hasMinimumRole(userRole: UserRole, minimumRole: UserRole): boole
 
 export function isDepartmentDashboardRole(role: UserRole): boolean {
   return DEPARTMENT_DASHBOARD_ROLES.includes(role);
+}
+
+export function isSectionDashboardRole(role: UserRole): boolean {
+  return SECTION_DASHBOARD_ROLES.includes(role);
+}
+
+export function isOperatorDashboardRole(role: UserRole): boolean {
+  return OPERATOR_DASHBOARD_ROLES.includes(role);
+}
+
+export function isCollectorDashboardRole(role: UserRole): boolean {
+  return COLLECTOR_DASHBOARD_ROLES.includes(role);
+}
+
+/** Collector and ACP can manage users. */
+export function canManageUsers(role: UserRole): boolean {
+  return DISTRICT_ADMIN_ROLES.includes(role);
+}
+
+/** Collector or ACP — district-wide admin actions (assign, reassign). */
+export function isDistrictAdminRole(role: UserRole): boolean {
+  return DISTRICT_ADMIN_ROLES.includes(role);
 }

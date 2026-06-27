@@ -4,20 +4,25 @@ import { getPermissionsForRole } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import type { SessionUser, UserRole } from "@/types";
 
+/** Map DB role slugs to canonical app roles (includes legacy aliases). */
 const roleSlugMap: Record<string, UserRole> = {
   collector: "collector",
+  acp: "acp",
   adm: "adm",
-  district_officer: "district_officer",
-  block_officer: "block_officer",
-  clerk: "clerk",
-  data_entry_operator: "data_entry_operator",
+  dak_operator: "dak_operator",
+  department_user: "department_user",
+  section_user: "section_user",
+  district_officer: "department_user",
+  block_officer: "department_user",
+  clerk: "department_user",
+  data_entry_operator: "dak_operator",
 };
 
 function mapRoleSlug(slug: string | undefined): UserRole {
   if (slug && slug in roleSlugMap) {
     return roleSlugMap[slug];
   }
-  return "data_entry_operator";
+  return "dak_operator";
 }
 
 /** Load the authenticated user profile for the admin shell. */
@@ -34,7 +39,9 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("name, email, designation, role_id, department_id, roles(slug, name)")
+    .select(
+      "name, email, designation, role_id, department_id, section_id, mobile, employee_code, is_active, roles(slug, name)"
+    )
     .eq("id", user.id)
     .maybeSingle();
 
@@ -50,6 +57,10 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     roleSlug: roleData?.slug ?? role,
     designation: profile?.designation ?? roleData?.name ?? "Officer",
     departmentId: (profile?.department_id as string | null) ?? null,
+    sectionId: (profile?.section_id as string | null) ?? null,
+    mobile: (profile?.mobile as string | null) ?? null,
+    employeeCode: (profile?.employee_code as string | null) ?? null,
+    isActive: profile?.is_active !== false,
     permissions: [...getPermissionsForRole(role)],
   };
 }

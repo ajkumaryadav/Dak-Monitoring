@@ -10,7 +10,7 @@ import { canAssignStatus, canReassignStatus } from "@/features/dak/lib/workflow"
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { notifyDakAssignment } from "@/features/notifications/services/notify-dak-event";
 import { getOfficerIdForDepartment } from "@/features/dak/services/get-department-officers";
-import { hasPermission, PERMISSIONS } from "@/lib/auth";
+import { hasPermission, isDistrictAdminRole, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 
@@ -100,7 +100,7 @@ export async function assignDak(
 
     if (!canAssignStatus(existing.status as string)) {
       const isCollectorReassign =
-        user.role === "collector" &&
+        isDistrictAdminRole(user.role) &&
         canReassignStatus(existing.status as string);
 
       if (!isCollectorReassign) {

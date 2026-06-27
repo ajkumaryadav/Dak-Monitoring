@@ -8,7 +8,12 @@ import {
 } from "@/features/dak/lib/workflow";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { DAK_SOURCE_WIDGETS } from "@/lib/constants/dak-sources";
-import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
+import {
+  isCollectorDashboardRole,
+  isDepartmentDashboardRole,
+  isOperatorDashboardRole,
+  isSectionDashboardRole,
+} from "@/lib/auth/permissions";
 import type { SessionUser } from "@/types";
 import type { AssignmentType, DakStatus, PriorityLevel } from "@/types";
 
@@ -46,6 +51,18 @@ export interface DepartmentDashboardStatSummary {
   assigned: number;
   pendingActions: number;
   overdue: number;
+  completed: number;
+}
+
+export interface OperatorDashboardStatSummary {
+  registered: number;
+  todayEntries: number;
+  returned: number;
+}
+
+export interface SectionDashboardStatSummary {
+  assigned: number;
+  pendingActions: number;
   completed: number;
 }
 
@@ -106,7 +123,26 @@ export interface DepartmentDashboardData {
   statusChart: ChartCountRow[];
 }
 
-export type DashboardAnalytics = CollectorDashboardData | DepartmentDashboardData;
+export interface SectionDashboardData {
+  variant: "section";
+  sectionName: string;
+  stats: SectionDashboardStatSummary;
+  recentDak: RecentDakRow[];
+  priorityChart: ChartCountRow[];
+  statusChart: ChartCountRow[];
+}
+
+export interface OperatorDashboardData {
+  variant: "operator";
+  stats: OperatorDashboardStatSummary;
+  recentDak: RecentDakRow[];
+}
+
+export type DashboardAnalytics =
+  | CollectorDashboardData
+  | DepartmentDashboardData
+  | SectionDashboardData
+  | OperatorDashboardData;
 
 type RawEntry = {
   id: string;
@@ -319,17 +355,29 @@ function buildSourceChart(entries: RawEntry[]): ChartCountRow[] {
 /** Fetch DAK rows for dashboard analytics with join fallback. */
 async function fetchDashboardEntries(
   supabase: ReturnType<typeof createAdminClient>,
-  departmentId?: string | null
+  scope?: {
+    departmentId?: string | null;
+    sectionId?: string | null;
+    createdBy?: string | null;
+  }
 ): Promise<RawEntry[]> {
   let query = supabase
     .from("dak_entries")
     .select(
-      "id, dak_number, subject, status, priority, due_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, departments(name), dak_sources(source_name), assignment_units(unit_name)"
+      "id, dak_number, subject, status, priority, due_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, created_by, departments(name), dak_sources(source_name), assignment_units(unit_name)"
     )
     .order("created_at", { ascending: false });
 
-  if (departmentId) {
-    query = query.eq("department_id", departmentId);
+  if (scope?.departmentId) {
+    query = query.eq("department_id", scope.departmentId);
+  }
+
+  if (scope?.sectionId) {
+    query = query.eq("assignment_unit_id", scope.sectionId);
+  }
+
+  if (scope?.createdBy) {
+    query = query.eq("created_by", scope.createdBy);
   }
 
   const { data, error } = await query;
@@ -345,12 +393,20 @@ async function fetchDashboardEntries(
   let fallbackQuery = supabase
     .from("dak_entries")
     .select(
-      "id, dak_number, subject, status, priority, due_date, created_at, department_id, source_id, assignment_type, assignment_unit_id"
+      "id, dak_number, subject, status, priority, due_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, created_by"
     )
     .order("created_at", { ascending: false });
 
-  if (departmentId) {
-    fallbackQuery = fallbackQuery.eq("department_id", departmentId);
+  if (scope?.departmentId) {
+    fallbackQuery = fallbackQuery.eq("department_id", scope.departmentId);
+  }
+
+  if (scope?.sectionId) {
+    fallbackQuery = fallbackQuery.eq("assignment_unit_id", scope.sectionId);
+  }
+
+  if (scope?.createdBy) {
+    fallbackQuery = fallbackQuery.eq("created_by", scope.createdBy);
   }
 
   const fallback = await fallbackQuery;
@@ -445,61 +501,125 @@ async function fetchDashboardEntries(
   }));
 }
 
-/** Fetch full dashboard analytics — collector sees all, department users scoped. */
-export async function fetchDashboardAnalytics(
+function buildScopedStats(
+  entries: RawEntry[],
+  today: string,
+  includeOverdue: boolean
+): DepartmentDashboardStatSummary {
+  let assigned = 0;
+  let pendingActions = 0;
+  let completed = 0;
+  let overdue = 0;
+
+  for (const entry of entries) {
+    const status = entry.status;
+    if (
+      ["assigned", "in_progress", "pending", "under_process"].includes(status)
+    ) {
+      assigned += 1;
+    }
+    if (
+      ["in_progress", "pending", "under_process", "assigned"].includes(status)
+    ) {
+      pendingActions += 1;
+    }
+    if (isCompletedDbStatus(status)) completed += 1;
+    if (
+      includeOverdue &&
+      entry.due_date &&
+      entry.due_date < today &&
+      !isCompletedDbStatus(status)
+    ) {
+      overdue += 1;
+    }
+  }
+
+  return { assigned, pendingActions, overdue, completed };
+}
+
+async function fetchOperatorDashboardAnalytics(
   user: SessionUser
-): Promise<DashboardAnalytics> {
+): Promise<OperatorDashboardData> {
   const supabase = createAdminClient();
   const today = getDistrictDateString();
-  const isDeptView =
-    isDepartmentDashboardRole(user.role) && !!user.departmentId;
+  const entries = await fetchDashboardEntries(supabase, {
+    createdBy: user.id,
+  });
 
-  const entries = await fetchDashboardEntries(
-    supabase,
-    isDeptView ? user.departmentId : null
-  );
-  const highPrioritySet = new Set<PriorityLevel>(["urgent", "immediate"]);
+  let todayEntries = 0;
+  let returned = 0;
 
-  if (isDeptView) {
-    let assigned = 0;
-    let pendingActions = 0;
-    let completed = 0;
-    let overdue = 0;
-
-    for (const entry of entries) {
-      const status = entry.status;
-      if (
-        ["assigned", "in_progress", "pending", "under_process"].includes(status)
-      ) {
-        assigned += 1;
-      }
-      if (
-        ["in_progress", "pending", "under_process", "assigned"].includes(status)
-      ) {
-        pendingActions += 1;
-      }
-      if (isCompletedDbStatus(status)) completed += 1;
-      if (
-        entry.due_date &&
-        entry.due_date < today &&
-        !isCompletedDbStatus(status)
-      ) {
-        overdue += 1;
-      }
-    }
-
-    const deptName =
-      entries[0] ? getDepartmentName(entries[0].departments) : "Department";
-
-    return {
-      variant: "department",
-      departmentName: deptName,
-      stats: { assigned, pendingActions, overdue, completed },
-      recentDak: entries.slice(0, 8).map(toRecentRow),
-      priorityChart: buildPriorityChart(entries),
-      statusChart: buildStatusChart(entries),
-    };
+  for (const entry of entries) {
+    const createdDate = entry.created_at.slice(0, 10);
+    if (createdDate === today) todayEntries += 1;
+    if (entry.status === "received") returned += 1;
   }
+
+  return {
+    variant: "operator",
+    stats: {
+      registered: entries.length,
+      todayEntries,
+      returned,
+    },
+    recentDak: entries.slice(0, 10).map(toRecentRow),
+  };
+}
+
+async function fetchDepartmentDashboardAnalytics(
+  user: SessionUser
+): Promise<DepartmentDashboardData> {
+  const supabase = createAdminClient();
+  const today = getDistrictDateString();
+  const entries = await fetchDashboardEntries(supabase, {
+    departmentId: user.departmentId,
+  });
+
+  const deptName =
+    entries[0] ? getDepartmentName(entries[0].departments) : "Department";
+
+  return {
+    variant: "department",
+    departmentName: deptName,
+    stats: buildScopedStats(entries, today, true),
+    recentDak: entries.slice(0, 8).map(toRecentRow),
+    priorityChart: buildPriorityChart(entries),
+    statusChart: buildStatusChart(entries),
+  };
+}
+
+async function fetchSectionDashboardAnalytics(
+  user: SessionUser
+): Promise<SectionDashboardData> {
+  const supabase = createAdminClient();
+  const entries = await fetchDashboardEntries(supabase, {
+    sectionId: user.sectionId,
+  });
+
+  const sectionName =
+    entries[0] ? getUnitName(entries[0]) : "Section";
+
+  const scoped = buildScopedStats(entries, getDistrictDateString(), false);
+
+  return {
+    variant: "section",
+    sectionName,
+    stats: {
+      assigned: scoped.assigned,
+      pendingActions: scoped.pendingActions,
+      completed: scoped.completed,
+    },
+    recentDak: entries.slice(0, 8).map(toRecentRow),
+    priorityChart: buildPriorityChart(entries),
+    statusChart: buildStatusChart(entries),
+  };
+}
+
+async function fetchCollectorDashboardAnalytics(): Promise<CollectorDashboardData> {
+  const supabase = createAdminClient();
+  const today = getDistrictDateString();
+  const entries = await fetchDashboardEntries(supabase);
+  const highPrioritySet = new Set<PriorityLevel>(["urgent", "immediate"]);
 
   let pending = 0;
   let completed = 0;
@@ -570,9 +690,51 @@ export async function fetchDashboardAnalytics(
   };
 }
 
+/** Fetch dashboard analytics scoped by role. */
+export async function fetchDashboardAnalytics(
+  user: SessionUser
+): Promise<DashboardAnalytics> {
+  if (isOperatorDashboardRole(user.role)) {
+    return fetchOperatorDashboardAnalytics(user);
+  }
+
+  if (isSectionDashboardRole(user.role) && user.sectionId) {
+    return fetchSectionDashboardAnalytics(user);
+  }
+
+  if (isDepartmentDashboardRole(user.role) && user.departmentId) {
+    return fetchDepartmentDashboardAnalytics(user);
+  }
+
+  if (isCollectorDashboardRole(user.role)) {
+    return fetchCollectorDashboardAnalytics();
+  }
+
+  // Fallback — treat unknown roles as operator-scoped when possible
+  return fetchOperatorDashboardAnalytics(user);
+}
+
 /** Legacy summary stats — re-exported for list pages. */
 export async function fetchDashboardStatsSummary(user: SessionUser) {
   const data = await fetchDashboardAnalytics(user);
+
+  if (data.variant === "operator") {
+    return {
+      variant: "operator" as const,
+      registered: data.stats.registered,
+      todayEntries: data.stats.todayEntries,
+      returned: data.stats.returned,
+    };
+  }
+
+  if (data.variant === "section") {
+    return {
+      variant: "section" as const,
+      assigned: data.stats.assigned,
+      pendingActions: data.stats.pendingActions,
+      completed: data.stats.completed,
+    };
+  }
 
   if (data.variant === "department") {
     return {
