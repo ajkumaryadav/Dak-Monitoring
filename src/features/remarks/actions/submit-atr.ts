@@ -93,10 +93,14 @@ export async function submitDakAtr(
       return { success: false, message: "DAK entry not found." };
     }
 
+    const submittedAt = new Date().toISOString();
+
     const { error } = await supabase.from("dak_atr").insert({
       dak_id: parsed.data.dakId,
       action_taken: parsed.data.actionTaken,
       submitted_by: user.id,
+      submitted_at: submittedAt,
+      created_at: submittedAt,
       attachment_file_name: attachmentMeta?.fileName ?? null,
       attachment_file_path: attachmentMeta?.filePath ?? null,
       attachment_storage_bucket: attachmentMeta ? STORAGE_BUCKET : null,

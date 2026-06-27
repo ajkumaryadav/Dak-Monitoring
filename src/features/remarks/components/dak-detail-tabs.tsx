@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, MessageSquare } from "lucide-react";
+import { Clock, FileText, MessageSquare, Paperclip } from "lucide-react";
 
 import {
   Card,
@@ -10,43 +10,53 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RemarksPanel } from "@/features/remarks/components/remarks-panel";
+import { AttachmentCard } from "@/features/dak/components/attachment-card";
+import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
 import { AtrPanel } from "@/features/remarks/components/atr-panel";
+import { RemarksPanel } from "@/features/remarks/components/remarks-panel";
 import type { RemarkPermissions } from "@/features/remarks/lib/remark-permissions";
 import type {
   DakAtrRecord,
   DakRemarkRecord,
 } from "@/features/remarks/services/get-remarks";
+import { DakTimelinePanel } from "@/features/timeline/components/dak-timeline-panel";
+import type { DakTimelineEvent } from "@/features/timeline/services/timeline";
 import { cn } from "@/lib/utils";
 
-type DetailTab = "remarks" | "atr";
+type DetailTab = "timeline" | "remarks" | "atr" | "attachments";
 
 interface DakDetailTabsProps {
   dakId: string;
+  timeline: DakTimelineEvent[];
   remarks: DakRemarkRecord[];
   atrRecords: DakAtrRecord[];
+  attachments: DakAttachmentWithUrl[];
   permissions: RemarkPermissions;
 }
 
-const tabs: { id: DetailTab; label: string; icon: typeof MessageSquare }[] = [
+const tabs: { id: DetailTab; label: string; icon: typeof Clock }[] = [
+  { id: "timeline", label: "Timeline", icon: Clock },
   { id: "remarks", label: "Remarks", icon: MessageSquare },
-  { id: "atr", label: "Action Taken Report", icon: FileText },
+  { id: "atr", label: "ATR", icon: FileText },
+  { id: "attachments", label: "Attachments", icon: Paperclip },
 ];
 
 export function DakDetailTabs({
   dakId,
+  timeline,
   remarks,
   atrRecords,
+  attachments,
   permissions,
 }: DakDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState<DetailTab>("remarks");
+  const [activeTab, setActiveTab] = useState<DetailTab>("timeline");
 
   return (
     <Card className="border-primary/15 lg:col-span-5">
       <CardHeader className="border-b border-border/60">
-        <CardTitle>Remarks & ATR</CardTitle>
+        <CardTitle>DAK Correspondence</CardTitle>
         <CardDescription>
-          Internal notes, department remarks, and action taken reports
+          Workflow timeline, remarks, action taken reports, and attachments
         </CardDescription>
         <div className="flex flex-wrap gap-2 pt-2">
           {tabs.map((tab) => {
@@ -71,6 +81,9 @@ export function DakDetailTabs({
         </div>
       </CardHeader>
       <CardContent className="pt-4">
+        {activeTab === "timeline" && (
+          <DakTimelinePanel events={timeline} compact />
+        )}
         {activeTab === "remarks" && (
           <RemarksPanel
             dakId={dakId}
@@ -84,6 +97,9 @@ export function DakDetailTabs({
             atrRecords={atrRecords}
             permissions={permissions}
           />
+        )}
+        {activeTab === "attachments" && (
+          <AttachmentCard attachments={attachments} embedded />
         )}
       </CardContent>
     </Card>

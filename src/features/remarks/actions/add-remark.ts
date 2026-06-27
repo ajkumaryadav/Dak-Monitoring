@@ -68,11 +68,16 @@ export async function addDakRemark(
       return { success: false, message: "DAK entry not found." };
     }
 
+    const isInternal =
+      parsed.data.remarkType === "internal_note" ||
+      parsed.data.remarkType === "collector_note";
+
     const { error } = await supabase.from("dak_remarks").insert({
       dak_id: parsed.data.dakId,
       remark_type: parsed.data.remarkType,
       body: parsed.data.body,
       created_by: user.id,
+      is_internal: isInternal,
     });
 
     if (error) {

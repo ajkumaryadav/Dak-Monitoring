@@ -12,9 +12,48 @@ import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachm
 
 interface AttachmentCardProps {
   attachments: DakAttachmentWithUrl[];
+  /** When true, render list only (inside a tab panel). */
+  embedded?: boolean;
 }
 
-export function AttachmentCard({ attachments }: AttachmentCardProps) {
+function AttachmentList({ attachments }: { attachments: DakAttachmentWithUrl[] }) {
+  if (!attachments.length) {
+    return (
+      <p className="py-6 text-center text-sm text-muted-foreground">
+        No attachments uploaded for this entry.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="space-y-2">
+      {attachments.map((attachment) => (
+        <li key={attachment.id}>
+          <a
+            href={attachment.downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 hover:text-primary"
+          >
+            <span aria-hidden>📄</span>
+            <span className="min-w-0 flex-1 truncate font-medium">
+              {attachment.file_name}
+            </span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {formatFileSize(attachment.file_size)}
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function AttachmentCard({ attachments, embedded = false }: AttachmentCardProps) {
+  if (embedded) {
+    return <AttachmentList attachments={attachments} />;
+  }
+
   return (
     <Card className="border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background">
       <CardHeader className="border-b border-border/60">
@@ -31,32 +70,7 @@ export function AttachmentCard({ attachments }: AttachmentCardProps) {
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {!attachments.length ? (
-          <p className="text-sm text-muted-foreground">
-            No attachments uploaded for this entry.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {attachments.map((attachment) => (
-              <li key={attachment.id}>
-                <a
-                  href={attachment.downloadUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50 hover:text-primary"
-                >
-                  <span aria-hidden>📄</span>
-                  <span className="min-w-0 flex-1 truncate font-medium">
-                    {attachment.file_name}
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {formatFileSize(attachment.file_size)}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
+        <AttachmentList attachments={attachments} />
       </CardContent>
     </Card>
   );

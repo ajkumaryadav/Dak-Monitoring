@@ -21,7 +21,6 @@ import {
   formatPendingDays,
 } from "@/features/audit/lib/pending-days";
 import { AssignDakForm } from "@/features/dak/components/assign-dak-form";
-import { AttachmentCard } from "@/features/dak/components/attachment-card";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
 import { DakStatusForm } from "@/features/dak/components/dak-status-form";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
@@ -36,10 +35,9 @@ import {
 } from "@/features/dak/lib/dak-display";
 import type { AssignFormOptions } from "@/features/dak/services/get-assign-form-options";
 import type { DakDetail } from "@/features/dak/services/get-dak-by-id";
-import { DakTimelinePanel } from "@/features/timeline/components/dak-timeline-panel";
-import type { DakTimelineEvent } from "@/features/timeline/services/timeline";
 import { SlaStatusBadge } from "@/features/sla/lib/sla-display";
 import { getEscalationLevelLabel } from "@/features/sla/lib/sla-constants";
+import type { DakTimelineEvent } from "@/features/timeline/services/timeline";
 import { cn } from "@/lib/utils";
 
 interface DakDetailViewProps {
@@ -199,16 +197,14 @@ export function DakDetailView({
         </div>
       </div>
 
-      <DakTimelinePanel events={timeline} />
-
       <DakDetailTabs
         dakId={dak.id}
+        timeline={timeline}
         remarks={remarks}
         atrRecords={atrRecords}
+        attachments={attachments}
         permissions={remarkPermissions}
       />
-
-      <AttachmentCard attachments={attachments} />
     </div>
   );
 }

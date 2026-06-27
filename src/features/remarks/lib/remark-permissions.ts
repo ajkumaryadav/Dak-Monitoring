@@ -1,3 +1,4 @@
+/** Resolve remark/ATR capabilities for the current user. */
 import type { DakRemarkType } from "@/features/remarks/lib/remark-types";
 import { RESTRICTED_REMARK_TYPES } from "@/features/remarks/lib/remark-types";
 import {
@@ -18,11 +19,30 @@ export interface RemarkPermissions {
   allowedRemarkTypes: DakRemarkType[];
 }
 
+const DISTRICT_REMARK_TYPES: DakRemarkType[] = [
+  "remark",
+  "internal_note",
+  "collector_note",
+];
+
 function isDistrictAdmin(role: UserRole): boolean {
   return DISTRICT_ADMIN_ROLES.includes(role);
 }
 
-/** Resolve remark/ATR capabilities for the current user. */
+function districtAdminPermissions(): RemarkPermissions {
+  return {
+    canViewAll: true,
+    canViewRestricted: true,
+    canAddRemark: true,
+    canAddInternalNote: true,
+    canAddCollectorNote: true,
+    canAddDepartmentRemark: false,
+    canSubmitAtr: false,
+    isReadOnly: false,
+    allowedRemarkTypes: DISTRICT_REMARK_TYPES,
+  };
+}
+
 export function getRemarkPermissions(user: SessionUser): RemarkPermissions {
   const { role } = user;
 
@@ -40,45 +60,21 @@ export function getRemarkPermissions(user: SessionUser): RemarkPermissions {
     };
   }
 
-  if (isDistrictAdmin(role)) {
-    return {
-      canViewAll: true,
-      canViewRestricted: true,
-      canAddRemark: false,
-      canAddInternalNote: true,
-      canAddCollectorNote: true,
-      canAddDepartmentRemark: false,
-      canSubmitAtr: false,
-      isReadOnly: false,
-      allowedRemarkTypes: ["internal_note", "collector_note"],
-    };
-  }
-
-  if (role === "adm") {
-    return {
-      canViewAll: true,
-      canViewRestricted: true,
-      canAddRemark: false,
-      canAddInternalNote: false,
-      canAddCollectorNote: false,
-      canAddDepartmentRemark: false,
-      canSubmitAtr: false,
-      isReadOnly: true,
-      allowedRemarkTypes: [],
-    };
+  if (isDistrictAdmin(role) || role === "adm") {
+    return districtAdminPermissions();
   }
 
   if (role === "department_user") {
     return {
       canViewAll: false,
       canViewRestricted: false,
-      canAddRemark: false,
+      canAddRemark: true,
       canAddInternalNote: false,
       canAddCollectorNote: false,
       canAddDepartmentRemark: true,
       canSubmitAtr: true,
       isReadOnly: false,
-      allowedRemarkTypes: ["department_remark"],
+      allowedRemarkTypes: ["remark", "department_remark"],
     };
   }
 
