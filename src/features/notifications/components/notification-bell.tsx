@@ -1,32 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Bell, Loader2 } from "lucide-react";
 
-import {
-  markAllNotificationsReadAction,
-  markNotificationReadAction,
-} from "@/features/notifications/actions/notification-actions";
-import type { NotificationRecord } from "@/features/notifications/services/notifications";
+import { useNotifications } from "@/features/notifications/components/notification-realtime-provider";
 import { NotificationList } from "@/features/notifications/components/notification-list";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface NotificationBellProps {
-  notifications: NotificationRecord[];
-  unreadCount: number;
-}
+/** Header notification bell with live unread count and dropdown. */
+export function NotificationBell() {
+  const {
+    dropdownNotifications,
+    unreadCount,
+    markRead,
+    markAllRead,
+    isPending,
+  } = useNotifications();
 
-/** Header notification bell with dropdown center. */
-export function NotificationBell({
-  notifications,
-  unreadCount,
-}: NotificationBellProps) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,20 +46,6 @@ export function NotificationBell({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [open]);
-
-  function handleMarkRead(id: string) {
-    startTransition(async () => {
-      await markNotificationReadAction(id);
-      router.refresh();
-    });
-  }
-
-  function handleMarkAllRead() {
-    startTransition(async () => {
-      await markAllNotificationsReadAction();
-      router.refresh();
-    });
-  }
 
   return (
     <div ref={rootRef} className="relative">
@@ -108,10 +87,10 @@ export function NotificationBell({
           </div>
           <div className="max-h-80 overflow-y-auto p-2">
             <NotificationList
-              notifications={notifications}
+              notifications={dropdownNotifications}
               compact
-              onMarkRead={handleMarkRead}
-              onMarkAllRead={handleMarkAllRead}
+              onMarkRead={markRead}
+              onMarkAllRead={markAllRead}
             />
           </div>
           <div className="border-t border-border/60 p-2">
@@ -131,6 +110,3 @@ export function NotificationBell({
 
 /** Alias — header dropdown panel for notifications. */
 export const NotificationDropdown = NotificationBell;
-
-/** Alias — full notification center lives at /dashboard/notifications. */
-export { NotificationsPageClient as NotificationCenter } from "@/features/notifications/components/notifications-page-client";

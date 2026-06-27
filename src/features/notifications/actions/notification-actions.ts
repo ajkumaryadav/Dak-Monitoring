@@ -1,7 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
 import {
   getUserNotifications,
   getUnreadNotificationCount,
@@ -18,7 +16,7 @@ export async function fetchNotificationCenterData() {
   }
 
   const [notifications, unreadCount] = await Promise.all([
-    getUserNotifications(user, { limit: 12 }),
+    getUserNotifications(user, { limit: 100 }),
     getUnreadNotificationCount(user),
   ]);
 
@@ -31,14 +29,7 @@ export async function markNotificationReadAction(notificationId: string) {
     return { success: false, message: "Unauthorized." };
   }
 
-  const result = await markAsRead(user, notificationId);
-
-  if (result.success) {
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/notifications");
-  }
-
-  return result;
+  return markAsRead(user, notificationId);
 }
 
 export async function markAllNotificationsReadAction() {
@@ -47,14 +38,7 @@ export async function markAllNotificationsReadAction() {
     return { success: false, message: "Unauthorized." };
   }
 
-  const result = await markAllRead(user);
-
-  if (result.success) {
-    revalidatePath("/dashboard");
-    revalidatePath("/dashboard/notifications");
-  }
-
-  return result;
+  return markAllRead(user);
 }
 
 export async function getUnreadCountAction() {

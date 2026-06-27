@@ -29,8 +29,8 @@ export default async function NotificationsPage() {
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background p-5 shadow-sm">
         <NotificationsPageClient
           user={user}
-          notifications={notifications}
-          unreadCount={unreadCount}
+          initialNotifications={notifications}
+          initialUnreadCount={unreadCount}
         />
       </div>
     </div>

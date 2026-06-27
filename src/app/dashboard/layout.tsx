@@ -21,7 +21,7 @@ export default async function DashboardLayout({
   await runSlaMonitor();
 
   const [notifications, unreadCount] = await Promise.all([
-    getUserNotifications(user, { limit: 12 }),
+    getUserNotifications(user, { limit: 100 }),
     getUnreadNotificationCount(user),
   ]);
 

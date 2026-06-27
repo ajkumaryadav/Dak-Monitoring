@@ -76,7 +76,8 @@ function logNotificationError(
   console.error(`[${context}]`, error.message ?? error);
 }
 
-function mapNotificationRow(row: Record<string, unknown>): NotificationRecord {
+/** Map a notifications table row to app record (server + realtime). */
+export function mapNotificationRow(row: Record<string, unknown>): NotificationRecord {
   const content =
     (row.body as string | null | undefined) ??
     (row.message as string | null | undefined) ??
@@ -375,10 +376,3 @@ export async function hasRecentNotification(
 
   return (data?.length ?? 0) > 0;
 }
-
-/**
- * Future realtime hook:
- * supabase.channel(NOTIFICATIONS_REALTIME_CHANNEL)
- *   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, handler)
- *   .subscribe()
- */
