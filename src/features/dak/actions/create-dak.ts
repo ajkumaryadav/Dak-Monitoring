@@ -12,6 +12,7 @@ import { uploadDakAttachment } from "@/features/dak/actions/upload-attachment";
 import { validateAttachmentFile } from "@/features/dak/lib/attachment-validation";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
+import { notifyDakCreated } from "@/features/notifications/services/notify-dak-event";
 import { hasPermission, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
@@ -97,7 +98,7 @@ export async function createDak(
         received_date: receivedDate,
         created_by: user.id,
       })
-      .select("id")
+      .select("id, dak_number")
       .single();
 
     if (error || !inserted) {
@@ -114,6 +115,14 @@ export async function createDak(
       eventType: "dak_registered",
       action: "DAK Registered",
       remarks: parsed.data.remarks?.trim() || "Registered by data entry operator",
+    });
+
+    await notifyDakCreated({
+      dakId: inserted.id as string,
+      dakNumber: inserted.dak_number as string,
+      subject: parsed.data.subject,
+      actorUserId: user.id,
+      actorName: user.name,
     });
 
     if (attachment) {
@@ -199,6 +208,7 @@ export async function createDakFormAction(
   revalidatePath("/dashboard/dak/pending");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/audit");
+  revalidatePath("/dashboard/notifications");
   revalidatePath(`/dashboard/dak/${result.dakId}`);
   redirect(`/dashboard/dak/${result.dakId}`);
 }

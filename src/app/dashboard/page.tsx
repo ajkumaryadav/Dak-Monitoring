@@ -1,6 +1,16 @@
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 import { getRecentActivity } from "@/features/audit/services/dak-history";
+import {
+  getUnreadNotificationCount,
+  getUserNotifications,
+} from "@/features/notifications/services/notifications";
+import {
+  getOverdueDakEntries,
+  getHighPriorityDakEntries,
+  getImmediateDakEntries,
+} from "@/features/notifications/services/notify-dak-event";
 import { fetchDashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
+import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
 import { getSessionUser } from "@/lib/session";
 
 export default async function DashboardPage() {
@@ -10,9 +20,27 @@ export default async function DashboardPage() {
     return null;
   }
 
-  const [analytics, recentActivity] = await Promise.all([
+  const departmentScope =
+    isDepartmentDashboardRole(user.role) && user.departmentId
+      ? user.departmentId
+      : undefined;
+
+  const [
+    analytics,
+    recentActivity,
+    notifications,
+    unreadCount,
+    overdueEntries,
+    highPriorityEntries,
+    immediateEntries,
+  ] = await Promise.all([
     fetchDashboardAnalytics(user),
     getRecentActivity(user, 8),
+    getUserNotifications(user, { limit: 8 }),
+    getUnreadNotificationCount(user),
+    getOverdueDakEntries(departmentScope),
+    getHighPriorityDakEntries(departmentScope),
+    getImmediateDakEntries(departmentScope),
   ]);
 
   return (
@@ -20,6 +48,12 @@ export default async function DashboardPage() {
       user={user}
       analytics={analytics}
       recentActivity={recentActivity}
+      notifications={notifications}
+      unreadCount={unreadCount}
+      overdueEntries={overdueEntries}
+      highPriorityEntries={highPriorityEntries}
+      immediateEntries={immediateEntries}
     />
   );
 }
+

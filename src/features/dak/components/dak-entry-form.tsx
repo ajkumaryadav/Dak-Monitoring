@@ -68,7 +68,6 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
 
       <form
         action={formAction}
-        encType="multipart/form-data"
         className="space-y-6 px-5 py-5 md:px-6 md:py-6"
       >
         {state.message && (

@@ -1,8 +1,18 @@
-import { Landmark, Sparkles, History } from "lucide-react";
+import { Landmark, Sparkles, History, Bell, AlertTriangle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { RecentActivityWidget } from "@/features/audit/components/recent-activity-widget";
 import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
+import {
+  NotificationWidget,
+  OverdueAlertCards,
+  DashboardAlerts,
+} from "@/features/notifications/components/notification-widgets";
+import type { NotificationRecord } from "@/features/notifications/services/notifications";
+import type {
+  OverdueDakRow,
+  PriorityDakRow,
+} from "@/features/notifications/services/notify-dak-event";
 import { DashboardSection } from "@/features/dashboard/components/dashboard-section";
 import { CollectorStatCards } from "@/features/dashboard/components/collector-stat-cards";
 import { DashboardChartsPanel } from "@/features/dashboard/components/dashboard-charts-panel";
@@ -20,9 +30,23 @@ interface DashboardViewProps {
   user: SessionUser;
   analytics: DashboardAnalytics;
   recentActivity: DakHistoryEntry[];
+  notifications: NotificationRecord[];
+  unreadCount: number;
+  overdueEntries: OverdueDakRow[];
+  highPriorityEntries: PriorityDakRow[];
+  immediateEntries: PriorityDakRow[];
 }
 
-export function DashboardView({ user, analytics, recentActivity }: DashboardViewProps) {
+export function DashboardView({
+  user,
+  analytics,
+  recentActivity,
+  notifications,
+  unreadCount,
+  overdueEntries,
+  highPriorityEntries,
+  immediateEntries,
+}: DashboardViewProps) {
   const isDepartmentView =
     analytics.variant === "department" && isDepartmentDashboardRole(user.role);
 
@@ -71,6 +95,32 @@ export function DashboardView({ user, analytics, recentActivity }: DashboardView
       {analytics.variant === "department" ? (
         <>
           <DepartmentStatCards data={analytics} />
+          <DashboardSection
+            title="Alerts"
+            description="Overdue, priority, immediate, and unread notifications"
+            icon={AlertTriangle}
+            variant="primary"
+          >
+            <DashboardAlerts
+              overdueCount={analytics.stats.overdue}
+              highPriorityCount={highPriorityEntries.length}
+              immediateCount={immediateEntries.length}
+              unreadCount={unreadCount}
+              topHighPriority={highPriorityEntries}
+              topImmediate={immediateEntries}
+            />
+          </DashboardSection>
+          <DashboardSection
+            title="Overdue Alerts"
+            description="Department DAK past due date"
+            icon={AlertTriangle}
+            variant="primary"
+          >
+            <OverdueAlertCards
+              overdueCount={analytics.stats.overdue}
+              topOverdue={overdueEntries}
+            />
+          </DashboardSection>
           <DashboardChartsPanel
             priorityChart={analytics.priorityChart}
             statusChart={analytics.statusChart}
@@ -86,10 +136,47 @@ export function DashboardView({ user, analytics, recentActivity }: DashboardView
           >
             <RecentActivityWidget entries={recentActivity} />
           </DashboardSection>
+          <DashboardSection
+            title="Notifications"
+            description="Recent alerts and workflow updates"
+            icon={Bell}
+            variant="neutral"
+          >
+            <NotificationWidget
+              notifications={notifications}
+              unreadCount={unreadCount}
+            />
+          </DashboardSection>
         </>
       ) : (
         <>
           <CollectorStatCards stats={analytics.stats} />
+          <DashboardSection
+            title="Alerts"
+            description="Overdue, priority, immediate, and unread notifications"
+            icon={AlertTriangle}
+            variant="primary"
+          >
+            <DashboardAlerts
+              overdueCount={analytics.stats.overdue}
+              highPriorityCount={highPriorityEntries.length}
+              immediateCount={immediateEntries.length}
+              unreadCount={unreadCount}
+              topHighPriority={highPriorityEntries}
+              topImmediate={immediateEntries}
+            />
+          </DashboardSection>
+          <DashboardSection
+            title="Overdue Alerts"
+            description="District DAK requiring immediate attention"
+            icon={AlertTriangle}
+            variant="primary"
+          >
+            <OverdueAlertCards
+              overdueCount={analytics.stats.overdue}
+              topOverdue={overdueEntries}
+            />
+          </DashboardSection>
           <DashboardChartsPanel
             priorityChart={analytics.priorityChart}
             statusChart={analytics.statusChart}
@@ -97,6 +184,17 @@ export function DashboardView({ user, analytics, recentActivity }: DashboardView
             recentDak={analytics.recentDak}
             departmentPerformance={analytics.departmentPerformance}
           />
+          <DashboardSection
+            title="Notifications"
+            description="Recent assignments, status changes, and overdue alerts"
+            icon={Bell}
+            variant="neutral"
+          >
+            <NotificationWidget
+              notifications={notifications}
+              unreadCount={unreadCount}
+            />
+          </DashboardSection>
           <DashboardSection
             title="Recent Activity"
             description="Latest DAK registrations, assignments, and status changes"

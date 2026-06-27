@@ -14,6 +14,7 @@ export const PERMISSIONS = {
   REPORTS: "reports",
   AUDIT: "audit",
   ESCALATION: "escalation",
+  NOTIFICATIONS: "notifications",
   USERS: "users",
 } as const;
 
@@ -34,6 +35,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/reports/sections": PERMISSIONS.REPORTS,
   "/dashboard/reports": PERMISSIONS.REPORTS,
   "/dashboard/audit": PERMISSIONS.AUDIT,
+  "/dashboard/notifications": PERMISSIONS.NOTIFICATIONS,
   "/users": PERMISSIONS.USERS,
 };
 
@@ -51,6 +53,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.REPORTS,
     PERMISSIONS.AUDIT,
+    PERMISSIONS.NOTIFICATIONS,
     PERMISSIONS.ESCALATION,
   ],
   district_officer: [
@@ -58,6 +61,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.DAK_VIEW,
     PERMISSIONS.DAK_UPDATE,
     PERMISSIONS.AUDIT,
+    PERMISSIONS.NOTIFICATIONS,
     PERMISSIONS.TASKS,
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.UPDATES,
@@ -67,14 +71,21 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.DAK_VIEW,
     PERMISSIONS.DAK_UPDATE,
     PERMISSIONS.AUDIT,
+    PERMISSIONS.NOTIFICATIONS,
     PERMISSIONS.TASKS,
     PERMISSIONS.UPDATES,
   ],
-  clerk: [PERMISSIONS.DASHBOARD, PERMISSIONS.DAK_VIEW, PERMISSIONS.TASKS],
+  clerk: [
+    PERMISSIONS.DASHBOARD,
+    PERMISSIONS.DAK_VIEW,
+    PERMISSIONS.TASKS,
+    PERMISSIONS.NOTIFICATIONS,
+  ],
   data_entry_operator: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_ENTRY,
     PERMISSIONS.DAK_VIEW,
+    PERMISSIONS.NOTIFICATIONS,
   ],
 };
 

@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bell,
   CheckCircle2,
   ClipboardList,
   Clock,
@@ -77,6 +78,12 @@ export const mainNavItems: NavItem[] = [
     href: "/dashboard/audit",
     icon: History,
     permission: PERMISSIONS.AUDIT,
+  },
+  {
+    title: "Notifications",
+    href: "/dashboard/notifications",
+    icon: Bell,
+    permission: PERMISSIONS.NOTIFICATIONS,
   },
 ];
 

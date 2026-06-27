@@ -12,6 +12,7 @@ import {
   type UpdateDakStatusInput,
 } from "@/features/dak/schemas/status-schema";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
+import { notifyDakStatusChange } from "@/features/notifications/services/notify-dak-event";
 import { hasPermission, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
@@ -34,6 +35,7 @@ function revalidateDakPaths(dakId: string) {
   revalidatePath("/dashboard/dak/completed");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/audit");
+  revalidatePath("/dashboard/notifications");
 }
 
 /** Update DAK workflow status — District/Block Officers (DLO). */
@@ -70,7 +72,7 @@ export async function updateDakStatus(
 
     const { data: existing, error: fetchError } = await supabase
       .from("dak_entries")
-      .select("id, status, department_id")
+      .select("id, status, department_id, dak_number, assigned_to")
       .eq("id", parsed.data.dakId)
       .maybeSingle();
 
@@ -159,6 +161,16 @@ export async function updateDakStatus(
       remarks: historyRemarks,
       fromStatus: currentStatus,
       toStatus: nextStatus,
+    });
+
+    await notifyDakStatusChange({
+      dakId: parsed.data.dakId,
+      dakNumber: existing.dak_number as string,
+      fromStatus: currentStatus,
+      toStatus: nextStatus,
+      assignedToUserId: (existing.assigned_to as string | null) ?? null,
+      actorUserId: user.id,
+      actorName: user.name,
     });
 
     revalidateDakPaths(parsed.data.dakId);

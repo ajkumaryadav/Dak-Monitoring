@@ -8,6 +8,7 @@ import {
 } from "@/features/dak/schemas/assign-schema";
 import { canAssignStatus, canReassignStatus } from "@/features/dak/lib/workflow";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
+import { notifyDakAssignment } from "@/features/notifications/services/notify-dak-event";
 import { getOfficerIdForDepartment } from "@/features/dak/services/get-department-officers";
 import { hasPermission, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -32,6 +33,7 @@ function revalidateDakPaths(dakId: string) {
   revalidatePath("/dashboard/reports");
   revalidatePath("/dashboard/reports/pending");
   revalidatePath("/dashboard/audit");
+  revalidatePath("/dashboard/notifications");
 }
 
 function parseAssignFormData(formData: FormData): unknown {
@@ -123,6 +125,9 @@ export async function assignDak(
     let logLabel = "";
     const logActionPrefix = isReassign ? "Reassigned" : "Assigned";
 
+    let targetLabel = "";
+    let assignedToUserId: string | null = null;
+
     if (parsed.data.assignmentType === "department") {
       const { data: department, error: deptError } = await supabase
         .from("departments")
@@ -135,6 +140,8 @@ export async function assignDak(
       }
 
       const assignedTo = await getOfficerIdForDepartment(parsed.data.departmentId);
+      assignedToUserId = assignedTo;
+      targetLabel = department.name as string;
 
       updatePayload = {
         ...updatePayload,
@@ -153,6 +160,8 @@ export async function assignDak(
       if (unitError || !unit) {
         return { success: false, message: "Selected section not found." };
       }
+
+      targetLabel = `${unit.unit_name} (Internal Section)`;
 
       updatePayload = {
         ...updatePayload,
@@ -197,6 +206,17 @@ export async function assignDak(
         assignment_type: parsed.data.assignmentType,
         is_reassign: isReassign,
       },
+    });
+
+    await notifyDakAssignment({
+      dakId: parsed.data.dakId,
+      dakNumber: existing.dak_number as string,
+      isReassign,
+      assignmentType: parsed.data.assignmentType,
+      targetLabel,
+      assignedToUserId,
+      actorUserId: user.id,
+      actorName: user.name,
     });
 
     revalidateDakPaths(parsed.data.dakId);

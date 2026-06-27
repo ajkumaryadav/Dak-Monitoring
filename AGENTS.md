@@ -90,6 +90,8 @@ Coding Guidelines:
 * Use Supabase Row Level Security.
 * Create audit logs for all actions.
 
+
+
 Future Features:
 
 * OCR
