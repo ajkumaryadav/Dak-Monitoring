@@ -9,6 +9,7 @@ import {
 import { canAssignStatus, canReassignStatus } from "@/features/dak/lib/workflow";
 import { formatAssignmentLabel } from "@/features/dak/lib/dak-display";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { notifyDakAssignment } from "@/features/notifications/services/notify-dak-event";
 import {
   canReassignDakRole,
@@ -276,6 +277,18 @@ export async function assignDak(
       assignedToUserId: parsed.data.assignedUserId,
       actorUserId: user.id,
       actorName: user.name,
+    });
+
+    await createActivityLog({
+      userId: user.id,
+      action: "DAK Assignment",
+      module: "dak",
+      description: `${isReassign ? "Reassigned" : "Assigned"} ${existing.dak_number} — ${logLabel}`,
+      metadata: {
+        dak_id: parsed.data.dakId,
+        assignment_type: parsed.data.assignmentType,
+        is_reassign: isReassign,
+      },
     });
 
     revalidateDakPaths(parsed.data.dakId);

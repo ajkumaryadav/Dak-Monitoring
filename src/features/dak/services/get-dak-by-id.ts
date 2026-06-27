@@ -2,14 +2,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { normalizeDakStatus } from "@/features/dak/lib/workflow";
 import type { AssignmentType, DakStatus, PriorityLevel } from "@/types";
 
-export type {
-  DakHistoryEntry,
-  DakTimelineEntry,
-} from "@/features/audit/services/dak-history";
-export {
-  getDakHistory,
-  getDakTimeline,
-} from "@/features/audit/services/dak-history";
+export type { DakHistoryEntry } from "@/features/audit/services/dak-history";
+export { getDakHistory } from "@/features/audit/services/dak-history";
 
 export interface DakDetail {
   id: string;
@@ -25,6 +19,7 @@ export interface DakDetail {
   disposed_date: string | null;
   closed_date: string | null;
   created_at: string;
+  created_by: string | null;
   department_id: string | null;
   source_id: string | null;
   assignment_type: AssignmentType | null;
@@ -46,7 +41,7 @@ export async function getDakById(id: string): Promise<DakDetail | null> {
   const { data, error } = await supabase
     .from("dak_entries")
     .select(
-      "id, dak_number, subject, sender, sender_address, priority, status, due_date, description, received_date, disposed_date, closed_date, created_at, department_id, source_id, assignment_type, assignment_unit_id, assigned_to, departments(name), dak_sources(source_name), assignment_units(unit_name), assigned_officer:users!dak_entries_assigned_to_fkey(name)"
+      "id, dak_number, subject, sender, sender_address, priority, status, due_date, description, received_date, disposed_date, closed_date, created_at, created_by, department_id, source_id, assignment_type, assignment_unit_id, assigned_to, departments(name), dak_sources(source_name), assignment_units(unit_name), assigned_officer:users!dak_entries_assigned_to_fkey(name)"
     )
     .eq("id", id)
     .maybeSingle();

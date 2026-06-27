@@ -117,6 +117,7 @@ export async function submitDakAtr(
       dakId: parsed.data.dakId,
       userId: user.id,
       eventType: "atr_submitted",
+      timelineActionType: "atr_submitted",
       action: "Action Taken Report submitted",
       remarks: parsed.data.actionTaken.slice(0, 500),
       metadata: { has_attachment: !!attachmentMeta },

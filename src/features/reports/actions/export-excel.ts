@@ -13,6 +13,7 @@ import {
   canExportReportKind,
   type ReportExportKind,
 } from "@/lib/auth/report-permissions";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { getSessionUser } from "@/lib/session";
 import type { DakStatus, PriorityLevel } from "@/types";
 
@@ -112,6 +113,14 @@ export async function exportExcelReport(
       getReportFilenamePrefix(reportKind as ReportExportKind, sourceName),
       getReportExportTitle(reportKind as ReportExportKind, sourceName)
     );
+
+    await createActivityLog({
+      userId: user.id,
+      action: "Report Export",
+      module: "reports",
+      description: `Exported ${reportKind} report (${rows.length} rows) as Excel`,
+      metadata: { report_kind: reportKind, format: "xlsx", row_count: rows.length },
+    });
 
     return {
       success: true,

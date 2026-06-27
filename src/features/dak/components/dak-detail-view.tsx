@@ -20,7 +20,6 @@ import {
   calculatePendingDays,
   formatPendingDays,
 } from "@/features/audit/lib/pending-days";
-import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
 import { AssignDakForm } from "@/features/dak/components/assign-dak-form";
 import { AttachmentCard } from "@/features/dak/components/attachment-card";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
@@ -28,25 +27,22 @@ import { DakStatusForm } from "@/features/dak/components/dak-status-form";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
 import { getAllowedTransitions } from "@/features/dak/lib/workflow";
 import {
-  formatAssignmentLabel,
   formatDakDate,
   formatDakStatus,
-  formatAssignmentType,
   getDepartmentName,
-  getOfficerName,
-  getSourceName,
-  getUnitName,
   getStatusStyle,
   priorityStyles,
   getBadgeClassName,
 } from "@/features/dak/lib/dak-display";
 import type { AssignFormOptions } from "@/features/dak/services/get-assign-form-options";
 import type { DakDetail } from "@/features/dak/services/get-dak-by-id";
+import { DakTimelinePanel } from "@/features/timeline/components/dak-timeline-panel";
+import type { DakTimelineEvent } from "@/features/timeline/services/timeline";
 import { cn } from "@/lib/utils";
 
 interface DakDetailViewProps {
   dak: DakDetail;
-  timeline: DakHistoryEntry[];
+  timeline: DakTimelineEvent[];
   attachments: DakAttachmentWithUrl[];
   assignOptions: AssignFormOptions;
   showAssignForm: boolean;
@@ -73,31 +69,6 @@ function DetailRow({ label, children }: DetailRowProps) {
   );
 }
 
-function buildTimelineEntries(
-  dak: DakDetail,
-  logs: DakHistoryEntry[]
-): DakHistoryEntry[] {
-  if (logs.length > 0) {
-    return logs;
-  }
-
-  return [
-    {
-      id: "registered-fallback",
-      dakId: dak.id,
-      eventType: "dak_registered",
-      actionLabel: "DAK Registered",
-      remarks: dak.description,
-      fromStatus: null,
-      toStatus: null,
-      metadata: {},
-      createdAt: dak.created_at,
-      performerName: null,
-      performerRole: null,
-    },
-  ];
-}
-
 export function DakDetailView({
   dak,
   timeline,
@@ -110,7 +81,6 @@ export function DakDetailView({
   atrRecords,
   remarkPermissions,
 }: DakDetailViewProps) {
-  const entries = buildTimelineEntries(dak, timeline);
   const allowedTransitions = getAllowedTransitions(dak.status);
   const pendingDays = calculatePendingDays({
     receivedDate: dak.received_date,
@@ -147,58 +117,23 @@ export function DakDetailView({
       <div className="grid gap-5 lg:grid-cols-5">
         <Card className="border-primary/15 bg-gradient-to-br from-primary/[0.04] via-background to-background lg:col-span-3">
           <CardHeader className="border-b border-border/60">
-            <CardTitle>DAK Details</CardTitle>
+            <CardTitle>DAK Summary</CardTitle>
             <CardDescription>
-              Source, assignment, priority, status, and correspondence information
+              Subject, status, priority, and department allocation
             </CardDescription>
           </CardHeader>
           <CardContent>
             <dl>
-              <DetailRow label="DAK Number">
-                <span className="font-semibold text-primary">
-                  {dak.dak_number}
-                </span>
+              <DetailRow label="Subject">
+                <span className="font-medium">{dak.subject}</span>
               </DetailRow>
-              <DetailRow label="Current Status">
+              <DetailRow label="Status">
                 <Badge
                   variant="outline"
                   className={cn("capitalize", getStatusStyle(dak.status))}
                 >
                   {formatDakStatus(dak.status)}
                 </Badge>
-              </DetailRow>
-              <DetailRow label="Pending Days">
-                <span className="font-medium">{pendingDays} day{pendingDays === 1 ? "" : "s"}</span>
-              </DetailRow>
-              <DetailRow label="DAK Source">
-                {getSourceName(dak.dak_sources)}
-              </DetailRow>
-              <DetailRow label="Assignment Type">
-                {formatAssignmentType(dak.assignment_type)}
-              </DetailRow>
-              <DetailRow label="Assignment">
-                {dak.assignment_type === "section"
-                  ? formatAssignmentLabel(
-                      getUnitName(dak.assignment_units),
-                      getOfficerName(dak.assigned_officer) === "Not assigned"
-                        ? null
-                        : getOfficerName(dak.assigned_officer)
-                    )
-                  : formatAssignmentLabel(
-                      getDepartmentName(dak.departments),
-                      getOfficerName(dak.assigned_officer) === "Not assigned"
-                        ? null
-                        : getOfficerName(dak.assigned_officer)
-                    )}
-              </DetailRow>
-              <DetailRow label="Department">
-                {getDepartmentName(dak.departments)}
-              </DetailRow>
-              <DetailRow label="Section">
-                {getUnitName(dak.assignment_units)}
-              </DetailRow>
-              <DetailRow label="Assigned Officer">
-                {getOfficerName(dak.assigned_officer)}
               </DetailRow>
               <DetailRow label="Priority">
                 <Badge
@@ -212,21 +147,16 @@ export function DakDetailView({
                   {dak.priority}
                 </Badge>
               </DetailRow>
+              <DetailRow label="Department">
+                {getDepartmentName(dak.departments)}
+              </DetailRow>
               <DetailRow label="Received Date">
                 {formatDakDate(dak.received_date)}
               </DetailRow>
               <DetailRow label="Due Date">
                 {formatDakDate(dak.due_date)}
               </DetailRow>
-              <DetailRow label="Subject">{dak.subject}</DetailRow>
               <DetailRow label="Sender">{dak.sender}</DetailRow>
-              <DetailRow label="Registration Remarks">
-                {dak.description?.trim() ? (
-                  <span className="whitespace-pre-wrap">{dak.description}</span>
-                ) : (
-                  <span className="text-muted-foreground">No remarks recorded</span>
-                )}
-              </DetailRow>
             </dl>
           </CardContent>
         </Card>
@@ -250,9 +180,10 @@ export function DakDetailView({
         </div>
       </div>
 
+      <DakTimelinePanel events={timeline} />
+
       <DakDetailTabs
         dakId={dak.id}
-        timeline={entries}
         remarks={remarks}
         atrRecords={atrRecords}
         permissions={remarkPermissions}
@@ -262,3 +193,4 @@ export function DakDetailView({
     </div>
   );
 }
+

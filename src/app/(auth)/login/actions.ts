@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { syncUserProfile } from "@/features/auth/actions/sync-user";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { loginSchema } from "@/features/auth/schemas/login-schema";
 import { createClient } from "@/lib/supabase/server";
 
@@ -40,6 +41,19 @@ export async function loginAction(
   }
 
   await syncUserProfile();
+
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+
+  if (authUser) {
+    await createActivityLog({
+      userId: authUser.id,
+      action: "Login",
+      module: "auth",
+      description: `Signed in as ${parsed.data.email}`,
+    });
+  }
 
   redirect("/dashboard");
 }

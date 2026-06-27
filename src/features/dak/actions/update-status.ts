@@ -158,6 +158,8 @@ export async function updateDakStatus(
       dakId: parsed.data.dakId,
       userId: user.id,
       eventType: historyEventType,
+      timelineActionType:
+        nextStatus === "closed" ? "closed" : "status_changed",
       action: historyAction,
       remarks: historyRemarks,
       fromStatus: currentStatus,

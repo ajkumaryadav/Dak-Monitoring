@@ -85,6 +85,7 @@ export async function addDakRemark(
       dakId: parsed.data.dakId,
       userId: user.id,
       eventType: "remarks_added",
+      timelineActionType: "remark_added",
       action: `${label} added`,
       remarks: parsed.data.body,
       metadata: { remark_type: parsed.data.remarkType },

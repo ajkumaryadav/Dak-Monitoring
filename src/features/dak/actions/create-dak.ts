@@ -12,6 +12,7 @@ import { uploadDakAttachment } from "@/features/dak/actions/upload-attachment";
 import { validateAttachmentFile } from "@/features/dak/lib/attachment-validation";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { notifyDakCreated } from "@/features/notifications/services/notify-dak-event";
 import { hasPermission, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -113,8 +114,17 @@ export async function createDak(
       dakId: inserted.id,
       userId: user.id,
       eventType: "dak_registered",
+      timelineActionType: "dak_created",
       action: "DAK Registered",
       remarks: parsed.data.remarks?.trim() || "Registered by data entry operator",
+    });
+
+    await createActivityLog({
+      userId: user.id,
+      action: "DAK Create",
+      module: "dak",
+      description: `Registered ${inserted.dak_number}: ${parsed.data.subject}`,
+      metadata: { dak_id: inserted.id, dak_number: inserted.dak_number },
     });
 
     await notifyDakCreated({
@@ -143,6 +153,7 @@ export async function createDak(
         dakId: inserted.id,
         userId: user.id,
         eventType: "remarks_added",
+        timelineActionType: "file_uploaded",
         action: "Attachment uploaded",
         remarks: attachment.name,
       });

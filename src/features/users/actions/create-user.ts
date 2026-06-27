@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getRoleLabel } from "@/features/users/lib/role-labels";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import {
   createUserSchema,
   type CreateUserInput,
@@ -100,6 +101,17 @@ export async function createUser(
       roleLabel: getRoleLabel(parsed.data.role),
       actorUserId: actor.id,
       targetUserId: authUser.user.id,
+    });
+
+    await createActivityLog({
+      userId: actor.id,
+      action: "User Creation",
+      module: "users",
+      description: `Created user ${parsed.data.name} (${parsed.data.email})`,
+      metadata: {
+        target_user_id: authUser.user.id,
+        role: parsed.data.role,
+      },
     });
 
     revalidateUserPaths(authUser.user.id);

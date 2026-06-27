@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { notifyPasswordReset } from "@/features/users/services/notify-user-event";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { getUserById } from "@/features/users/services/get-users";
 import { canManageUsers } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -45,6 +46,14 @@ export async function resetUserPassword(
       userEmail: target.email,
       targetUserId: userId,
       actorUserId: actor.id,
+    });
+
+    await createActivityLog({
+      userId: actor.id,
+      action: "Password Reset",
+      module: "users",
+      description: `Reset password for ${target.name}`,
+      metadata: { target_user_id: userId },
     });
 
     revalidatePath("/dashboard/admin/users");

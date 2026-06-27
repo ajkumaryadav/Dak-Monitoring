@@ -3,10 +3,7 @@ import { notFound } from "next/navigation";
 import { DakDetailView } from "@/features/dak/components/dak-detail-view";
 import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
 import { getAssignFormOptions } from "@/features/dak/services/get-assign-form-options";
-import {
-  getDakById,
-  getDakTimeline,
-} from "@/features/dak/services/get-dak-by-id";
+import { getDakById } from "@/features/dak/services/get-dak-by-id";
 import {
   canAssignStatus,
   canReassignStatus,
@@ -16,8 +13,14 @@ import {
   getDakAtrRecords,
   getDakRemarks,
 } from "@/features/remarks/services/get-remarks";
-import { hasPermission, canReassignDakRole, PERMISSIONS, requirePermission } from "@/lib/auth";
-import { getSessionUser } from "@/lib/session";
+import { getDakTimeline } from "@/features/timeline/services/timeline";
+import {
+  hasPermission,
+  canReassignDakRole,
+  isOperatorDashboardRole,
+  PERMISSIONS,
+  requirePermission,
+} from "@/lib/auth";
 
 interface DakDetailPageProps {
   params: Promise<{ id: string }>;
@@ -33,9 +36,16 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     notFound();
   }
 
+  if (
+    isOperatorDashboardRole(user.role) &&
+    dak.created_by !== user.id
+  ) {
+    notFound();
+  }
+
   const [timeline, attachments, assignOptions, remarks, atrRecords] =
     await Promise.all([
-      getDakTimeline(id),
+      getDakTimeline(id, user),
       getDakAttachments(id),
       getAssignFormOptions(),
       getDakRemarks(id, user),

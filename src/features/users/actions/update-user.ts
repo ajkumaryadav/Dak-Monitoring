@@ -6,7 +6,8 @@ import {
   updateUserSchema,
   type UpdateUserInput,
 } from "@/features/users/schemas/user-schema";
-import { getRoleIdBySlug } from "@/features/users/services/get-users";
+import { getRoleIdBySlug, getUserById } from "@/features/users/services/get-users";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { canManageUsers } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
@@ -49,6 +50,11 @@ export async function updateUser(
       return { success: false, message: "Selected role is not configured." };
     }
 
+    const existing = await getUserById(userId);
+    if (!existing) {
+      return { success: false, message: "User not found." };
+    }
+
     const admin = createAdminClient();
 
     const { error } = await admin
@@ -74,6 +80,20 @@ export async function updateUser(
       email: parsed.data.email,
       user_metadata: { name: parsed.data.name },
     });
+
+    if (existing.roleSlug !== parsed.data.role) {
+      await createActivityLog({
+        userId: actor.id,
+        action: "Role Change",
+        module: "users",
+        description: `Changed role for ${parsed.data.name} from ${existing.roleSlug} to ${parsed.data.role}`,
+        metadata: {
+          target_user_id: userId,
+          from_role: existing.roleSlug,
+          to_role: parsed.data.role,
+        },
+      });
+    }
 
     revalidateUserPaths(userId);
     return { success: true };

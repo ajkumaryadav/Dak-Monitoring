@@ -16,6 +16,7 @@ export const PERMISSIONS = {
   ESCALATION: "escalation",
   NOTIFICATIONS: "notifications",
   USERS: "users",
+  ACTIVITY: "activity",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -35,6 +36,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/reports/sections": PERMISSIONS.REPORTS,
   "/dashboard/reports": PERMISSIONS.REPORTS,
   "/dashboard/audit": PERMISSIONS.AUDIT,
+  "/dashboard/activity": PERMISSIONS.ACTIVITY,
   "/dashboard/notifications": PERMISSIONS.NOTIFICATIONS,
   "/dashboard/admin/users": PERMISSIONS.USERS,
 };
@@ -57,6 +59,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.REPORTS,
     PERMISSIONS.AUDIT,
+    PERMISSIONS.ACTIVITY,
     PERMISSIONS.NOTIFICATIONS,
     PERMISSIONS.ESCALATION,
   ],

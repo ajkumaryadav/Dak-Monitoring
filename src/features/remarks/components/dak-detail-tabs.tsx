@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Clock, FileText, MessageSquare } from "lucide-react";
+import { FileText, MessageSquare } from "lucide-react";
 
-import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
 import {
   Card,
   CardContent,
@@ -11,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CompleteHistoryTimeline } from "@/features/remarks/components/complete-history-timeline";
 import { RemarksPanel } from "@/features/remarks/components/remarks-panel";
 import { AtrPanel } from "@/features/remarks/components/atr-panel";
 import type { RemarkPermissions } from "@/features/remarks/lib/remark-permissions";
@@ -21,37 +19,34 @@ import type {
 } from "@/features/remarks/services/get-remarks";
 import { cn } from "@/lib/utils";
 
-type DetailTab = "timeline" | "remarks" | "atr";
+type DetailTab = "remarks" | "atr";
 
 interface DakDetailTabsProps {
   dakId: string;
-  timeline: DakHistoryEntry[];
   remarks: DakRemarkRecord[];
   atrRecords: DakAtrRecord[];
   permissions: RemarkPermissions;
 }
 
-const tabs: { id: DetailTab; label: string; icon: typeof Clock }[] = [
-  { id: "timeline", label: "Timeline", icon: Clock },
+const tabs: { id: DetailTab; label: string; icon: typeof MessageSquare }[] = [
   { id: "remarks", label: "Remarks", icon: MessageSquare },
   { id: "atr", label: "Action Taken Report", icon: FileText },
 ];
 
 export function DakDetailTabs({
   dakId,
-  timeline,
   remarks,
   atrRecords,
   permissions,
 }: DakDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState<DetailTab>("timeline");
+  const [activeTab, setActiveTab] = useState<DetailTab>("remarks");
 
   return (
     <Card className="border-primary/15 lg:col-span-5">
       <CardHeader className="border-b border-border/60">
-        <CardTitle>DAK History & Correspondence</CardTitle>
+        <CardTitle>Remarks & ATR</CardTitle>
         <CardDescription>
-          Complete workflow timeline, remarks, and action taken reports
+          Internal notes, department remarks, and action taken reports
         </CardDescription>
         <div className="flex flex-wrap gap-2 pt-2">
           {tabs.map((tab) => {
@@ -76,13 +71,6 @@ export function DakDetailTabs({
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {activeTab === "timeline" && (
-          <CompleteHistoryTimeline
-            timeline={timeline}
-            remarks={remarks}
-            atrRecords={atrRecords}
-          />
-        )}
         {activeTab === "remarks" && (
           <RemarksPanel
             dakId={dakId}

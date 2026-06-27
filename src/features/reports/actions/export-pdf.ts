@@ -13,6 +13,7 @@ import {
   canExportReportKind,
   type ReportExportKind,
 } from "@/lib/auth/report-permissions";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { getSessionUser } from "@/lib/session";
 import type { DakStatus, PriorityLevel } from "@/types";
 
@@ -114,6 +115,14 @@ export async function exportPdfReport(
       title,
       user.name
     );
+
+    await createActivityLog({
+      userId: user.id,
+      action: "Report Export",
+      module: "reports",
+      description: `Exported ${reportKind} report (${rows.length} rows) as PDF`,
+      metadata: { report_kind: reportKind, format: "pdf", row_count: rows.length },
+    });
 
     return {
       success: true,

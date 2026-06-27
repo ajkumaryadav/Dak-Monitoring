@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { notifyUserStatusChange } from "@/features/users/services/notify-user-event";
+import { createActivityLog } from "@/features/activity/services/activity-log";
 import { getUserById } from "@/features/users/services/get-users";
 import { canManageUsers } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -52,6 +53,16 @@ export async function setUserActive(
       actorUserId: actor.id,
       enabled: isActive,
     });
+
+    if (!isActive) {
+      await createActivityLog({
+        userId: actor.id,
+        action: "User Disable",
+        module: "users",
+        description: `Disabled user ${target.name}`,
+        metadata: { target_user_id: userId },
+      });
+    }
 
     revalidatePath("/dashboard/admin/users");
     revalidatePath(`/dashboard/admin/users/${userId}`);

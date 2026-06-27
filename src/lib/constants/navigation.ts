@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   Bell,
   CheckCircle2,
@@ -81,6 +82,12 @@ export const mainNavItems: NavItem[] = [
     permission: PERMISSIONS.AUDIT,
   },
   {
+    title: "Activity Log",
+    href: "/dashboard/activity",
+    icon: Activity,
+    permission: PERMISSIONS.ACTIVITY,
+  },
+  {
     title: "Notifications",
     href: "/dashboard/notifications",
     icon: Bell,
@@ -106,11 +113,11 @@ export const mainNavGroups: NavGroup[] = [
   },
   {
     label: "Analytics",
-    items: mainNavItems.slice(6, 9),
+    items: mainNavItems.slice(6, 10),
   },
   {
     label: "Administration",
-    items: mainNavItems.slice(9),
+    items: mainNavItems.slice(10),
   },
 ];
 
