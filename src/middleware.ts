@@ -48,6 +48,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && (pathname === "/login" || pathname === "/")) {
+    if (request.nextUrl.searchParams.get("signed_out") === "1") {
+      return supabaseResponse;
+    }
+
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = "/dashboard";
     return NextResponse.redirect(dashboardUrl);

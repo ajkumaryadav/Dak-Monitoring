@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Landmark, LogOut } from "lucide-react";
 
-import { logoutAction } from "@/features/auth/actions/logout";
 import {
   Sidebar,
   SidebarContent,
@@ -138,16 +137,14 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       <SidebarFooter className="border-t border-sidebar-border px-2 py-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <form action={logoutAction} className="w-full">
-              <SidebarMenuButton
-                type="submit"
-                className="text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive"
-                tooltip="Sign out"
-              >
-                <LogOut />
-                <span>Sign out</span>
-              </SidebarMenuButton>
-            </form>
+            <SidebarMenuButton
+              render={<Link href="/auth/logout" prefetch={false} />}
+              className="text-sidebar-foreground hover:bg-destructive/10 hover:text-destructive"
+              tooltip="Sign out"
+            >
+              <LogOut />
+              <span>Sign out</span>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
 

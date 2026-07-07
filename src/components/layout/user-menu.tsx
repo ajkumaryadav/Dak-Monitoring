@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { KeyRound, LogOut, Settings, User } from "lucide-react";
-
-import { logoutAction } from "@/features/auth/actions/logout";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -137,19 +135,19 @@ export function UserMenu({ user }: UserMenuProps) {
 
           <div className="my-1 h-px bg-border" />
 
-          <form action={logoutAction}>
-            <button
-              type="submit"
-              role="menuitem"
-              className={cn(
-                "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-destructive",
-                "hover:bg-destructive/10"
-              )}
-            >
-              <LogOut className="size-4 shrink-0" />
-              Sign out
-            </button>
-          </form>
+          <Link
+            href="/auth/logout"
+            prefetch={false}
+            role="menuitem"
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm text-destructive",
+              "hover:bg-destructive/10"
+            )}
+            onClick={() => setOpen(false)}
+          >
+            <LogOut className="size-4 shrink-0" />
+            Sign out
+          </Link>
         </div>
       )}
     </div>
