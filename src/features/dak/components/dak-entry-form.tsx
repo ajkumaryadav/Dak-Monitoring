@@ -1,7 +1,7 @@
 "use client";
 
 import { FilePlus2, Loader2 } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,7 @@ import {
   type CreateDakFormState,
 } from "@/features/dak/actions/create-dak";
 import { AttachmentUpload } from "@/features/dak/components/attachment-upload";
-import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
-import { PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
+import { DuplicateApplicationsAlert } from "@/features/dak/components/duplicate-applications-alert";
 import type { DepartmentOption } from "@/features/dak/services/get-departments";
 import type { DakSourceOption } from "@/features/dak/services/get-dak-sources";
 import { cn } from "@/lib/utils";
@@ -32,11 +31,11 @@ interface DakEntryFormProps {
 }
 
 export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
+  const [mobile, setMobile] = useState("");
   const [state, formAction, isPending] = useActionState(
     createDakFormAction,
     initialState
   );
-  const minDueDate = getDistrictDateString();
 
   return (
     <div className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.06] via-background to-background shadow-sm">
@@ -50,21 +49,11 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
               DAK Registration Form
             </h2>
             <p className="text-sm text-muted-foreground">
-              Enter correspondence details for diary registration
+              Diary intake — priority and department assigned by Collector
             </p>
           </div>
         </div>
       </div>
-
-      {departments.length === 0 && (
-        <p
-          className="mx-5 mt-5 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-300 md:mx-6"
-          role="alert"
-        >
-          No departments found. Refresh this page or run the Supabase seed
-          migration.
-        </p>
-      )}
 
       <form
         action={formAction}
@@ -138,29 +127,41 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="priority">Priority</Label>
-            <select
-              id="priority"
-              name="priority"
+            <Label htmlFor="applicantMobile">Applicant Mobile *</Label>
+            <input
+              id="applicantMobile"
+              name="applicantMobile"
+              type="tel"
               required
-              defaultValue=""
+              minLength={10}
+              maxLength={15}
+              placeholder="10-digit mobile number"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
               className={inputClassName}
-              aria-invalid={!!state.errors?.priority}
-            >
-              <option value="" disabled>
-                Select priority
-              </option>
-              {PRIORITY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {state.errors?.priority?.[0] && (
+              aria-invalid={!!state.errors?.applicantMobile}
+            />
+            {state.errors?.applicantMobile?.[0] && (
               <p className="text-sm text-destructive" role="alert">
-                {state.errors.priority[0]}
+                {state.errors.applicantMobile[0]}
               </p>
             )}
+            <DuplicateApplicationsAlert mobile={mobile} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="applicantReference">
+              Aadhaar / Reference No.{" "}
+              <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
+            <input
+              id="applicantReference"
+              name="applicantReference"
+              type="text"
+              maxLength={50}
+              placeholder="Reference number if available"
+              className={inputClassName}
+            />
           </div>
 
           <div className="grid gap-2">
@@ -191,19 +192,19 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="departmentId">Department</Label>
+            <Label htmlFor="departmentId">
+              Suggested Department{" "}
+              <span className="font-normal text-muted-foreground">(optional)</span>
+            </Label>
             <select
               id="departmentId"
               name="departmentId"
-              required
               defaultValue=""
               className={inputClassName}
               disabled={departments.length === 0}
               aria-invalid={!!state.errors?.departmentId}
             >
-              <option value="" disabled>
-                Select department
-              </option>
+              <option value="">Not assigned — Collector will allocate</option>
               {departments.map((department) => (
                 <option key={department.id} value={department.id}>
                   {department.name}
@@ -213,24 +214,6 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
             {state.errors?.departmentId?.[0] && (
               <p className="text-sm text-destructive" role="alert">
                 {state.errors.departmentId[0]}
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2 md:col-span-2">
-            <Label htmlFor="dueDate">Due Date</Label>
-            <input
-              id="dueDate"
-              name="dueDate"
-              type="date"
-              required
-              min={minDueDate}
-              className={cn(inputClassName, "w-full md:max-w-xs")}
-              aria-invalid={!!state.errors?.dueDate}
-            />
-            {state.errors?.dueDate?.[0] && (
-              <p className="text-sm text-destructive" role="alert">
-                {state.errors.dueDate[0]}
               </p>
             )}
           </div>
@@ -264,7 +247,7 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
           </button>
           <button
             type="submit"
-            disabled={isPending || departments.length === 0 || sources.length === 0}
+            disabled={isPending || sources.length === 0}
             className={cn(buttonVariants(), "h-9 px-4 sm:min-w-40")}
           >
             {isPending ? (

@@ -6,6 +6,7 @@ import type { NotificationRecord } from "@/features/notifications/services/notif
 import type { PriorityDakRow } from "@/features/notifications/services/notify-dak-event";
 import type { SlaDakRow } from "@/features/sla/lib/sla-types";
 import type { DashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
+import type { TaskStatsSummary } from "@/features/tasks/services/tasks";
 import type { UserStatsSummary } from "@/features/users/services/get-users";
 import type { SessionUser } from "@/types";
 
@@ -22,6 +23,7 @@ interface DashboardViewProps {
   highPriorityEntries: PriorityDakRow[];
   immediateEntries: PriorityDakRow[];
   userStats?: UserStatsSummary | null;
+  taskStats?: TaskStatsSummary | null;
 }
 
 /** Route to the correct role-scoped dashboard view. */
@@ -38,6 +40,7 @@ export function DashboardView({
   highPriorityEntries,
   immediateEntries,
   userStats,
+  taskStats,
 }: DashboardViewProps) {
   if (analytics.variant === "operator") {
     return (
@@ -62,6 +65,7 @@ export function DashboardView({
         dueSoonEntries={dueSoonEntries}
         highPriorityEntries={highPriorityEntries}
         immediateEntries={immediateEntries}
+        taskStats={taskStats}
       />
     );
   }
@@ -79,6 +83,7 @@ export function DashboardView({
       highPriorityEntries={highPriorityEntries}
       immediateEntries={immediateEntries}
       userStats={userStats}
+      taskStats={taskStats}
     />
   );
 }

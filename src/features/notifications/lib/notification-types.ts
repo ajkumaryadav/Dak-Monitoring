@@ -13,7 +13,16 @@ export type NotificationType =
   | "user_disabled"
   | "user_enabled"
   | "remark_added"
-  | "atr_submitted";
+  | "atr_submitted"
+  | "transfer_requested"
+  | "transfer_approved"
+  | "transfer_rejected"
+  | "escalation_requested"
+  | "escalation_resolved"
+  | "extension_requested"
+  | "extension_approved"
+  | "extension_rejected"
+  | "closure_approved";
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   dak_created: "New DAK Registered",
@@ -30,6 +39,15 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   user_enabled: "User Enabled",
   remark_added: "Remark Added",
   atr_submitted: "ATR Submitted",
+  transfer_requested: "Transfer Requested",
+  transfer_approved: "Transfer Approved",
+  transfer_rejected: "Transfer Rejected",
+  escalation_requested: "Escalation Requested",
+  escalation_resolved: "Escalation Resolved",
+  extension_requested: "Extension Requested",
+  extension_approved: "Extension Approved",
+  extension_rejected: "Extension Rejected",
+  closure_approved: "Closure Approved",
 };
 
 /** Supabase Realtime channel name — subscribe per user in future. */

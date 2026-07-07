@@ -31,7 +31,7 @@ export default async function AssignmentsPage({
   const dakEntries = await getFilteredDakList(
     "assignments",
     searchQuery,
-    undefined,
+    {},
     filters
   );
 

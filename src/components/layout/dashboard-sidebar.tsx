@@ -20,7 +20,7 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { appConfig, mainNavGroups } from "@/lib/constants/navigation";
+import { appConfig, getNavGroupsForRole } from "@/lib/constants/navigation";
 import { hasPermission } from "@/lib/auth/permissions";
 import type { SessionUser } from "@/types";
 
@@ -49,6 +49,7 @@ interface DashboardSidebarProps {
 
 export function DashboardSidebar({ user }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const navGroups = getNavGroupsForRole(user.role);
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -69,7 +70,7 @@ export function DashboardSidebar({ user }: DashboardSidebarProps) {
       </SidebarHeader>
 
       <SidebarContent className="gap-0 px-1 py-3">
-        {mainNavGroups.map((group) => {
+        {navGroups.map((group) => {
           const visibleItems = group.items.filter((item) => {
             if (item.disabled) {
               return true;

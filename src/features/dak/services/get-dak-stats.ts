@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getDepartmentName, getSourceName, getUnitName } from "@/features/dak/lib/dak-display";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
+import type { DakListScope } from "@/features/dak/lib/list-scope";
 import {
   LEGACY_COMPLETED_DB_STATUSES,
   isTerminalStatus,
@@ -10,7 +11,13 @@ import { fetchDashboardStatsSummary } from "@/features/reports/services/dashboar
 import type { SessionUser } from "@/types";
 import type { AssignmentType, DakStatus, PriorityLevel } from "@/types";
 
-export type DakListFilter = "all" | "pending" | "completed" | "assignments";
+export type DakListFilter =
+  | "all"
+  | "pending"
+  | "assigned"
+  | "completed"
+  | "assignments"
+  | "pending_approval";
 
 export interface DakListFilters {
   searchQuery?: string;
@@ -84,13 +91,24 @@ export type DashboardStats =
   | SectionDashboardStats
   | OperatorDashboardStats;
 
-const PENDING_DB_STATUSES = [
-  "received",
+const PENDING_ACTION_DB_STATUSES = [
   "assigned",
   "in_progress",
   "pending",
   "under_process",
   "escalated",
+  "atr_submitted",
+];
+
+const ASSIGNED_DB_STATUSES = [
+  ...PENDING_ACTION_DB_STATUSES,
+  "pending_approval",
+  "completed",
+];
+
+const PENDING_DB_STATUSES = [
+  ...PENDING_ACTION_DB_STATUSES,
+  "received",
 ];
 
 const COMPLETED_DB_STATUSES = [
@@ -197,28 +215,28 @@ function applyClientFilters(
 export async function getFilteredDakList(
   filter: DakListFilter,
   searchQuery?: string,
-  departmentId?: string | null,
+  scope: DakListScope = {},
   extraFilters: Omit<DakListFilters, "searchQuery" | "departmentId"> = {}
 ): Promise<DakListEntry[]> {
-  const entries = await getDakList(filter, departmentId);
+  const entries = await getDakList(filter, scope);
   return applyClientFilters(entries, {
     searchQuery,
-    departmentId,
+    departmentId: scope.departmentId,
     ...extraFilters,
   });
 }
 
-/** @deprecated Use getFilteredDakList("all", searchQuery, departmentId) */
+/** @deprecated Use getFilteredDakList("all", searchQuery, scope) */
 export async function searchDakEntries(
   searchQuery: string,
-  departmentId?: string | null
+  scope: DakListScope = {}
 ): Promise<DakListEntry[]> {
-  return getFilteredDakList("all", searchQuery, departmentId);
+  return getFilteredDakList("all", searchQuery, scope);
 }
 
 async function fetchDakListRows(
   filter: DakListFilter,
-  departmentId?: string | null
+  scope: DakListScope = {}
 ): Promise<DakListEntry[]> {
   const supabase = createAdminClient();
 
@@ -227,14 +245,22 @@ async function fetchDakListRows(
     .select(LIST_SELECT)
     .order("created_at", { ascending: false });
 
-  if (departmentId) {
-    query = query.eq("department_id", departmentId);
+  if (scope.departmentId) {
+    query = query.eq("department_id", scope.departmentId);
+  }
+
+  if (scope.sectionId) {
+    query = query.eq("assignment_unit_id", scope.sectionId);
   }
 
   if (filter === "assignments") {
     query = query.eq("status", "received");
   } else if (filter === "pending") {
-    query = query.in("status", PENDING_DB_STATUSES);
+    query = query.in("status", PENDING_ACTION_DB_STATUSES);
+  } else if (filter === "assigned") {
+    query = query.in("status", ASSIGNED_DB_STATUSES);
+  } else if (filter === "pending_approval") {
+    query = query.eq("status", "pending_approval");
   } else if (filter === "completed") {
     query = query.in("status", COMPLETED_DB_STATUSES);
   }
@@ -258,14 +284,22 @@ async function fetchDakListRows(
     )
     .order("created_at", { ascending: false });
 
-  if (departmentId) {
-    fallbackQuery = fallbackQuery.eq("department_id", departmentId);
+  if (scope.departmentId) {
+    fallbackQuery = fallbackQuery.eq("department_id", scope.departmentId);
+  }
+
+  if (scope.sectionId) {
+    fallbackQuery = fallbackQuery.eq("assignment_unit_id", scope.sectionId);
   }
 
   if (filter === "assignments") {
     fallbackQuery = fallbackQuery.eq("status", "received");
   } else if (filter === "pending") {
-    fallbackQuery = fallbackQuery.in("status", PENDING_DB_STATUSES);
+    fallbackQuery = fallbackQuery.in("status", PENDING_ACTION_DB_STATUSES);
+  } else if (filter === "assigned") {
+    fallbackQuery = fallbackQuery.in("status", ASSIGNED_DB_STATUSES);
+  } else if (filter === "pending_approval") {
+    fallbackQuery = fallbackQuery.eq("status", "pending_approval");
   } else if (filter === "completed") {
     fallbackQuery = fallbackQuery.in("status", COMPLETED_DB_STATUSES);
   }
@@ -378,9 +412,9 @@ async function fetchDakListRows(
 /** Fetch DAK entries for list views with optional status filter. */
 export async function getDakList(
   filter: DakListFilter = "all",
-  departmentId?: string | null
+  scope: DakListScope = {}
 ): Promise<DakListEntry[]> {
-  return fetchDakListRows(filter, departmentId);
+  return fetchDakListRows(filter, scope);
 }
 
 /** Role-aware dashboard statistics — delegates to reports analytics service. */
@@ -390,4 +424,10 @@ export async function getDashboardStats(
   return fetchDashboardStatsSummary(user);
 }
 
-export { PENDING_DB_STATUSES, COMPLETED_DB_STATUSES };
+export {
+  PENDING_DB_STATUSES,
+  PENDING_ACTION_DB_STATUSES,
+  ASSIGNED_DB_STATUSES,
+  COMPLETED_DB_STATUSES,
+};
+export type { DakListScope } from "@/features/dak/lib/list-scope";

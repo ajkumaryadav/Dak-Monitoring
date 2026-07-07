@@ -8,7 +8,9 @@ import {
   assignDakFormAction,
   type AssignDakFormState,
 } from "@/features/dak/actions/assign-dak";
+import { ASSIGN_PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
 import { ASSIGNMENT_TYPE_OPTIONS } from "@/features/dak/schemas/assign-schema";
+import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -45,6 +47,8 @@ export function AssignDakForm({
   );
   const [departmentId, setDepartmentId] = useState("");
   const [sectionId, setSectionId] = useState("");
+  const [priority, setPriority] = useState("important");
+  const minDueDate = getDistrictDateString();
   const [state, formAction, isPending] = useActionState(
     assignDakFormAction,
     initialState
@@ -224,8 +228,51 @@ export function AssignDakForm({
             </>
           )}
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <select
+                id="priority"
+                name="priority"
+                required
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className={inputClassName}
+                aria-invalid={!!state.errors?.priority}
+              >
+                {ASSIGN_PRIORITY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {state.errors?.priority?.[0] && (
+                <p className="text-xs text-destructive">
+                  {state.errors.priority[0]}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dueDate">Disposal Due Date</Label>
+              <input
+                id="dueDate"
+                name="dueDate"
+                type="date"
+                required
+                min={minDueDate}
+                className={inputClassName}
+                aria-invalid={!!state.errors?.dueDate}
+              />
+              {state.errors?.dueDate?.[0] && (
+                <p className="text-xs text-destructive">
+                  {state.errors.dueDate[0]}
+                </p>
+              )}
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="remarks">Assignment Remarks</Label>
+            <Label htmlFor="remarks">Collector Remarks / Instructions</Label>
             <textarea
               id="remarks"
               name="remarks"

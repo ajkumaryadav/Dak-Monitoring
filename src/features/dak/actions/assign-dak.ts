@@ -32,6 +32,7 @@ function revalidateDakPaths(dakId: string) {
   revalidatePath(`/dashboard/dak/${dakId}`);
   revalidatePath("/dashboard/dak");
   revalidatePath("/dashboard/dak/assignments");
+  revalidatePath("/dashboard/dak/assigned");
   revalidatePath("/dashboard/dak/pending");
   revalidatePath("/dashboard/dak/completed");
   revalidatePath("/dashboard");
@@ -44,6 +45,8 @@ function revalidateDakPaths(dakId: string) {
 function parseAssignFormData(formData: FormData): unknown {
   const assignmentType = formData.get("assignmentType");
   const assignedUserId = formData.get("assignedUserId");
+  const priority = formData.get("priority");
+  const dueDate = formData.get("dueDate");
 
   if (assignmentType === "section") {
     return {
@@ -51,6 +54,8 @@ function parseAssignFormData(formData: FormData): unknown {
       assignmentType: "section",
       assignmentUnitId: formData.get("assignmentUnitId"),
       assignedUserId,
+      priority,
+      dueDate,
       remarks: formData.get("remarks") ?? "",
     };
   }
@@ -60,6 +65,8 @@ function parseAssignFormData(formData: FormData): unknown {
     assignmentType: "department",
     departmentId: formData.get("departmentId"),
     assignedUserId,
+    priority,
+    dueDate,
     remarks: formData.get("remarks") ?? "",
   };
 }
@@ -177,12 +184,16 @@ export async function assignDak(
 
     const isReassign = canReassignStatus(existing.status as string);
     const nextStatus = isReassign ? (existing.status as string) : "assigned";
+    const dueDate = parsed.data.dueDate.slice(0, 10);
 
     let updatePayload: Record<string, unknown> = {
       assigned_by: user.id,
       assigned_to: parsed.data.assignedUserId,
       status: nextStatus,
       assignment_type: parsed.data.assignmentType,
+      priority: parsed.data.priority,
+      due_date: dueDate,
+      sla_due_date: dueDate,
       escalation_level: 0,
     };
 
@@ -266,8 +277,25 @@ export async function assignDak(
         assignment_type: parsed.data.assignmentType,
         assigned_user_id: parsed.data.assignedUserId,
         is_reassign: isReassign,
+        priority: parsed.data.priority,
+        due_date: dueDate,
       },
     });
+
+    if (!isReassign) {
+      await logWorkflowAction({
+        dakId: parsed.data.dakId,
+        userId: user.id,
+        eventType: "status_changed",
+        timelineActionType: "sla_assigned",
+        action: "Priority & Due Date Assigned",
+        remarks: `${parsed.data.priority} priority — disposal due ${dueDate}`,
+        metadata: {
+          sla_due_date: dueDate,
+          priority: parsed.data.priority,
+        },
+      });
+    }
 
     await notifyDakAssignment({
       dakId: parsed.data.dakId,

@@ -9,6 +9,7 @@ export const PERMISSIONS = {
   DAK_ASSIGN: "dak:assign",
   DAK_UPDATE: "dak:update",
   TASKS: "tasks",
+  TASKS_MANAGE: "tasks:manage",
   DEPARTMENT: "department",
   UPDATES: "updates",
   REPORTS: "reports",
@@ -26,7 +27,10 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard": PERMISSIONS.DASHBOARD,
   "/dashboard/dak/new": PERMISSIONS.DAK_ENTRY,
   "/dashboard/dak/assignments": PERMISSIONS.DAK_ASSIGN,
+  "/dashboard/dak/assigned": PERMISSIONS.DAK_VIEW,
+  "/dashboard/dak/pending-approval": PERMISSIONS.DAK_ASSIGN,
   "/dashboard/dak/pending": PERMISSIONS.DAK_VIEW,
+  "/dashboard/tasks/new": PERMISSIONS.TASKS_MANAGE,
   "/dashboard/dak/completed": PERMISSIONS.DAK_VIEW,
   "/dashboard/dak": PERMISSIONS.DAK_VIEW,
   "/dashboard/tasks": PERMISSIONS.TASKS,
@@ -38,6 +42,7 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/reports/source": PERMISSIONS.REPORTS,
   "/dashboard/reports/departments": PERMISSIONS.REPORTS,
   "/dashboard/reports/sections": PERMISSIONS.REPORTS,
+  "/dashboard/reports/officers": PERMISSIONS.REPORTS,
   "/dashboard/reports": PERMISSIONS.REPORTS,
   "/dashboard/audit": PERMISSIONS.AUDIT,
   "/dashboard/activity": PERMISSIONS.ACTIVITY,
@@ -45,21 +50,45 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/admin/users": PERMISSIONS.USERS,
 };
 
-/** Collector and ACP — equal district-wide privileges. */
+/** Collector and ACP — district oversight roles (distinct menus and privileges). */
 export const DISTRICT_ADMIN_ROLES: readonly UserRole[] = ["collector", "acp"];
 
-/**
- * Role → permissions map.
- * ACP has equal privileges as Collector.
- */
+/** Roles that can create, assign, approve, and reassign tasks. */
+export const TASK_MANAGE_ROLES: readonly UserRole[] = ["collector", "adm"];
+
+/** Collector — district admin without DAK registration or operational status updates. */
+export const COLLECTOR_ROLE_PERMISSIONS: readonly Permission[] = [
+  PERMISSIONS.DASHBOARD,
+  PERMISSIONS.DAK_VIEW,
+  PERMISSIONS.DAK_ASSIGN,
+  PERMISSIONS.TASKS,
+  PERMISSIONS.TASKS_MANAGE,
+  PERMISSIONS.REPORTS,
+  PERMISSIONS.AUDIT,
+  PERMISSIONS.ACTIVITY,
+  PERMISSIONS.NOTIFICATIONS,
+  PERMISSIONS.USERS,
+  PERMISSIONS.ESCALATION,
+];
+
+/** ACP — monitoring and supervision without DAK registration or task creation. */
+export const ACP_ROLE_PERMISSIONS: readonly Permission[] = [
+  PERMISSIONS.DASHBOARD,
+  PERMISSIONS.DAK_VIEW,
+  PERMISSIONS.TASKS,
+  PERMISSIONS.REPORTS,
+  PERMISSIONS.NOTIFICATIONS,
+];
+
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
-  collector: [PERMISSIONS.ALL],
-  acp: [PERMISSIONS.ALL],
+  collector: COLLECTOR_ROLE_PERMISSIONS,
+  acp: ACP_ROLE_PERMISSIONS,
   adm: [
     PERMISSIONS.DASHBOARD,
     PERMISSIONS.DAK_VIEW,
     PERMISSIONS.DAK_ASSIGN,
     PERMISSIONS.TASKS,
+    PERMISSIONS.TASKS_MANAGE,
     PERMISSIONS.DEPARTMENT,
     PERMISSIONS.REPORTS,
     PERMISSIONS.AUDIT,
@@ -167,17 +196,27 @@ export function isCollectorDashboardRole(role: UserRole): boolean {
   return COLLECTOR_DASHBOARD_ROLES.includes(role);
 }
 
-/** Collector and ACP can manage users. */
+/** Only Collector can manage district user accounts. */
 export function canManageUsers(role: UserRole): boolean {
-  return DISTRICT_ADMIN_ROLES.includes(role);
+  return role === "collector";
 }
 
-/** Collector or ACP — district-wide admin actions (user management). */
+/** Collector or ACP — district-wide oversight (remarks, alerts). */
 export function isDistrictAdminRole(role: UserRole): boolean {
   return DISTRICT_ADMIN_ROLES.includes(role);
 }
 
 /** Collector, ACP, and ADM can reassign in-workflow DAK. */
 export function canReassignDakRole(role: UserRole): boolean {
-  return COLLECTOR_DASHBOARD_ROLES.includes(role);
+  return role === "collector" || role === "adm";
+}
+
+/** Collector and ADM can create, assign, approve, and reassign tasks. */
+export function canManageTasks(role: UserRole): boolean {
+  return TASK_MANAGE_ROLES.includes(role);
+}
+
+/** Only department/section officers update operational DAK status. */
+export function canUpdateDakStatusRole(role: UserRole): boolean {
+  return role === "department_user" || role === "section_user";
 }

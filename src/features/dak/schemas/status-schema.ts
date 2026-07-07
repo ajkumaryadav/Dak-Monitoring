@@ -3,12 +3,9 @@ import { z } from "zod";
 import type { DakStatus } from "@/types";
 
 const statusValues = [
-  "received",
   "assigned",
   "in_progress",
   "pending",
-  "completed",
-  "closed",
 ] as const satisfies readonly DakStatus[];
 
 export const updateDakStatusSchema = z.object({
@@ -17,8 +14,8 @@ export const updateDakStatusSchema = z.object({
     .string()
     .min(1, "Please select a status")
     .refine(
-      (value): value is DakStatus =>
-        statusValues.includes(value as DakStatus),
+      (value): value is (typeof statusValues)[number] =>
+        (statusValues as readonly string[]).includes(value),
       { message: "Please select a valid status" }
     ),
   remarks: z

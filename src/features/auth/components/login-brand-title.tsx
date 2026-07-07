@@ -1,5 +1,7 @@
 import { Landmark } from "lucide-react";
 
+import { appConfig } from "@/lib/constants/navigation";
+
 export function LoginBrandTitle() {
   return (
     <div className="flex flex-col items-center gap-4 pt-1">
@@ -16,14 +18,12 @@ export function LoginBrandTitle() {
       <div className="space-y-2">
         <h1 className="text-center text-[1.65rem] leading-tight font-bold tracking-tight sm:text-[1.85rem]">
           <span className="bg-gradient-to-r from-primary via-violet-600 to-sky-600 bg-clip-text text-transparent">
-            DAK Monitoring
-          </span>{" "}
-          <span className="font-semibold text-muted-foreground/70">(</span>
-          <span className="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 bg-clip-text font-extrabold tracking-wide text-transparent">
-            DDAMS
+            {appConfig.name}
           </span>
-          <span className="font-semibold text-muted-foreground/70">)</span>
         </h1>
+        <p className="max-w-xs text-center text-sm leading-relaxed text-muted-foreground">
+          {appConfig.fullName}
+        </p>
 
         <div className="flex items-center justify-center gap-2">
           <span className="h-px w-10 bg-gradient-to-r from-transparent to-primary/50" />

@@ -11,11 +11,8 @@ import {
   type DakListSearchParams,
 } from "@/features/dak/lib/parse-dak-list-params";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
-import {
-  isDepartmentDashboardRole,
-  PERMISSIONS,
-  requirePermission,
-} from "@/lib/auth";
+import { getDakListScope } from "@/features/dak/lib/list-scope";
+import { PERMISSIONS, requirePermission } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 
 interface CompletedDakPageProps {
@@ -34,15 +31,14 @@ export default async function CompletedDakPage({
   const { searchQuery, filters } = parseDakListParams(params);
   const filtersActive = hasActiveListFilters(filters);
 
-  const departmentId =
-    user && isDepartmentDashboardRole(user.role) ? user.departmentId : undefined;
+  const scope = getDakListScope(user);
 
-  const showDepartmentFilter = !isDepartmentDashboardRole(user?.role ?? "dak_operator");
+  const showDepartmentFilter = !scope.departmentId && !scope.sectionId;
 
   const dakEntries = await getFilteredDakList(
     "completed",
     searchQuery,
-    departmentId,
+    scope,
     filters
   );
 

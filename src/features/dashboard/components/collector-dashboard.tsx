@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, History, Sparkles } from "lucide-react";
+import { AlertTriangle, Bell, History, ListTodo, Sparkles } from "lucide-react";
 
 import { RecentActivityWidget } from "@/features/audit/components/recent-activity-widget";
 import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
@@ -21,6 +21,8 @@ import type { SlaDakRow } from "@/features/sla/lib/sla-types";
 import { SlaDashboardWidgets } from "@/features/sla/components/sla-dashboard-widgets";
 import type { CollectorDashboardData } from "@/features/reports/services/dashboard-analytics";
 import { UserStatsCards } from "@/features/users/components/user-stats-cards";
+import { CollectorTaskStatCards } from "@/features/dashboard/components/task-stat-cards";
+import type { TaskStatsSummary } from "@/features/tasks/services/tasks";
 import type { UserStatsSummary } from "@/features/users/services/get-users";
 import type { SessionUser } from "@/types";
 
@@ -36,6 +38,7 @@ interface CollectorDashboardProps {
   highPriorityEntries: PriorityDakRow[];
   immediateEntries: PriorityDakRow[];
   userStats?: UserStatsSummary | null;
+  taskStats?: TaskStatsSummary | null;
 }
 
 /** Full district dashboard for Collector, ACP, and ADM. */
@@ -51,6 +54,7 @@ export function CollectorDashboard({
   highPriorityEntries,
   immediateEntries,
   userStats,
+  taskStats,
 }: CollectorDashboardProps) {
   return (
     <div className="space-y-8">
@@ -61,6 +65,17 @@ export function CollectorDashboard({
       />
 
       <CollectorStatCards stats={analytics.stats} />
+
+      {taskStats ? (
+        <DashboardSection
+          title="Task Management"
+          description="Administrative task assignments and compliance tracking"
+          icon={ListTodo}
+          variant="neutral"
+        >
+          <CollectorTaskStatCards stats={taskStats} />
+        </DashboardSection>
+      ) : null}
 
       {userStats ? (
         <DashboardSection

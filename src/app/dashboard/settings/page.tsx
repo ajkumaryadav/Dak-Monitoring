@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
 import { ProfileSettingsForm } from "@/features/profile/components/profile-settings-form";
+import { ChangePasswordForm } from "@/features/profile/components/change-password-form";
 import { PERMISSIONS, requirePermission } from "@/lib/auth";
 
 export default async function SettingsPage() {
@@ -31,6 +32,18 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent>
           <ProfileSettingsForm user={user} />
+        </CardContent>
+      </Card>
+
+      <Card className="max-w-2xl border-border/60" id="change-password">
+        <CardHeader>
+          <CardTitle className="text-lg">Change Password</CardTitle>
+          <CardDescription>
+            Update your login password securely.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ChangePasswordForm />
         </CardContent>
       </Card>
     </div>

@@ -1,4 +1,4 @@
-import { AlertTriangle, Bell, History } from "lucide-react";
+import { AlertTriangle, Bell, History, ListTodo } from "lucide-react";
 
 import { RecentActivityWidget } from "@/features/audit/components/recent-activity-widget";
 import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
@@ -20,6 +20,8 @@ import type {
   DepartmentDashboardData,
   SectionDashboardData,
 } from "@/features/reports/services/dashboard-analytics";
+import { DepartmentTaskStatCards } from "@/features/dashboard/components/task-stat-cards";
+import type { TaskStatsSummary } from "@/features/tasks/services/tasks";
 import type { SessionUser } from "@/types";
 
 interface DepartmentDashboardProps {
@@ -32,6 +34,7 @@ interface DepartmentDashboardProps {
   dueSoonEntries: SlaDakRow[];
   highPriorityEntries: PriorityDakRow[];
   immediateEntries: PriorityDakRow[];
+  taskStats?: TaskStatsSummary | null;
 }
 
 /** Department or section scoped dashboard — no district-wide analytics. */
@@ -45,6 +48,7 @@ export function DepartmentDashboard({
   dueSoonEntries,
   highPriorityEntries,
   immediateEntries,
+  taskStats,
 }: DepartmentDashboardProps) {
   const isSection = analytics.variant === "section";
 
@@ -65,6 +69,17 @@ export function DepartmentDashboard({
       ) : (
         <DepartmentStatCards data={analytics} />
       )}
+
+      {taskStats ? (
+        <DashboardSection
+          title="Task Management"
+          description="Department task assignments and compliance status"
+          icon={ListTodo}
+          variant="neutral"
+        >
+          <DepartmentTaskStatCards stats={taskStats} />
+        </DashboardSection>
+      ) : null}
 
       {analytics.variant === "department" && (
         <>

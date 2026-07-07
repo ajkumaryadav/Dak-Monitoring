@@ -11,7 +11,6 @@ import { syncUserProfile } from "@/features/auth/actions/sync-user";
 import { uploadDakAttachment } from "@/features/dak/actions/upload-attachment";
 import { validateAttachmentFile } from "@/features/dak/lib/attachment-validation";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
-import { calculateSlaDate } from "@/features/sla/services/calculate-sla";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { createActivityLog } from "@/features/activity/services/activity-log";
 import { notifyDakCreated } from "@/features/notifications/services/notify-dak-event";
@@ -83,11 +82,6 @@ export async function createDak(
 
     const supabase = createAdminClient();
     const receivedDate = getDistrictDateString();
-    const slaDueDate = await calculateSlaDate({
-      priority: parsed.data.priority,
-      receivedDate,
-      departmentId: parsed.data.departmentId,
-    });
 
     const { data: inserted, error } = await supabase
       .from("dak_entries")
@@ -96,11 +90,13 @@ export async function createDak(
         subject: parsed.data.subject,
         sender: parsed.data.senderName,
         sender_address: parsed.data.senderAddress,
-        priority: parsed.data.priority,
-        department_id: parsed.data.departmentId,
+        applicant_mobile: parsed.data.applicantMobile,
+        applicant_reference: parsed.data.applicantReference ?? null,
+        priority: "routine",
+        department_id: parsed.data.departmentId ?? null,
         source_id: parsed.data.sourceId,
-        due_date: parsed.data.dueDate.slice(0, 10),
-        sla_due_date: slaDueDate,
+        due_date: null,
+        sla_due_date: null,
         escalation_level: 0,
         description: parsed.data.remarks?.trim() || null,
         status: "received",
@@ -125,19 +121,6 @@ export async function createDak(
       timelineActionType: "dak_created",
       action: "DAK Registered",
       remarks: parsed.data.remarks?.trim() || "Registered by data entry operator",
-    });
-
-    await logWorkflowAction({
-      dakId: inserted.id,
-      userId: user.id,
-      eventType: "status_changed",
-      timelineActionType: "sla_assigned",
-      action: "SLA Assigned",
-      remarks: `SLA due date set to ${slaDueDate} based on ${parsed.data.priority} priority.`,
-      metadata: {
-        sla_due_date: slaDueDate,
-        priority: parsed.data.priority,
-      },
     });
 
     await createActivityLog({
@@ -215,10 +198,10 @@ export async function createDakFormAction(
     subject: formData.get("subject"),
     senderName: formData.get("senderName"),
     senderAddress: formData.get("senderAddress"),
-    priority: formData.get("priority"),
-    departmentId: formData.get("departmentId"),
+    applicantMobile: formData.get("applicantMobile"),
+    applicantReference: formData.get("applicantReference") ?? "",
+    departmentId: formData.get("departmentId") ?? "",
     sourceId: formData.get("sourceId"),
-    dueDate: formData.get("dueDate"),
     remarks: formData.get("remarks") ?? "",
     attachment,
   });

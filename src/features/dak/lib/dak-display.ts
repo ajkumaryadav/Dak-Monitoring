@@ -19,6 +19,10 @@ export const statusStyles: Record<DakStatus, string> = {
     "border-[oklch(0.55_0.12_200)]/30 bg-[oklch(0.55_0.12_200)]/10 text-[oklch(0.4_0.1_200)]",
   pending:
     "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  atr_submitted:
+    "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-400",
+  pending_approval:
+    "border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-400",
   completed:
     "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   closed: "border-border bg-muted text-muted-foreground",
@@ -56,6 +60,17 @@ export function formatDakDateTime(value: string | null | undefined) {
 
 export function formatDakStatus(status: string) {
   return getStatusLabel(status);
+}
+
+const PRIORITY_LABELS: Record<PriorityLevel, string> = {
+  routine: "Low",
+  important: "Normal",
+  urgent: "High",
+  immediate: "Immediate",
+};
+
+export function formatPriorityLabel(priority: string) {
+  return PRIORITY_LABELS[priority as PriorityLevel] ?? priority;
 }
 
 export function getStatusStyle(status: string) {

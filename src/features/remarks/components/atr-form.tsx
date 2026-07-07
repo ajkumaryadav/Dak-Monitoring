@@ -74,7 +74,7 @@ export function AtrForm({ dakId }: AtrFormProps) {
         ) : (
           <FileText className="size-4" />
         )}
-        Submit ATR
+        Submit ATR for Approval
       </button>
     </form>
   );

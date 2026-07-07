@@ -142,12 +142,11 @@ async function attachDakNumbers(
   );
 }
 
+import { COLLECTOR_DASHBOARD_ROLES } from "@/lib/auth/permissions";
+
 /** Collector, ACP, and ADM see district-wide notifications. */
 export function canViewAllNotifications(user: SessionUser): boolean {
-  return (
-    hasPermission(user.role, PERMISSIONS.ALL) ||
-    user.role === "adm"
-  );
+  return COLLECTOR_DASHBOARD_ROLES.includes(user.role);
 }
 
 /** Insert a notification row (realtime-ready via postgres_changes on notifications). */

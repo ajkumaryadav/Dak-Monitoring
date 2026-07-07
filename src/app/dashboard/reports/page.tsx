@@ -100,6 +100,15 @@ const reportLinks = [
     tag: "Internal",
   },
   {
+    title: "Officer Performance",
+    description: "Officer-wise pending, overdue, completed, and average disposal time.",
+    footnote: "Accountability metrics by assigned officer.",
+    href: "/dashboard/reports/officers",
+    icon: Users,
+    variant: "primary" as const,
+    tag: "Officers",
+  },
+  {
     title: "CMO Pending Report",
     description: "Pending DAK originating from the Chief Minister's Office.",
     footnote: "High-visibility executive references.",

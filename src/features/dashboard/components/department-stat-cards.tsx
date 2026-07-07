@@ -20,7 +20,7 @@ export function DepartmentStatCards({ data }: DepartmentStatCardsProps) {
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <Link href="/dashboard/dak/pending">
+      <Link href="/dashboard/dak/assigned">
         <StatCard
           title="Assigned DAK"
           value={stats.assigned}

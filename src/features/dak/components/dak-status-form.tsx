@@ -63,7 +63,7 @@ export function DakStatusForm({
       <CardHeader className="border-b border-border/60">
         <CardTitle className="text-base">Update Status</CardTitle>
         <CardDescription>
-          Advance this DAK through the district workflow
+          Mark progress — use ATR tab to submit compliance for closure approval
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-4">

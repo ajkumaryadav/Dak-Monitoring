@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { LogOut, Settings, User } from "lucide-react";
+import { KeyRound, LogOut, Settings, User } from "lucide-react";
 
 import { logoutAction } from "@/features/auth/actions/logout";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -120,6 +120,19 @@ export function UserMenu({ user }: UserMenuProps) {
           >
             <Settings className="size-4 shrink-0" />
             Settings
+          </Link>
+
+          <Link
+            href="/dashboard/profile#change-password"
+            role="menuitem"
+            className={cn(
+              "flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm",
+              "hover:bg-accent hover:text-accent-foreground"
+            )}
+            onClick={() => setOpen(false)}
+          >
+            <KeyRound className="size-4 shrink-0" />
+            Change Password
           </Link>
 
           <div className="my-1 h-px bg-border" />

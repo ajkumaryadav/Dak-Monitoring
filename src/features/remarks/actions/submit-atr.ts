@@ -7,6 +7,7 @@ import {
 } from "@/features/dak/lib/attachment-validation";
 import { uploadDakFile } from "@/features/dak/actions/upload-attachment";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
+import { canSubmitAtrStatus } from "@/features/dak/lib/workflow";
 import { getRemarkPermissions } from "@/features/remarks/lib/remark-permissions";
 import {
   submitAtrSchema,
@@ -85,12 +86,19 @@ export async function submitDakAtr(
 
     const { data: dak, error: dakError } = await supabase
       .from("dak_entries")
-      .select("id, dak_number")
+      .select("id, dak_number, status")
       .eq("id", parsed.data.dakId)
       .maybeSingle();
 
     if (dakError || !dak) {
       return { success: false, message: "DAK entry not found." };
+    }
+
+    if (!canSubmitAtrStatus(dak.status as string)) {
+      return {
+        success: false,
+        message: "ATR can only be submitted while the DAK is in active processing.",
+      };
     }
 
     const submittedAt = new Date().toISOString();
@@ -117,13 +125,43 @@ export async function submitDakAtr(
       return { success: false, message: error.message ?? "Failed to submit ATR." };
     }
 
+    await supabase
+      .from("dak_entries")
+      .update({
+        status: "atr_submitted",
+        updated_by: user.id,
+      })
+      .eq("id", parsed.data.dakId);
+
     await logWorkflowAction({
       dakId: parsed.data.dakId,
       userId: user.id,
       eventType: "atr_submitted",
       timelineActionType: "atr_submitted",
-      action: "Action Taken Report submitted",
+      action: "ATR / Compliance Submitted",
       remarks: parsed.data.actionTaken.slice(0, 500),
+      fromStatus: dak.status as string,
+      toStatus: "atr_submitted",
+      metadata: { has_attachment: !!attachmentMeta },
+    });
+
+    await supabase
+      .from("dak_entries")
+      .update({
+        status: "pending_approval",
+        updated_by: user.id,
+      })
+      .eq("id", parsed.data.dakId);
+
+    await logWorkflowAction({
+      dakId: parsed.data.dakId,
+      userId: user.id,
+      eventType: "status_changed",
+      timelineActionType: "status_changed",
+      action: "Submitted for Closure Approval",
+      remarks: parsed.data.actionTaken.slice(0, 500),
+      fromStatus: "atr_submitted",
+      toStatus: "pending_approval",
       metadata: { has_attachment: !!attachmentMeta },
     });
 

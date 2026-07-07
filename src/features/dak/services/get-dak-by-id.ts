@@ -11,6 +11,8 @@ export interface DakDetail {
   subject: string;
   sender: string;
   sender_address: string | null;
+  applicant_mobile: string | null;
+  applicant_reference: string | null;
   priority: PriorityLevel;
   status: DakStatus;
   due_date: string | null;
@@ -43,7 +45,7 @@ export async function getDakById(id: string): Promise<DakDetail | null> {
   const { data, error } = await supabase
     .from("dak_entries")
     .select(
-      "id, dak_number, subject, sender, sender_address, priority, status, due_date, sla_due_date, escalation_level, description, received_date, disposed_date, closed_date, created_at, created_by, department_id, source_id, assignment_type, assignment_unit_id, assigned_to, departments(name), dak_sources(source_name), assignment_units(unit_name), assigned_officer:users!dak_entries_assigned_to_fkey(name)"
+      "id, dak_number, subject, sender, sender_address, applicant_mobile, applicant_reference, priority, status, due_date, sla_due_date, escalation_level, description, received_date, disposed_date, closed_date, created_at, created_by, department_id, source_id, assignment_type, assignment_unit_id, assigned_to, departments(name), dak_sources(source_name), assignment_units(unit_name), assigned_officer:users!dak_entries_assigned_to_fkey(name)"
     )
     .eq("id", id)
     .maybeSingle();

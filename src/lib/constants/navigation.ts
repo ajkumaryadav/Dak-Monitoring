@@ -9,12 +9,16 @@ import {
   FileText,
   History,
   LayoutDashboard,
+  ListChecks,
+  ListTodo,
+  ShieldCheck,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
 import type { Permission } from "@/lib/auth/permissions";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
+import type { UserRole } from "@/types";
 
 export interface NavItem {
   title: string;
@@ -52,10 +56,16 @@ export const mainNavItems: NavItem[] = [
     permission: PERMISSIONS.DAK_VIEW,
   },
   {
-    title: "Assignments",
+    title: "Pending Assignment",
     href: "/dashboard/dak/assignments",
     icon: ClipboardList,
     permission: PERMISSIONS.DAK_ASSIGN,
+  },
+  {
+    title: "Assigned DAK",
+    href: "/dashboard/dak/assigned",
+    icon: ListChecks,
+    permission: PERMISSIONS.DAK_VIEW,
   },
   {
     title: "Pending DAK",
@@ -68,6 +78,18 @@ export const mainNavItems: NavItem[] = [
     href: "/dashboard/dak/completed",
     icon: CheckCircle2,
     permission: PERMISSIONS.DAK_VIEW,
+  },
+  {
+    title: "Pending Approval",
+    href: "/dashboard/dak/pending-approval",
+    icon: ShieldCheck,
+    permission: PERMISSIONS.DAK_ASSIGN,
+  },
+  {
+    title: "Tasks",
+    href: "/dashboard/tasks",
+    icon: ListTodo,
+    permission: PERMISSIONS.TASKS,
   },
   {
     title: "Reports",
@@ -109,22 +131,114 @@ export const mainNavGroups: NavGroup[] = [
   },
   {
     label: "DAK Operations",
-    items: mainNavItems.slice(1, 6),
+    items: mainNavItems.slice(1, 9),
   },
   {
     label: "Analytics",
-    items: mainNavItems.slice(6, 10),
+    items: mainNavItems.slice(9, 13),
   },
   {
     label: "Administration",
-    items: mainNavItems.slice(10),
+    items: mainNavItems.slice(13),
   },
 ];
 
+const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
+  collector: [
+    "/dashboard",
+    "/dashboard/dak/assignments",
+    "/dashboard/dak/assigned",
+    "/dashboard/tasks",
+    "/dashboard/reports",
+    "/dashboard/notifications",
+    "/dashboard/admin/users",
+  ],
+  acp: [
+    "/dashboard",
+    "/dashboard/dak/assigned",
+    "/dashboard/dak/pending",
+    "/dashboard/tasks",
+    "/dashboard/reports",
+    "/dashboard/notifications",
+  ],
+};
+
+const ROLE_NAV_TITLE_OVERRIDES: Partial<
+  Record<UserRole, Partial<Record<string, string>>>
+> = {
+  acp: {
+    "/dashboard/tasks": "Task Monitoring",
+  },
+};
+
+function buildNavItemMap(): Map<string, NavItem> {
+  return new Map(mainNavItems.map((item) => [item.href, item]));
+}
+
+const navItemByHref = buildNavItemMap();
+
+function groupNavItems(items: NavItem[]): NavGroup[] {
+  const overview = items.filter((item) => item.href === "/dashboard");
+  const dakOps = items.filter((item) =>
+    item.href.startsWith("/dashboard/dak")
+  );
+  const analytics = items.filter(
+    (item) =>
+      item.href.startsWith("/dashboard/tasks") ||
+      item.href.startsWith("/dashboard/reports")
+  );
+  const admin = items.filter(
+    (item) =>
+      item.href.startsWith("/dashboard/admin") ||
+      item.href.startsWith("/dashboard/audit") ||
+      item.href.startsWith("/dashboard/activity") ||
+      item.href.startsWith("/dashboard/notifications")
+  );
+
+  const groups: NavGroup[] = [];
+  if (overview.length) groups.push({ label: "Overview", items: overview });
+  if (dakOps.length) groups.push({ label: "DAK Operations", items: dakOps });
+  if (analytics.length) groups.push({ label: "Analytics", items: analytics });
+  if (admin.length) groups.push({ label: "Administration", items: admin });
+  return groups;
+}
+
+/** Role-aware navigation — Collector and ACP use curated menus; others use permission filtering. */
+export function getNavGroupsForRole(role: UserRole): NavGroup[] {
+  const roleHrefs = ROLE_NAV_HREFS[role];
+
+  if (roleHrefs) {
+    const titleOverrides = ROLE_NAV_TITLE_OVERRIDES[role] ?? {};
+    const items = roleHrefs
+      .map((href) => {
+        const base = navItemByHref.get(href);
+        if (!base) return null;
+        const title = titleOverrides[href] ?? base.title;
+        return title === base.title ? base : { ...base, title };
+      })
+      .filter((item): item is NavItem => item !== null);
+
+    return groupNavItems(items);
+  }
+
+  const visibleItems = mainNavItems.filter((item) => {
+    if (item.disabled) return true;
+    if (!item.permission) return true;
+    return hasPermission(role, item.permission);
+  });
+
+  return mainNavGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => visibleItems.includes(item)),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
 export const appConfig = {
-  name: "DAK Monitoring",
+  name: "DAK Monitoring System",
   fullName: "District DAK & Administrative Monitoring System",
-  shortName: "DDAMS",
+  shortName: "Rajasthan Government · District Administration",
   district: "Khairthal-Tijara",
   districtAdministration: "Khairthal-Tijara @ Administration",
 } as const;

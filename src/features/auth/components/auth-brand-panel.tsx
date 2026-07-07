@@ -6,6 +6,7 @@ import {
   Shield,
 } from "lucide-react";
 
+import { AuthShowcasePreview } from "@/features/auth/components/auth-showcase-preview";
 import { appConfig } from "@/lib/constants/navigation";
 import { cn } from "@/lib/utils";
 
@@ -53,8 +54,7 @@ const highlights = [
 
 export function AuthBrandPanel() {
   return (
-    <div className="relative hidden flex-1 flex-col justify-between overflow-hidden border-r border-border/60 bg-muted/30 p-10 text-foreground dark:bg-background lg:flex">
-
+    <div className="relative hidden flex-1 flex-col overflow-y-auto border-r border-border/60 bg-muted/30 p-8 text-foreground dark:bg-background lg:flex xl:p-10">
       <div className="relative z-10 flex min-w-0 items-center gap-3">
         <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
           <Landmark className="size-6" />
@@ -69,34 +69,35 @@ export function AuthBrandPanel() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-xl space-y-8">
-        <div className="space-y-4">
-          <h1 className="text-3xl leading-tight font-semibold tracking-tight text-foreground xl:text-4xl">
+      <div className="relative z-10 mt-8 max-w-2xl space-y-6">
+        <div className="space-y-3">
+          <h1 className="text-2xl leading-tight font-semibold tracking-tight text-foreground xl:text-3xl">
             {appConfig.fullName}
           </h1>
-          <p className="max-w-md text-base leading-relaxed text-muted-foreground">
-            Secure district platform for DAK tracking, workflow management, and
-            administrative oversight.
+          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+            Secure district platform for DAK tracking, workflow management, task
+            compliance, and administrative oversight under Rajasthan Government
+            digital governance standards.
           </p>
         </div>
 
-        <ul className="grid gap-3">
+        <ul className="grid gap-2.5">
           {highlights.map(({ icon: Icon, title, description, tag, colors }) => (
             <li
               key={title}
               className={cn(
-                "group relative overflow-hidden rounded-xl border border-border/60 bg-card/80 p-4 shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                "group relative overflow-hidden rounded-xl border border-border/60 bg-card/80 p-3.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-md",
                 colors.card
               )}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3">
                 <div
                   className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-lg ring-1",
+                    "flex size-9 shrink-0 items-center justify-center rounded-lg ring-1",
                     colors.icon
                   )}
                 >
-                  <Icon className="size-5" />
+                  <Icon className="size-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -112,7 +113,7 @@ export function AuthBrandPanel() {
                       {tag}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                     {description}
                   </p>
                 </div>
@@ -126,9 +127,24 @@ export function AuthBrandPanel() {
             </li>
           ))}
         </ul>
+
+        <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="mt-0.5 size-4 shrink-0 text-amber-600" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Security Notice</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Authorized personnel only. All login attempts and administrative
+                actions are logged for audit. Do not share credentials.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <AuthShowcasePreview />
       </div>
 
-      <div className="relative z-10 border-t border-border/60 pt-5">
+      <div className="relative z-10 mt-8 border-t border-border/60 pt-5">
         <p className="text-sm font-semibold text-foreground">
           {appConfig.districtAdministration}
         </p>

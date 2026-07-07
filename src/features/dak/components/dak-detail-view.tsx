@@ -20,14 +20,20 @@ import {
   calculatePendingDays,
   formatPendingDays,
 } from "@/features/audit/lib/pending-days";
+import { DakApprovalPanel } from "@/features/dak/components/dak-approval-panel";
 import { AssignDakForm } from "@/features/dak/components/assign-dak-form";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
 import { DakStatusForm } from "@/features/dak/components/dak-status-form";
+import { DakDepartmentActionsPanel } from "@/features/dak-requests/components/dak-department-actions-panel";
+import { DakRequestReviewPanel } from "@/features/dak-requests/components/dak-request-review-panel";
+import type { DakRequestRecord } from "@/features/dak-requests/services/dak-requests";
+import type { DepartmentOption } from "@/features/dak/services/get-departments";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
-import { getAllowedTransitions } from "@/features/dak/lib/workflow";
+import { canApproveClosure, getAllowedTransitions } from "@/features/dak/lib/workflow";
 import {
   formatDakDate,
   formatDakStatus,
+  formatPriorityLabel,
   getDepartmentName,
   getStatusStyle,
   priorityStyles,
@@ -48,6 +54,11 @@ interface DakDetailViewProps {
   showAssignForm: boolean;
   isReassign?: boolean;
   canUpdateStatus: boolean;
+  showApprovalPanel?: boolean;
+  showDepartmentActions?: boolean;
+  showRequestReview?: boolean;
+  dakRequests?: DakRequestRecord[];
+  departments?: DepartmentOption[];
   remarks: DakRemarkRecord[];
   atrRecords: DakAtrRecord[];
   remarkPermissions: RemarkPermissions;
@@ -77,6 +88,11 @@ export function DakDetailView({
   showAssignForm,
   isReassign = false,
   canUpdateStatus,
+  showApprovalPanel = false,
+  showDepartmentActions = false,
+  showRequestReview = false,
+  dakRequests = [],
+  departments = [],
   remarks,
   atrRecords,
   remarkPermissions,
@@ -144,7 +160,7 @@ export function DakDetailView({
                     "bg-muted text-muted-foreground"
                   )}
                 >
-                  {dak.priority}
+                  {formatPriorityLabel(dak.priority)}
                 </Badge>
               </DetailRow>
               <DetailRow label="Department">
@@ -174,6 +190,12 @@ export function DakDetailView({
                 {formatDakDate(dak.due_date)}
               </DetailRow>
               <DetailRow label="Sender">{dak.sender}</DetailRow>
+              {dak.applicant_mobile && (
+                <DetailRow label="Applicant Mobile">{dak.applicant_mobile}</DetailRow>
+              )}
+              {dak.sender_address && (
+                <DetailRow label="Sender Address">{dak.sender_address}</DetailRow>
+              )}
             </dl>
           </CardContent>
         </Card>
@@ -192,6 +214,20 @@ export function DakDetailView({
               dakId={dak.id}
               currentStatus={dak.status}
               allowedTransitions={allowedTransitions}
+            />
+          )}
+
+          {showApprovalPanel && <DakApprovalPanel dakId={dak.id} />}
+
+          {showRequestReview && (
+            <DakRequestReviewPanel requests={dakRequests} />
+          )}
+
+          {showDepartmentActions && (
+            <DakDepartmentActionsPanel
+              dakId={dak.id}
+              departments={departments}
+              currentDepartmentId={dak.department_id}
             />
           )}
         </div>

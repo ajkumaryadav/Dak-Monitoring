@@ -1,11 +1,19 @@
 import { z } from "zod";
 
-import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import type { PriorityLevel } from "@/types";
+
+/** Collector-facing priority labels at assignment time. */
+export const ASSIGN_PRIORITY_OPTIONS = [
+  { value: "immediate", label: "Immediate — Due Today" },
+  { value: "urgent", label: "High — 3 Days" },
+  { value: "important", label: "Normal — 15 Days" },
+  { value: "routine", label: "Low — 30 Days" },
+] as const satisfies ReadonlyArray<{ value: PriorityLevel; label: string }>;
+
 export const PRIORITY_OPTIONS = [
-  { value: "routine", label: "Routine" },
-  { value: "important", label: "Important" },
-  { value: "urgent", label: "Urgent" },
+  { value: "routine", label: "Low" },
+  { value: "important", label: "Normal" },
+  { value: "urgent", label: "High" },
   { value: "immediate", label: "Immediate" },
 ] as const satisfies ReadonlyArray<{ value: PriorityLevel; label: string }>;
 
@@ -24,34 +32,30 @@ export const createDakSchema = z.object({
     .string()
     .trim()
     .min(5, "Sender address must be at least 5 characters"),
-  priority: z
+  applicantMobile: z
     .string()
-    .min(1, "Please select a priority level")
-    .refine(
-      (value): value is (typeof priorityValues)[number] =>
-        priorityValues.includes(value as (typeof priorityValues)[number]),
-      { message: "Please select a priority level" }
-    ),
+    .trim()
+    .min(10, "Enter a valid 10-digit mobile number")
+    .transform((v) => v.replace(/\D/g, "").slice(-10))
+    .refine((v) => /^\d{10}$/.test(v), {
+      message: "Enter a valid 10-digit mobile number",
+    }),
+  applicantReference: z
+    .string()
+    .max(50, "Reference must be 50 characters or fewer")
+    .optional()
+    .transform((v) => (v?.trim() ? v.trim() : undefined)),
   departmentId: z
-    .string({ error: "Please select a department" })
-    .min(1, "Please select a department")
-    .uuid("Please select a valid department"),
+    .string()
+    .optional()
+    .transform((value) => (value?.trim() ? value.trim() : undefined))
+    .refine((value) => !value || z.string().uuid().safeParse(value).success, {
+      message: "Please select a valid department",
+    }),
   sourceId: z
     .string({ error: "Please select a DAK source" })
     .min(1, "Please select a DAK source")
     .uuid("Please select a valid DAK source"),
-  dueDate: z
-    .string()
-    .min(1, "Due date is required")
-    .refine((value) => !Number.isNaN(Date.parse(value)), {
-      message: "Please enter a valid due date",
-    })
-    .refine(
-      (value) => value.slice(0, 10) >= getDistrictDateString(),
-      {
-        message: "Due date must be on or after today (received date)",
-      }
-    ),
   remarks: z.string().max(1000, "Remarks must be 1000 characters or fewer"),
   attachment: z.any().optional(),
 });
@@ -62,9 +66,9 @@ export type CreateDakFormValues = {
   subject: string;
   senderName: string;
   senderAddress: string;
-  priority: string;
-  departmentId: string;
+  departmentId?: string;
   sourceId: string;
-  dueDate: string;
   remarks: string;
 };
+
+export { priorityValues };

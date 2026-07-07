@@ -7,12 +7,14 @@ export type UserRole =
   | "department_user"
   | "section_user";
 
-/** DAK workflow status values (DEO → Assign → DLO → Complete). */
+/** DAK workflow status values (DEO → Assign → DLO → ATR → Approval → Closed). */
 export type DakStatus =
   | "received"
   | "assigned"
   | "in_progress"
   | "pending"
+  | "atr_submitted"
+  | "pending_approval"
   | "completed"
   | "closed";
 

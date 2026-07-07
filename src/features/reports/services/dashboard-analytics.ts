@@ -763,4 +763,91 @@ export async function fetchDashboardStatsSummary(user: SessionUser) {
   };
 }
 
+export interface OfficerPerformanceRow {
+  officer_id: string;
+  officer_name: string;
+  department_name: string;
+  pending: number;
+  overdue: number;
+  completed: number;
+  avg_disposal_days: number | null;
+}
+
+/** Officer-wise pending, overdue, completed, and average disposal time. */
+export async function fetchOfficerPerformance(): Promise<OfficerPerformanceRow[]> {
+  const supabase = createAdminClient();
+  const today = getDistrictDateString();
+
+  const { data, error } = await supabase
+    .from("dak_entries")
+    .select(
+      "id, status, due_date, received_date, closed_date, assigned_to, users!dak_entries_assigned_to_fkey(id, name, department_id, departments(name))"
+    )
+    .not("assigned_to", "is", null);
+
+  if (error || !data) {
+    console.error("[fetchOfficerPerformance]", error?.message);
+    return [];
+  }
+
+  const byOfficer = new Map<
+    string,
+    OfficerPerformanceRow & { disposalDays: number[] }
+  >();
+
+  for (const row of data) {
+    const user = row.users as
+      | { id: string; name: string; departments: { name: string } | { name: string }[] | null }
+      | { id: string; name: string; departments: { name: string } | { name: string }[] | null }[]
+      | null;
+    const officer = Array.isArray(user) ? user[0] : user;
+    if (!officer?.id) continue;
+
+    const status = normalizeDakStatus(row.status as string);
+    const entry = byOfficer.get(officer.id) ?? {
+      officer_id: officer.id,
+      officer_name: officer.name,
+      department_name: Array.isArray(officer.departments)
+        ? officer.departments[0]?.name ?? "—"
+        : officer.departments?.name ?? "—",
+      pending: 0,
+      overdue: 0,
+      completed: 0,
+      avg_disposal_days: null,
+      disposalDays: [],
+    };
+
+    if (isTerminalStatus(status)) {
+      entry.completed += 1;
+      if (row.received_date && row.closed_date) {
+        const days = Math.round(
+          (Date.parse(row.closed_date as string) -
+            Date.parse(row.received_date as string)) /
+            86400000
+        );
+        if (days >= 0) entry.disposalDays.push(days);
+      }
+    } else if (isActiveStatus(status)) {
+      entry.pending += 1;
+      if (row.due_date && (row.due_date as string) < today) {
+        entry.overdue += 1;
+      }
+    }
+
+    byOfficer.set(officer.id, entry);
+  }
+
+  return [...byOfficer.values()]
+    .map(({ disposalDays, ...row }) => ({
+      ...row,
+      avg_disposal_days:
+        disposalDays.length > 0
+          ? Math.round(
+              disposalDays.reduce((a, b) => a + b, 0) / disposalDays.length
+            )
+          : null,
+    }))
+    .sort((a, b) => b.pending - a.pending);
+}
+
 export { PENDING_DB_STATUSES, COMPLETED_DB_STATUSES, isCompletedDbStatus };

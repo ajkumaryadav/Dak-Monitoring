@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import {
-  canTransition,
+  canDepartmentTransition,
   getStatusLabel,
   normalizeDakStatus,
 } from "@/features/dak/lib/workflow";
@@ -13,7 +13,11 @@ import {
 } from "@/features/dak/schemas/status-schema";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { notifyDakStatusChange } from "@/features/notifications/services/notify-dak-event";
-import { hasPermission, isDistrictAdminRole, PERMISSIONS } from "@/lib/auth";
+import {
+  canUpdateDakStatusRole,
+  hasPermission,
+  PERMISSIONS,
+} from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 import type { DakStatus } from "@/types";
@@ -52,7 +56,10 @@ export async function updateDakStatus(
       };
     }
 
-    if (!hasPermission(user.role, PERMISSIONS.DAK_UPDATE)) {
+    if (
+      !hasPermission(user.role, PERMISSIONS.DAK_UPDATE) ||
+      !canUpdateDakStatusRole(user.role)
+    ) {
       return {
         success: false,
         message: "You do not have permission to update DAK status.",
@@ -90,7 +97,7 @@ export async function updateDakStatus(
       };
     }
 
-    if (!canTransition(currentStatus, nextStatus)) {
+    if (!canDepartmentTransition(currentStatus, nextStatus)) {
       return {
         success: false,
         message: `Cannot change status from ${getStatusLabel(currentStatus)} to ${getStatusLabel(nextStatus)}.`,
@@ -100,9 +107,7 @@ export async function updateDakStatus(
     if (
       user.departmentId &&
       existing.department_id &&
-      user.departmentId !== existing.department_id &&
-      user.role !== "collector" &&
-      user.role !== "acp"
+      user.departmentId !== existing.department_id
     ) {
       return {
         success: false,
@@ -114,14 +119,6 @@ export async function updateDakStatus(
       status: nextStatus,
       updated_by: user.id,
     };
-
-    if (nextStatus === "completed") {
-      updatePayload.disposed_date = new Date().toISOString().slice(0, 10);
-    }
-
-    if (nextStatus === "closed") {
-      updatePayload.closed_date = new Date().toISOString().slice(0, 10);
-    }
 
     const { error: updateError } = await supabase
       .from("dak_entries")
@@ -136,20 +133,8 @@ export async function updateDakStatus(
       };
     }
 
-    const historyEventType =
-      nextStatus === "completed"
-        ? "completed"
-        : nextStatus === "closed"
-          ? "closed"
-          : "status_changed";
-
-    const historyAction =
-      nextStatus === "completed"
-        ? "Completed"
-        : nextStatus === "closed"
-          ? "Closed"
-          : `Status Changed to ${getStatusLabel(nextStatus)}`;
-
+    const historyEventType = "status_changed";
+    const historyAction = `Status Changed to ${getStatusLabel(nextStatus)}`;
     const historyRemarks =
       parsed.data.remarks?.trim() ||
       `Changed from ${getStatusLabel(currentStatus)} to ${getStatusLabel(nextStatus)}`;
@@ -158,8 +143,7 @@ export async function updateDakStatus(
       dakId: parsed.data.dakId,
       userId: user.id,
       eventType: historyEventType,
-      timelineActionType:
-        nextStatus === "closed" ? "closed" : "status_changed",
+      timelineActionType: "status_changed",
       action: historyAction,
       remarks: historyRemarks,
       fromStatus: currentStatus,

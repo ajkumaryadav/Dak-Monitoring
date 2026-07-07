@@ -6,21 +6,34 @@ export const STATUS_LABELS: Record<DakStatus, string> = {
   assigned: "Assigned",
   in_progress: "In Progress",
   pending: "Pending",
+  atr_submitted: "ATR Submitted",
+  pending_approval: "Pending Approval",
   completed: "Completed",
   closed: "Closed",
 };
 
 /**
  * Valid forward transitions:
- * DEO Entry → Collector/ADM Assignment → Department Officer → Action → Completed → Closed
+ * DEO Entry → Collector Assignment → Department Officer → ATR → Collector Approval → Closed
  */
 export const STATUS_TRANSITIONS: Record<DakStatus, readonly DakStatus[]> = {
   received: ["assigned"],
   assigned: ["in_progress", "pending"],
-  in_progress: ["pending", "completed"],
-  pending: ["in_progress", "completed"],
+  in_progress: ["pending"],
+  pending: ["in_progress"],
+  atr_submitted: ["pending_approval"],
+  pending_approval: ["closed", "in_progress"],
   completed: ["closed"],
   closed: [],
+};
+
+/** Status options shown on the department officer status form. */
+export const DEPARTMENT_STATUS_TRANSITIONS: Partial<
+  Record<DakStatus, readonly DakStatus[]>
+> = {
+  assigned: ["in_progress", "pending"],
+  in_progress: ["pending"],
+  pending: ["in_progress"],
 };
 
 export const TERMINAL_STATUSES: readonly DakStatus[] = ["completed", "closed"];
@@ -30,6 +43,8 @@ export const ACTIVE_STATUSES: readonly DakStatus[] = [
   "assigned",
   "in_progress",
   "pending",
+  "atr_submitted",
+  "pending_approval",
 ];
 
 /** Legacy DB enum values mapped to the current workflow model. */
@@ -61,11 +76,25 @@ export function getStatusLabel(status: string): string {
 
 export function getAllowedTransitions(status: string): DakStatus[] {
   const normalized = normalizeDakStatus(status);
+  return [...(DEPARTMENT_STATUS_TRANSITIONS[normalized] ?? [])];
+}
+
+export function getCollectorAllowedTransitions(status: string): DakStatus[] {
+  const normalized = normalizeDakStatus(status);
+  if (normalized === "pending_approval") {
+    return [];
+  }
   return [...(STATUS_TRANSITIONS[normalized] ?? [])];
 }
 
 export function canTransition(from: string, to: DakStatus): boolean {
-  return getAllowedTransitions(from).includes(to);
+  const normalized = normalizeDakStatus(from);
+  return [...(STATUS_TRANSITIONS[normalized] ?? [])].includes(to);
+}
+
+export function canDepartmentTransition(from: string, to: DakStatus): boolean {
+  const normalized = normalizeDakStatus(from);
+  return [...(DEPARTMENT_STATUS_TRANSITIONS[normalized] ?? [])].includes(to);
 }
 
 export function isTerminalStatus(status: string): boolean {
@@ -99,6 +128,17 @@ export function canAssignStatus(status: string): boolean {
 
 /** Active statuses where the Collector may change department/section allocation. */
 export function canReassignStatus(status: string): boolean {
+  const normalized = normalizeDakStatus(status);
+  return ["assigned", "in_progress", "pending", "atr_submitted"].includes(
+    normalized
+  );
+}
+
+export function canApproveClosure(status: string): boolean {
+  return normalizeDakStatus(status) === "pending_approval";
+}
+
+export function canSubmitAtrStatus(status: string): boolean {
   const normalized = normalizeDakStatus(status);
   return ["assigned", "in_progress", "pending"].includes(normalized);
 }

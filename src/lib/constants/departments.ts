@@ -1,6 +1,7 @@
 /** District departments — always sorted alphabetically when loaded. */
 export const DISTRICT_DEPARTMENTS = [
   "BIDA",
+  "Collectorate",
   "Devsthan",
   "DOIT&C",
   "Food & Supply",
@@ -27,18 +28,28 @@ export type DistrictDepartmentName = (typeof DISTRICT_DEPARTMENTS)[number];
 
 /** Internal Collectorate sections for section-level assignment. */
 export const INTERNAL_SECTIONS = [
-  "Development",
+  "Establishment",
   "Accounts",
+  "General Administration",
+  "Nazarat",
+  "Legal",
+  "Confidential",
+  "Election",
+  "Disaster Management",
+  "Store",
+  "Record Room",
+  "Planning",
+  "Development",
   "PA Cell",
   "General",
   "LR",
   "Court",
-  "Legal",
   "RTI",
   "Panchayati Raj",
   "ADM",
-  "Store",
   "ACEM",
+  "PRO",
+  "Revenue",
 ] as const;
 
 export type InternalSectionName = (typeof INTERNAL_SECTIONS)[number];

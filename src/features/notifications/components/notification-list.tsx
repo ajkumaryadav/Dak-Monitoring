@@ -43,6 +43,15 @@ const typeIcons: Record<NotificationType, typeof Bell> = {
   user_enabled: UserCheck,
   remark_added: MessageSquare,
   atr_submitted: FileText,
+  transfer_requested: ArrowRightLeft,
+  transfer_approved: CheckCircle2,
+  transfer_rejected: AlertTriangle,
+  escalation_requested: ShieldAlert,
+  escalation_resolved: ShieldAlert,
+  extension_requested: CalendarClock,
+  extension_approved: CalendarClock,
+  extension_rejected: AlertTriangle,
+  closure_approved: CheckCircle2,
 };
 
 interface NotificationListProps {

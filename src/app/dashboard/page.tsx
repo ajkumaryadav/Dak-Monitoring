@@ -11,7 +11,9 @@ import {
 import { fetchSlaDashboardData } from "@/features/sla/services/sla-report";
 import { fetchDashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
 import { getUserStats } from "@/features/users/services/get-users";
+import { getTaskStats } from "@/features/tasks/services/tasks";
 import {
+  canManageUsers,
   isCollectorDashboardRole,
   isDepartmentDashboardRole,
   isOperatorDashboardRole,
@@ -28,7 +30,6 @@ export default async function DashboardPage() {
 
   const isOperator = isOperatorDashboardRole(user.role);
   const isDepartment = isDepartmentDashboardRole(user.role);
-  const isCollector = isCollectorDashboardRole(user.role);
   const isSection = isSectionDashboardRole(user.role);
 
   const departmentScope =
@@ -36,9 +37,20 @@ export default async function DashboardPage() {
       ? user.departmentId
       : undefined;
 
-  const showUserStats = isCollectorDashboardRole(user.role);
-  const showDistrictAlerts = isCollector;
+  const showUserStats = canManageUsers(user.role);
+  const showDistrictAlerts = isCollectorDashboardRole(user.role);
   const showScopedAlerts = isDepartment;
+  const showTaskStats =
+    user.role === "collector" ||
+    user.role === "adm" ||
+    isDepartment ||
+    isSection;
+
+  const taskScope = isSection
+    ? { assignedTo: user.id }
+    : isDepartment && user.departmentId
+      ? { departmentId: user.departmentId }
+      : undefined;
 
   const [
     analytics,
@@ -49,6 +61,7 @@ export default async function DashboardPage() {
     highPriorityEntries,
     immediateEntries,
     userStats,
+    taskStats,
   ] = await Promise.all([
     fetchDashboardAnalytics(user),
     isOperator ? Promise.resolve([]) : getRecentActivity(user, 8),
@@ -69,6 +82,7 @@ export default async function DashboardPage() {
       ? getImmediateDakEntries(departmentScope)
       : Promise.resolve([]),
     showUserStats ? getUserStats() : Promise.resolve(null),
+    showTaskStats ? getTaskStats(taskScope) : Promise.resolve(null),
   ]);
 
   return (
@@ -85,6 +99,7 @@ export default async function DashboardPage() {
       highPriorityEntries={highPriorityEntries}
       immediateEntries={immediateEntries}
       userStats={userStats}
+      taskStats={taskStats}
     />
   );
 }
