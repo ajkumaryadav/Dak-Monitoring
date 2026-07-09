@@ -57,6 +57,8 @@ export interface DepartmentDashboardStatSummary {
 export interface OperatorDashboardStatSummary {
   registered: number;
   todayEntries: number;
+  monthEntries: number;
+  forwarded: number;
   returned: number;
 }
 
@@ -547,12 +549,17 @@ async function fetchOperatorDashboardAnalytics(
   });
 
   let todayEntries = 0;
+  let monthEntries = 0;
+  let forwarded = 0;
   let returned = 0;
+
+  const monthPrefix = today.slice(0, 7);
 
   for (const entry of entries) {
     const createdDate = entry.created_at.slice(0, 10);
     if (createdDate === today) todayEntries += 1;
-    if (entry.status === "received") returned += 1;
+    if (createdDate.startsWith(monthPrefix)) monthEntries += 1;
+    if (entry.status === "received") forwarded += 1;
   }
 
   return {
@@ -560,6 +567,8 @@ async function fetchOperatorDashboardAnalytics(
     stats: {
       registered: entries.length,
       todayEntries,
+      monthEntries,
+      forwarded,
       returned,
     },
     recentDak: entries.slice(0, 10).map(toRecentRow),
@@ -723,6 +732,8 @@ export async function fetchDashboardStatsSummary(user: SessionUser) {
       variant: "operator" as const,
       registered: data.stats.registered,
       todayEntries: data.stats.todayEntries,
+      monthEntries: data.stats.monthEntries,
+      forwarded: data.stats.forwarded,
       returned: data.stats.returned,
     };
   }

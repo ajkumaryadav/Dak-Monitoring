@@ -63,7 +63,7 @@ export function DakHistoryTimeline({ entries }: DakHistoryTimelineProps) {
           <div>
             <CardTitle>Timeline & Audit History</CardTitle>
             <CardDescription>
-              Complete workflow trail with remarks and responsible officers
+              Latest activity first — workflow trail with remarks and officers
             </CardDescription>
           </div>
         </div>
@@ -76,6 +76,7 @@ export function DakHistoryTimeline({ entries }: DakHistoryTimelineProps) {
         ) : (
           <ol className="relative space-y-0 border-l border-primary/20 pl-6">
             {entries.map((entry, index) => {
+              const isLatest = index === 0;
               const isLast = index === entries.length - 1;
               const Icon = eventIcons[entry.eventType] ?? Clock;
 
@@ -87,7 +88,7 @@ export function DakHistoryTimeline({ entries }: DakHistoryTimelineProps) {
                   <span
                     className={cn(
                       "absolute top-1 -left-[calc(0.75rem+1px)] flex size-3 items-center justify-center rounded-full ring-4 ring-background",
-                      isLast ? "bg-primary" : "bg-primary/40"
+                      isLatest ? "bg-primary" : "bg-primary/40"
                     )}
                   />
                   <div className="flex flex-wrap items-center gap-2">

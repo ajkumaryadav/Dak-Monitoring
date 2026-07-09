@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  sanitizeFileName,
   validateAttachmentFile,
 } from "@/features/dak/lib/attachment-validation";
 import { uploadDakFile } from "@/features/dak/actions/upload-attachment";
@@ -75,7 +76,7 @@ export async function submitDakAtr(
       }
 
       attachmentMeta = {
-        fileName: attachment.name,
+        fileName: sanitizeFileName(attachment.name),
         filePath: upload.filePath,
         mimeType: attachment.type || "application/octet-stream",
         fileSize: attachment.size,

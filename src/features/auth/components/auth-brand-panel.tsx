@@ -6,7 +6,6 @@ import {
   Shield,
 } from "lucide-react";
 
-import { AuthShowcasePreview } from "@/features/auth/components/auth-showcase-preview";
 import { appConfig } from "@/lib/constants/navigation";
 import { cn } from "@/lib/utils";
 
@@ -127,30 +126,6 @@ export function AuthBrandPanel() {
             </li>
           ))}
         </ul>
-
-        <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4">
-          <div className="flex items-start gap-3">
-            <Shield className="mt-0.5 size-4 shrink-0 text-amber-600" />
-            <div>
-              <p className="text-sm font-semibold text-foreground">Security Notice</p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Authorized personnel only. All login attempts and administrative
-                actions are logged for audit. Do not share credentials.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <AuthShowcasePreview />
-      </div>
-
-      <div className="relative z-10 mt-8 border-t border-border/60 pt-5">
-        <p className="text-sm font-semibold text-foreground">
-          {appConfig.districtAdministration}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          District Governance · Administrative Monitoring
-        </p>
       </div>
     </div>
   );

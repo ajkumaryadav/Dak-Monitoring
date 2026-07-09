@@ -125,6 +125,19 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
 /** Roles that see operator-scoped dashboard (own registrations only). */
 export const OPERATOR_DASHBOARD_ROLES: readonly UserRole[] = ["dak_operator"];
 
+/** Routes the DAK Operator must never access (even with dak:view). */
+export const OPERATOR_BLOCKED_ROUTE_PREFIXES: readonly string[] = [
+  "/dashboard/dak/pending",
+  "/dashboard/dak/completed",
+  "/dashboard/dak/assignments",
+  "/dashboard/dak/pending-approval",
+  "/dashboard/tasks",
+  "/dashboard/reports",
+  "/dashboard/audit",
+  "/dashboard/activity",
+  "/dashboard/admin",
+];
+
 /** Roles that see full district dashboard (analytics, reports widgets). */
 export const COLLECTOR_DASHBOARD_ROLES: readonly UserRole[] = [
   "collector",
@@ -162,7 +175,24 @@ export function hasPermission(
   return permissions.includes(PERMISSIONS.ALL) || permissions.includes(permission);
 }
 
+export function isOperatorBlockedRoute(
+  role: UserRole,
+  pathname: string
+): boolean {
+  if (role !== "dak_operator") {
+    return false;
+  }
+
+  return OPERATOR_BLOCKED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
 export function canAccessRoute(role: UserRole, pathname: string): boolean {
+  if (isOperatorBlockedRoute(role, pathname)) {
+    return false;
+  }
+
   const matchedRoute = Object.keys(ROUTE_PERMISSIONS)
     .sort((a, b) => b.length - a.length)
     .find(

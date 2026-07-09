@@ -3,6 +3,7 @@ import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
 import { DakHistoryTimeline } from "@/features/audit/components/dak-history-timeline";
 import { getRemarkTypeLabel } from "@/features/remarks/lib/remark-types";
 import type { DakAtrRecord, DakRemarkRecord } from "@/features/remarks/services/get-remarks";
+import { cn } from "@/lib/utils";
 
 export type UnifiedHistoryKind = "workflow" | "remark" | "atr";
 
@@ -61,9 +62,14 @@ export function buildUnifiedHistory(
     });
   }
 
-  return items.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return items.sort((a, b) => {
+    const timeDiff =
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (timeDiff !== 0) {
+      return timeDiff;
+    }
+    return b.id.localeCompare(a.id);
+  });
 }
 
 interface CompleteHistoryTimelineProps {
@@ -99,12 +105,15 @@ export function CompleteHistoryTimeline({
   return (
     <ol className="relative space-y-0 border-l border-primary/20 pl-6">
       {unified.map((item, index) => {
-        const isLast = index === unified.length - 1;
+        const isLatest = index === 0;
         return (
-          <li key={item.id} className={`relative pb-6 ${isLast ? "pb-0" : ""}`}>
+          <li
+            key={item.id}
+            className={cn("relative pb-6", index === unified.length - 1 && "pb-0")}
+          >
             <span
               className={`absolute top-1 -left-[calc(0.75rem+1px)] size-3 rounded-full ring-4 ring-background ${
-                isLast ? "bg-primary" : "bg-primary/40"
+                isLatest ? "bg-primary" : "bg-primary/40"
               }`}
             />
             <p className="text-sm font-medium">{item.label}</p>

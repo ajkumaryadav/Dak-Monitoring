@@ -9,6 +9,7 @@ import {
   submitAtrFormAction,
   type SubmitAtrFormState,
 } from "@/features/remarks/actions/submit-atr";
+import { ALLOWED_ATTACHMENT_ACCEPT } from "@/features/dak/lib/attachment-validation";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -50,7 +51,7 @@ export function AtrForm({ dakId }: AtrFormProps) {
           id="attachment"
           name="attachment"
           type="file"
-          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+          accept={ALLOWED_ATTACHMENT_ACCEPT}
           className="block w-full text-sm"
         />
       </div>

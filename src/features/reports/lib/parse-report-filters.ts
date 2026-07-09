@@ -1,4 +1,5 @@
 import type { PendingReportFilters } from "@/features/reports/services/pending-report";
+import { sanitizeDateRangeParams } from "@/lib/validation/date-range";
 import type { DakStatus, PriorityLevel } from "@/types";
 
 /** URL search params for report list pages (mirrors DakListSearchParams). */
@@ -17,14 +18,19 @@ export interface ReportSearchParams {
 export type ReportFilterValues = ReportSearchParams;
 
 export function parseReportFilters(params: ReportSearchParams): PendingReportFilters {
+  const { dateFrom, dateTo } = sanitizeDateRangeParams(
+    params.dateFrom,
+    params.dateTo
+  );
+
   return {
     departmentId: params.department,
     sourceId: params.source,
     assignmentUnitId: params.section,
     priority: (params.priority ?? "") as PriorityLevel | "",
     status: (params.status ?? "") as DakStatus | "",
-    dateFrom: params.dateFrom,
-    dateTo: params.dateTo,
+    dateFrom,
+    dateTo,
     overdueOnly: params.overdue === "1",
   };
 }

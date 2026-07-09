@@ -12,7 +12,11 @@ import {
 } from "@/features/dak/lib/parse-dak-list-params";
 import { getDakListScope } from "@/features/dak/lib/list-scope";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
-import { PERMISSIONS, requirePermission } from "@/lib/auth";
+import {
+  isOperatorDashboardRole,
+  PERMISSIONS,
+  requirePermission,
+} from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 
 interface AssignedDakPageProps {
@@ -27,31 +31,43 @@ export default async function AssignedDakPage({
   await requirePermission(PERMISSIONS.DAK_VIEW);
 
   const user = await getSessionUser();
+  const isOperator = user ? isOperatorDashboardRole(user.role) : false;
   const params = await searchParams;
   const { searchQuery, filters } = parseDakListParams(params);
   const filtersActive = hasActiveListFilters(filters);
 
   const scope = getDakListScope(user);
-  const showDepartmentFilter = !scope.departmentId && !scope.sectionId;
+  const showDepartmentFilter = !scope.departmentId && !scope.sectionId && !scope.createdBy;
 
+  const listFilter = isOperator ? "forwarded" : "assigned";
   const dakEntries = await getFilteredDakList(
-    "assigned",
+    listFilter,
     searchQuery,
     scope,
     filters
   );
 
   const hasQuery = Boolean(searchQuery || filtersActive);
+  const pageTitle = isOperator
+    ? hasQuery
+      ? "Forwarded DAK — Filtered"
+      : "Forwarded DAK"
+    : hasQuery
+      ? "Assigned DAK — Filtered"
+      : "Assigned DAK";
+  const pageDescription = isOperator
+    ? hasQuery
+      ? "Your forwarded correspondence matching the filters."
+      : "DAK you have registered and forwarded to Collector/ADM for review."
+    : hasQuery
+      ? "Allotted correspondence matching your filters."
+      : "All DAK currently allotted — assigned, in progress, pending, or completed awaiting closure.";
 
   return (
     <div className="space-y-6">
       <DakPageHeader
-        title={hasQuery ? "Assigned DAK — Filtered" : "Assigned DAK"}
-        description={
-          hasQuery
-            ? "Allotted correspondence matching your filters."
-            : "All DAK currently allotted — assigned, in progress, pending, or completed awaiting closure."
-        }
+        title={pageTitle}
+        description={pageDescription}
         icon={ClipboardList}
       />
 
@@ -60,11 +76,17 @@ export default async function AssignedDakPage({
       <DakListFiltersPanel
         basePath="/dashboard/dak/assigned"
         showDepartmentFilter={showDepartmentFilter}
-        statusMode="pending"
+        statusMode={isOperator ? "all" : "pending"}
       />
 
       <p className="text-sm text-muted-foreground">
-        {dakEntries.length} {hasQuery ? "matching" : "assigned"} entr
+        {dakEntries.length}{" "}
+        {hasQuery
+          ? "matching"
+          : isOperator
+            ? "forwarded"
+            : "assigned"}{" "}
+        entr
         {dakEntries.length === 1 ? "y" : "ies"}
         {hasQuery && (
           <>
@@ -84,12 +106,20 @@ export default async function AssignedDakPage({
         <DakListTable
           entries={dakEntries}
           emptyTitle={
-            hasQuery ? "No matching assigned DAK" : "No assigned DAK entries"
+            hasQuery
+              ? isOperator
+                ? "No matching forwarded DAK"
+                : "No matching assigned DAK"
+              : isOperator
+                ? "No forwarded DAK entries"
+                : "No assigned DAK entries"
           }
           emptyDescription={
             hasQuery
               ? "Try different filters or search terms."
-              : "Assigned correspondence will appear here after Collector allocation."
+              : isOperator
+                ? "Registered DAK forwarded to Collector/ADM will appear here."
+                : "Assigned correspondence will appear here after Collector allocation."
           }
         />
       </div>

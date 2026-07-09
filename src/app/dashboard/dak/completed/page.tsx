@@ -12,7 +12,7 @@ import {
 } from "@/features/dak/lib/parse-dak-list-params";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
 import { getDakListScope } from "@/features/dak/lib/list-scope";
-import { PERMISSIONS, requirePermission } from "@/lib/auth";
+import { PERMISSIONS, requireNonOperatorRoute, requirePermission } from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 
 interface CompletedDakPageProps {
@@ -25,6 +25,7 @@ export default async function CompletedDakPage({
   searchParams,
 }: CompletedDakPageProps) {
   await requirePermission(PERMISSIONS.DAK_VIEW);
+  await requireNonOperatorRoute("/dashboard/dak/completed");
 
   const user = await getSessionUser();
   const params = await searchParams;

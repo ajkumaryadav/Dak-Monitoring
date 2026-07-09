@@ -57,13 +57,18 @@ export async function getDakRemarks(
   dakId: string,
   user: SessionUser
 ): Promise<DakRemarkRecord[]> {
+  if (user.role === "dak_operator") {
+    return [];
+  }
+
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("dak_remarks")
     .select(REMARK_SELECT)
     .eq("dak_id", dakId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
 
   if (error) {
     console.error("[getDakRemarks]", error.message);
@@ -77,8 +82,13 @@ export async function getDakRemarks(
 
 /** Fetch ATR submissions for a DAK with signed attachment URLs. */
 export async function getDakAtrRecords(
-  dakId: string
+  dakId: string,
+  user?: SessionUser | null
 ): Promise<DakAtrRecord[]> {
+  if (user?.role === "dak_operator") {
+    return [];
+  }
+
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
@@ -96,7 +106,8 @@ export async function getDakAtrRecords(
     `
     )
     .eq("dak_id", dakId)
-    .order("submitted_at", { ascending: false });
+    .order("submitted_at", { ascending: false })
+    .order("id", { ascending: false });
 
   if (error) {
     console.error("[getDakAtrRecords]", error.message);

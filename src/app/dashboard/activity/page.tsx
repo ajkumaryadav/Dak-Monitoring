@@ -5,9 +5,11 @@ import { ActivityLogTable } from "@/features/activity/components/activity-log-ta
 import { canViewActivityLog } from "@/features/activity/lib/activity-permissions";
 import { getActivityLogs } from "@/features/activity/services/activity-log";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import { GetFilterForm } from "@/components/filters/get-filter-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PERMISSIONS, requirePermission } from "@/lib/auth";
+import { sanitizeDateRangeParams } from "@/lib/validation/date-range";
 import { redirect } from "next/navigation";
 
 interface ActivityPageProps {
@@ -31,12 +33,16 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
   }
 
   const params = await searchParams;
+  const { dateFrom, dateTo } = sanitizeDateRangeParams(
+    params.dateFrom,
+    params.dateTo
+  );
 
   const entries = await getActivityLogs(user, {
     module: params.module,
     action: params.action,
-    dateFrom: params.dateFrom,
-    dateTo: params.dateTo,
+    dateFrom,
+    dateTo,
     limit: 250,
   });
 
@@ -50,8 +56,7 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
         icon={Activity}
       />
 
-      <form
-        method="GET"
+      <GetFilterForm
         action="/dashboard/activity"
         className="grid gap-4 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-5"
       >
@@ -93,7 +98,8 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
             id="dateFrom"
             name="dateFrom"
             type="date"
-            defaultValue={params.dateFrom ?? ""}
+            defaultValue={dateFrom ?? ""}
+            max={dateTo || undefined}
             className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
           />
         </div>
@@ -103,7 +109,8 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
             id="dateTo"
             name="dateTo"
             type="date"
-            defaultValue={params.dateTo ?? ""}
+            defaultValue={dateTo ?? ""}
+            min={dateFrom || undefined}
             className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
           />
         </div>
@@ -118,7 +125,7 @@ export default async function ActivityPage({ searchParams }: ActivityPageProps) 
             Reset
           </Link>
         </div>
-      </form>
+      </GetFilterForm>
 
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background p-5 shadow-sm">
         <ActivityLogTable entries={entries} />

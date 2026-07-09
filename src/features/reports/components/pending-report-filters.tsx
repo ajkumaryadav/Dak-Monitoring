@@ -2,6 +2,8 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { DateRangeInputs } from "@/components/filters/date-range-inputs";
+import { useUrlDateRangeFilter } from "@/components/filters/use-url-date-range-filter";
 import { Label } from "@/components/ui/label";
 import { STATUS_LABELS } from "@/features/dak/lib/workflow";
 import { PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
@@ -32,6 +34,8 @@ export function PendingReportFilters({
 }: PendingReportFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { dateFrom, dateTo, updateDateFrom, updateDateTo } =
+    useUrlDateRangeFilter(basePath);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -129,27 +133,12 @@ export function PendingReportFilters({
         </select>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="dateFrom">From Date</Label>
-        <input
-          id="dateFrom"
-          type="date"
-          defaultValue={searchParams.get("dateFrom") ?? ""}
-          onChange={(e) => updateParam("dateFrom", e.target.value)}
-          className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="dateTo">To Date</Label>
-        <input
-          id="dateTo"
-          type="date"
-          defaultValue={searchParams.get("dateTo") ?? ""}
-          onChange={(e) => updateParam("dateTo", e.target.value)}
-          className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
-        />
-      </div>
+      <DateRangeInputs
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={updateDateFrom}
+        onDateToChange={updateDateTo}
+      />
 
       <div className="flex items-end sm:col-span-2 lg:col-span-1">
         <label className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg border border-input px-3 text-sm dark:bg-input/30">

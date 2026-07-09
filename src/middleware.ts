@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabaseEnv } from "@/lib/supabase/env";
+import { isOperatorBlockedRoute } from "@/lib/auth/permissions";
+import { readRoleSlugFromProfile } from "@/lib/auth/role-slug";
 
 const PROTECTED_PREFIXES = ["/dashboard"];
 
@@ -45,6 +47,24 @@ export async function middleware(request: NextRequest) {
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  if (user && isProtected && isOperatorBlockedRoute("dak_operator", pathname)) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("roles(slug)")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const role = readRoleSlugFromProfile(
+      profile?.roles as { slug?: string } | { slug?: string }[] | null
+    );
+
+    if (isOperatorBlockedRoute(role, pathname)) {
+      const deniedUrl = request.nextUrl.clone();
+      deniedUrl.pathname = "/unauthorized";
+      return NextResponse.redirect(deniedUrl);
+    }
   }
 
   if (user && (pathname === "/login" || pathname === "/")) {

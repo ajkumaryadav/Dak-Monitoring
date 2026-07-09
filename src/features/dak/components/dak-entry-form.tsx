@@ -28,9 +28,14 @@ const initialState: CreateDakFormState = {};
 interface DakEntryFormProps {
   departments: DepartmentOption[];
   sources: DakSourceOption[];
+  isOperator?: boolean;
 }
 
-export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
+export function DakEntryForm({
+  departments,
+  sources,
+  isOperator = false,
+}: DakEntryFormProps) {
   const [mobile, setMobile] = useState("");
   const [state, formAction, isPending] = useActionState(
     createDakFormAction,
@@ -49,7 +54,9 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
               DAK Registration Form
             </h2>
             <p className="text-sm text-muted-foreground">
-              Diary intake — priority and department assigned by Collector
+              {isOperator
+                ? "Diary intake — Collector/ADM will assign department and priority"
+                : "Diary intake — priority and department assigned by Collector"}
             </p>
           </div>
         </div>
@@ -191,32 +198,34 @@ export function DakEntryForm({ departments, sources }: DakEntryFormProps) {
             )}
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="departmentId">
-              Suggested Department{" "}
-              <span className="font-normal text-muted-foreground">(optional)</span>
-            </Label>
-            <select
-              id="departmentId"
-              name="departmentId"
-              defaultValue=""
-              className={inputClassName}
-              disabled={departments.length === 0}
-              aria-invalid={!!state.errors?.departmentId}
-            >
-              <option value="">Not assigned — Collector will allocate</option>
-              {departments.map((department) => (
-                <option key={department.id} value={department.id}>
-                  {department.name}
-                </option>
-              ))}
-            </select>
-            {state.errors?.departmentId?.[0] && (
-              <p className="text-sm text-destructive" role="alert">
-                {state.errors.departmentId[0]}
-              </p>
-            )}
-          </div>
+          {!isOperator && (
+            <div className="grid gap-2">
+              <Label htmlFor="departmentId">
+                Suggested Department{" "}
+                <span className="font-normal text-muted-foreground">(optional)</span>
+              </Label>
+              <select
+                id="departmentId"
+                name="departmentId"
+                defaultValue=""
+                className={inputClassName}
+                disabled={departments.length === 0}
+                aria-invalid={!!state.errors?.departmentId}
+              >
+                <option value="">Not assigned — Collector will allocate</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.name}
+                  </option>
+                ))}
+              </select>
+              {state.errors?.departmentId?.[0] && (
+                <p className="text-sm text-destructive" role="alert">
+                  {state.errors.departmentId[0]}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="grid gap-2 md:col-span-2">
             <Label htmlFor="remarks">Remarks</Label>

@@ -144,6 +144,13 @@ export const mainNavGroups: NavGroup[] = [
 ];
 
 const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
+  dak_operator: [
+    "/dashboard",
+    "/dashboard/dak/new",
+    "/dashboard/dak",
+    "/dashboard/dak/assigned",
+    "/dashboard/notifications",
+  ],
   collector: [
     "/dashboard",
     "/dashboard/dak/assignments",
@@ -166,6 +173,9 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
 const ROLE_NAV_TITLE_OVERRIDES: Partial<
   Record<UserRole, Partial<Record<string, string>>>
 > = {
+  dak_operator: {
+    "/dashboard/dak/assigned": "Forwarded DAK",
+  },
   acp: {
     "/dashboard/tasks": "Task Monitoring",
   },
@@ -177,7 +187,7 @@ function buildNavItemMap(): Map<string, NavItem> {
 
 const navItemByHref = buildNavItemMap();
 
-function groupNavItems(items: NavItem[]): NavGroup[] {
+function groupNavItems(items: NavItem[], role?: UserRole): NavGroup[] {
   const overview = items.filter((item) => item.href === "/dashboard");
   const dakOps = items.filter((item) =>
     item.href.startsWith("/dashboard/dak")
@@ -195,11 +205,17 @@ function groupNavItems(items: NavItem[]): NavGroup[] {
       item.href.startsWith("/dashboard/notifications")
   );
 
+  const dakGroupLabel =
+    role === "dak_operator" ? "DAK Registration" : "DAK Operations";
+
   const groups: NavGroup[] = [];
   if (overview.length) groups.push({ label: "Overview", items: overview });
-  if (dakOps.length) groups.push({ label: "DAK Operations", items: dakOps });
+  if (dakOps.length) groups.push({ label: dakGroupLabel, items: dakOps });
   if (analytics.length) groups.push({ label: "Analytics", items: analytics });
-  if (admin.length) groups.push({ label: "Administration", items: admin });
+  if (admin.length) {
+    const adminLabel = role === "dak_operator" ? "Alerts" : "Administration";
+    groups.push({ label: adminLabel, items: admin });
+  }
   return groups;
 }
 
@@ -218,7 +234,7 @@ export function getNavGroupsForRole(role: UserRole): NavGroup[] {
       })
       .filter((item): item is NavItem => item !== null);
 
-    return groupNavItems(items);
+    return groupNavItems(items, role);
   }
 
   const visibleItems = mainNavItems.filter((item) => {
@@ -230,6 +246,12 @@ export function getNavGroupsForRole(role: UserRole): NavGroup[] {
   return mainNavGroups
     .map((group) => ({
       ...group,
+      label:
+        role === "dak_operator" && group.label === "DAK Operations"
+          ? "DAK Registration"
+          : role === "dak_operator" && group.label === "Administration"
+            ? "Alerts"
+            : group.label,
       items: group.items.filter((item) => visibleItems.includes(item)),
     }))
     .filter((group) => group.items.length > 0);
@@ -241,4 +263,8 @@ export const appConfig = {
   shortName: "Rajasthan Government · District Administration",
   district: "Khairthal-Tijara",
   districtAdministration: "Khairthal-Tijara @ Administration",
+  districtTagline: "District Governance · Administrative Monitoring",
+  supportEmail: "dlo.doit.khairthaltijara@rajasthan.gov.in",
+  portalIpCode: "33217",
+  copyrightHolder: "DOIT&C Khairthal-Tijara",
 } as const;

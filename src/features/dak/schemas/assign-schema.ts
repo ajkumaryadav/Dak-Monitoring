@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
-import type { PriorityLevel } from "@/types";
+import { isValidDisposalDueDate } from "@/lib/constants/priority-due-date";
 
 const priorityValues = ["routine", "important", "urgent", "immediate"] as const;
 
@@ -30,7 +29,7 @@ const baseAssignFields = {
     .refine((value) => !Number.isNaN(Date.parse(value)), {
       message: "Please enter a valid due date",
     })
-    .refine((value) => value.slice(0, 10) >= getDistrictDateString(), {
+    .refine((value) => isValidDisposalDueDate(value.slice(0, 10)), {
       message: "Due date must be on or after today",
     }),
   remarks: z

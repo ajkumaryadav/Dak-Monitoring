@@ -1,6 +1,9 @@
 "use server";
 
+import { randomUUID } from "crypto";
+
 import {
+  getFileExtension,
   sanitizeFileName,
   validateAttachmentFile,
 } from "@/features/dak/lib/attachment-validation";
@@ -17,6 +20,7 @@ export interface DakAttachmentRecord {
   file_size: number;
   mime_type: string;
   created_at: string;
+  uploaded_by?: string | null;
 }
 
 export interface DakAttachmentWithUrl extends DakAttachmentRecord {
@@ -40,7 +44,8 @@ export async function uploadDakFile(
 
   const supabase = createAdminClient();
   const safeName = sanitizeFileName(file.name);
-  const filePath = `${dakId}/${Date.now()}-${safeName}`;
+  const extension = getFileExtension(safeName);
+  const filePath = `${dakId}/${randomUUID()}${extension}`;
 
   const fileBuffer = Buffer.from(await file.arrayBuffer());
 
@@ -75,7 +80,7 @@ export async function saveAttachmentRecord(params: {
     .from("attachments")
     .insert({
       dak_id: params.dakId,
-      file_name: params.file.name,
+      file_name: sanitizeFileName(params.file.name),
       file_path: params.filePath,
       storage_bucket: STORAGE_BUCKET,
       file_size: params.file.size,
@@ -141,22 +146,43 @@ export async function createAttachmentSignedUrl(
 
 /** Fetch attachments for a DAK with signed download URLs. */
 export async function getDakAttachments(
-  dakId: string
+  dakId: string,
+  options?: {
+    registrarId?: string | null;
+    before?: string | null;
+  }
 ): Promise<DakAttachmentWithUrl[]> {
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("attachments")
-    .select("id, dak_id, file_name, file_path, file_size, mime_type, created_at")
+    .select(
+      "id, dak_id, file_name, file_path, file_size, mime_type, created_at, uploaded_by"
+    )
     .eq("dak_id", dakId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
 
   if (error) {
     console.error("[getDakAttachments]", error.message);
     return [];
   }
 
-  const attachments = (data ?? []) as DakAttachmentRecord[];
+  let attachments = (data ?? []) as DakAttachmentRecord[];
+
+  if (options?.registrarId || options?.before) {
+    attachments = attachments.filter((attachment) => {
+      if (options.registrarId && attachment.uploaded_by) {
+        return attachment.uploaded_by === options.registrarId;
+      }
+
+      if (options.before) {
+        return attachment.created_at <= options.before;
+      }
+
+      return true;
+    });
+  }
   const withUrls: DakAttachmentWithUrl[] = [];
 
   for (const attachment of attachments) {

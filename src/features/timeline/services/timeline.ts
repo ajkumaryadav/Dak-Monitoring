@@ -128,7 +128,8 @@ export async function getDakTimeline(
     .from("dak_timeline")
     .select(TIMELINE_SELECT)
     .eq("dak_id", dakId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
 
   if (error) {
     console.error("[getDakTimeline]", error.message);

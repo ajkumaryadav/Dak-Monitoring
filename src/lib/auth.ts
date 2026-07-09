@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import {
   canAccessRoute,
   hasPermission,
+  isOperatorBlockedRoute,
   type Permission,
 } from "@/lib/auth/permissions";
 import { getSessionUser } from "@/lib/session";
@@ -25,6 +26,7 @@ export {
   hasPermission,
   isDepartmentDashboardRole,
   isDistrictAdminRole,
+  isOperatorBlockedRoute,
   isOperatorDashboardRole,
   isCollectorDashboardRole,
   isSectionDashboardRole,
@@ -73,6 +75,19 @@ export async function requireRole(
   const user = await requireAuth();
 
   if (!allowedRoles.includes(user.role)) {
+    redirect("/unauthorized");
+  }
+
+  return user;
+}
+
+/** Block DAK Operator from supervisory/monitoring routes. */
+export async function requireNonOperatorRoute(
+  pathname: string
+): Promise<SessionUser> {
+  const user = await requireAuth();
+
+  if (isOperatorBlockedRoute(user.role, pathname)) {
     redirect("/unauthorized");
   }
 

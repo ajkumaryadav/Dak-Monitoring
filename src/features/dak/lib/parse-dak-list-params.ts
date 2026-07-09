@@ -1,4 +1,5 @@
 import type { DakListFilters } from "@/features/dak/services/get-dak-stats";
+import { sanitizeDateRangeParams } from "@/lib/validation/date-range";
 import type { DakStatus, PriorityLevel } from "@/types";
 
 export interface DakListSearchParams {
@@ -16,6 +17,11 @@ export interface DakListSearchParams {
 export function parseDakListParams(
   params: DakListSearchParams
 ): { searchQuery: string; filters: Omit<DakListFilters, "searchQuery"> } {
+  const { dateFrom, dateTo } = sanitizeDateRangeParams(
+    params.dateFrom,
+    params.dateTo
+  );
+
   return {
     searchQuery: params.q?.trim() ?? "",
     filters: {
@@ -24,8 +30,8 @@ export function parseDakListParams(
       assignmentUnitId: params.section,
       priority: (params.priority ?? "") as PriorityLevel | "",
       status: (params.status ?? "") as DakStatus | "",
-      dateFrom: params.dateFrom,
-      dateTo: params.dateTo,
+      dateFrom,
+      dateTo,
       overdueOnly: params.overdue === "1",
     },
   };

@@ -8,9 +8,9 @@ import {
   assignDakFormAction,
   type AssignDakFormState,
 } from "@/features/dak/actions/assign-dak";
+import { usePriorityDueDate } from "@/features/dak/hooks/use-priority-due-date";
 import { ASSIGN_PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
 import { ASSIGNMENT_TYPE_OPTIONS } from "@/features/dak/schemas/assign-schema";
-import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import type { AssignFormOptions } from "@/features/dak/services/get-assign-form-options";
+import type { PriorityLevel } from "@/types";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -47,8 +48,14 @@ export function AssignDakForm({
   );
   const [departmentId, setDepartmentId] = useState("");
   const [sectionId, setSectionId] = useState("");
-  const [priority, setPriority] = useState("important");
-  const minDueDate = getDistrictDateString();
+  const {
+    priority,
+    setPriority,
+    dueDate,
+    setDueDate,
+    minDate,
+    manualOverride,
+  } = usePriorityDueDate({ initialPriority: "important" });
   const [state, formAction, isPending] = useActionState(
     assignDakFormAction,
     initialState
@@ -236,7 +243,7 @@ export function AssignDakForm({
                 name="priority"
                 required
                 value={priority}
-                onChange={(e) => setPriority(e.target.value)}
+                onChange={(e) => setPriority(e.target.value as PriorityLevel)}
                 className={inputClassName}
                 aria-invalid={!!state.errors?.priority}
               >
@@ -259,10 +266,17 @@ export function AssignDakForm({
                 name="dueDate"
                 type="date"
                 required
-                min={minDueDate}
+                min={minDate}
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
                 className={inputClassName}
                 aria-invalid={!!state.errors?.dueDate}
               />
+              <p className="text-xs text-muted-foreground">
+                {manualOverride
+                  ? "Manually adjusted — changing priority will not overwrite this date until reset."
+                  : "Auto-calculated from priority. You may adjust if required."}
+              </p>
               {state.errors?.dueDate?.[0] && (
                 <p className="text-xs text-destructive">
                   {state.errors.dueDate[0]}

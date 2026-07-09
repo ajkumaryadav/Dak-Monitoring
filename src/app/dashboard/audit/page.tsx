@@ -8,9 +8,11 @@ import {
 } from "@/features/audit/lib/history-events";
 import { getAuditLog } from "@/features/audit/services/dak-history";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import { GetFilterForm } from "@/components/filters/get-filter-form";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PERMISSIONS, requirePermission } from "@/lib/auth";
+import { sanitizeDateRangeParams } from "@/lib/validation/date-range";
 
 interface AuditPageProps {
   searchParams: Promise<{
@@ -25,11 +27,15 @@ export const dynamic = "force-dynamic";
 export default async function AuditPage({ searchParams }: AuditPageProps) {
   const user = await requirePermission(PERMISSIONS.AUDIT);
   const params = await searchParams;
+  const { dateFrom, dateTo } = sanitizeDateRangeParams(
+    params.dateFrom,
+    params.dateTo
+  );
 
   const entries = await getAuditLog(user, {
     eventType: params.eventType,
-    dateFrom: params.dateFrom,
-    dateTo: params.dateTo,
+    dateFrom,
+    dateTo,
     limit: 200,
   });
 
@@ -45,8 +51,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
         icon={History}
       />
 
-      <form
-        method="GET"
+      <GetFilterForm
         action="/dashboard/audit"
         className="grid gap-4 rounded-xl border border-border/60 bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-4"
       >
@@ -72,7 +77,8 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
             id="dateFrom"
             name="dateFrom"
             type="date"
-            defaultValue={params.dateFrom ?? ""}
+            defaultValue={dateFrom ?? ""}
+            max={dateTo || undefined}
             className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
           />
         </div>
@@ -82,7 +88,8 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
             id="dateTo"
             name="dateTo"
             type="date"
-            defaultValue={params.dateTo ?? ""}
+            defaultValue={dateTo ?? ""}
+            min={dateFrom || undefined}
             className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm dark:bg-input/30"
           />
         </div>
@@ -97,7 +104,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
             Reset
           </Link>
         </div>
-      </form>
+      </GetFilterForm>
 
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background p-5 shadow-sm">
         <AuditLogTable entries={entries} />

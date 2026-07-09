@@ -14,6 +14,7 @@ import {
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
 import { getDakListScope } from "@/features/dak/lib/list-scope";
 import {
+  isOperatorDashboardRole,
   PERMISSIONS,
   requirePermission,
 } from "@/lib/auth";
@@ -31,6 +32,7 @@ export default async function AllDakPage({ searchParams }: AllDakPageProps) {
   await requirePermission(PERMISSIONS.DAK_VIEW);
 
   const user = await getSessionUser();
+  const isOperator = user ? isOperatorDashboardRole(user.role) : false;
   const canCreate = user
     ? hasPermission(user.role, PERMISSIONS.DAK_ENTRY)
     : false;
@@ -41,7 +43,8 @@ export default async function AllDakPage({ searchParams }: AllDakPageProps) {
 
   const scope = getDakListScope(user);
 
-  const showDepartmentFilter = !scope.departmentId && !scope.sectionId;
+  const showDepartmentFilter =
+    !scope.departmentId && !scope.sectionId && !scope.createdBy;
 
   const dakEntries = await getFilteredDakList(
     "all",
@@ -55,11 +58,15 @@ export default async function AllDakPage({ searchParams }: AllDakPageProps) {
   return (
     <div className="space-y-6">
       <DakPageHeader
-        title={hasQuery ? "Search Results" : "All DAK"}
+        title={hasQuery ? "Search Results" : isOperator ? "All DAK" : "All DAK"}
         description={
           hasQuery
-            ? "Filtered registered correspondence entries."
-            : "View and manage registered district correspondence entries."
+            ? isOperator
+              ? "Your registered correspondence matching the filters."
+              : "Filtered registered correspondence entries."
+            : isOperator
+              ? "All correspondence you have registered in the diary."
+              : "View and manage registered district correspondence entries."
         }
         icon={FileText}
       />

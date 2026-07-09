@@ -150,7 +150,7 @@ export async function recordHistory(
   return { success: true };
 }
 
-/** Fetch chronological history for a single DAK (timeline). */
+/** Fetch reverse-chronological history for a single DAK (timeline). */
 export async function getDakHistory(dakId: string): Promise<DakHistoryEntry[]> {
   const supabase = createAdminClient();
 
@@ -158,7 +158,8 @@ export async function getDakHistory(dakId: string): Promise<DakHistoryEntry[]> {
     .from("dak_history")
     .select(HISTORY_SELECT)
     .eq("dak_id", dakId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false });
 
   if (error) {
     logHistoryError("getDakHistory", error);

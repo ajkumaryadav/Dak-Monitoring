@@ -133,3 +133,185 @@
     font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   }
 }
+
+@keyframes auth-step-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-step-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes auth-step-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes auth-flow-shimmer-vertical {
+  0% {
+    background-position: 0 200%;
+  }
+  100% {
+    background-position: 0 -200%;
+  }
+}
+
+@keyframes auth-flow-shimmer-horizontal {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes auth-doc-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes auth-doc-drift-a {
+  0%,
+  100% {
+    transform: rotate(-8deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-6deg) translateY(-4px);
+  }
+}
+
+@keyframes auth-doc-drift-b {
+  0%,
+  100% {
+    transform: rotate(4deg) translateY(0);
+  }
+  50% {
+    transform: rotate(6deg) translateY(-3px);
+  }
+}
+
+@keyframes auth-orb-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6px, -8px) scale(1.05);
+  }
+}
+
+@keyframes auth-point-fade {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes auth-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+.auth-step-rise {
+  animation: auth-step-rise 0.7s ease-out both;
+}
+
+.auth-step-pulse {
+  animation: auth-step-pulse 3s ease-in-out infinite;
+}
+
+.auth-step-ring {
+  animation: auth-step-ring 2.4s ease-out infinite;
+}
+
+.auth-flow-line-vertical {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--primary) 50%, transparent),
+    color-mix(in oklch, var(--primary) 20%, transparent),
+    transparent
+  );
+  background-size: 100% 200%;
+  animation: auth-flow-shimmer-vertical 3.5s linear infinite;
+}
+
+.auth-flow-line-horizontal {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in oklch, var(--primary) 20%, transparent),
+    color-mix(in oklch, var(--primary) 50%, transparent),
+    color-mix(in oklch, var(--primary) 20%, transparent),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: auth-flow-shimmer-horizontal 3.5s linear infinite;
+}
+
+.auth-doc-float {
+  animation: auth-doc-float 4s ease-in-out infinite;
+}
+
+.auth-doc-layer-back {
+  animation: auth-doc-drift-a 5s ease-in-out infinite;
+}
+
+.auth-doc-layer-mid {
+  animation: auth-doc-drift-b 4.5s ease-in-out infinite;
+}
+
+.auth-doc-layer-front {
+  animation: auth-doc-float 3.5s ease-in-out infinite;
+}
+
+.auth-visual-orb-a {
+  animation: auth-orb-drift 8s ease-in-out infinite;
+}
+
+.auth-visual-orb-b {
+  animation: auth-orb-drift 10s ease-in-out infinite reverse;
+}
+
+.auth-point-fade {
+  animation: auth-point-fade 0.6s ease-out both;
+}
+
+.auth-dot-pulse {
+  animation: auth-dot-pulse 2s ease-in-out infinite;
+}

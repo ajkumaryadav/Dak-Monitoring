@@ -1,6 +1,8 @@
 "use server";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isOperatorDashboardRole } from "@/lib/auth/permissions";
+import { getSessionUser } from "@/lib/session";
 import { getStatusLabel, normalizeDakStatus } from "@/features/dak/lib/workflow";
 import { formatDakDate } from "@/features/dak/lib/dak-display";
 
@@ -21,12 +23,20 @@ export async function checkDuplicateApplications(
   if (normalized.length !== 10) return [];
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  const user = await getSessionUser();
+
+  let query = supabase
     .from("dak_entries")
     .select("id, dak_number, subject, status, received_date")
     .eq("applicant_mobile", normalized)
     .order("received_date", { ascending: false })
     .limit(20);
+
+  if (user && isOperatorDashboardRole(user.role)) {
+    query = query.eq("created_by", user.id);
+  }
+
+  const { data, error } = await query;
 
   if (error || !data) return [];
 

@@ -15,6 +15,7 @@ export type DakListFilter =
   | "all"
   | "pending"
   | "assigned"
+  | "forwarded"
   | "completed"
   | "assignments"
   | "pending_approval";
@@ -75,6 +76,8 @@ export interface OperatorDashboardStats {
   variant: "operator";
   registered: number;
   todayEntries: number;
+  monthEntries: number;
+  forwarded: number;
   returned: number;
 }
 
@@ -253,12 +256,18 @@ async function fetchDakListRows(
     query = query.eq("assignment_unit_id", scope.sectionId);
   }
 
+  if (scope.createdBy) {
+    query = query.eq("created_by", scope.createdBy);
+  }
+
   if (filter === "assignments") {
     query = query.eq("status", "received");
   } else if (filter === "pending") {
     query = query.in("status", PENDING_ACTION_DB_STATUSES);
   } else if (filter === "assigned") {
     query = query.in("status", ASSIGNED_DB_STATUSES);
+  } else if (filter === "forwarded") {
+    query = query.eq("status", "received");
   } else if (filter === "pending_approval") {
     query = query.eq("status", "pending_approval");
   } else if (filter === "completed") {
@@ -292,12 +301,18 @@ async function fetchDakListRows(
     fallbackQuery = fallbackQuery.eq("assignment_unit_id", scope.sectionId);
   }
 
+  if (scope.createdBy) {
+    fallbackQuery = fallbackQuery.eq("created_by", scope.createdBy);
+  }
+
   if (filter === "assignments") {
     fallbackQuery = fallbackQuery.eq("status", "received");
   } else if (filter === "pending") {
     fallbackQuery = fallbackQuery.in("status", PENDING_ACTION_DB_STATUSES);
   } else if (filter === "assigned") {
     fallbackQuery = fallbackQuery.in("status", ASSIGNED_DB_STATUSES);
+  } else if (filter === "forwarded") {
+    fallbackQuery = fallbackQuery.neq("status", "received");
   } else if (filter === "pending_approval") {
     fallbackQuery = fallbackQuery.eq("status", "pending_approval");
   } else if (filter === "completed") {

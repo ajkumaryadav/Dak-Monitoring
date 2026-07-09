@@ -1,8 +1,12 @@
+"use client";
+
+import { useState } from "react";
+
 import { Label } from "@/components/ui/label";
 import {
   ALLOWED_ATTACHMENT_ACCEPT,
-  MAX_DOCUMENT_BYTES,
-  MAX_IMAGE_BYTES,
+  MAX_UPLOAD_BYTES,
+  validateAttachmentFile,
 } from "@/features/dak/lib/attachment-validation";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +22,20 @@ interface AttachmentUploadProps {
 }
 
 export function AttachmentUpload({ error }: AttachmentUploadProps) {
+  const [clientError, setClientError] = useState<string | null>(null);
+  const displayError = error ?? clientError;
+
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setClientError(null);
+      return;
+    }
+
+    const validation = validateAttachmentFile(file);
+    setClientError(validation.valid ? null : validation.message);
+  }
+
   return (
     <div className="grid gap-2 md:col-span-2">
       <Label htmlFor="attachment">Attachment (optional)</Label>
@@ -26,16 +44,17 @@ export function AttachmentUpload({ error }: AttachmentUploadProps) {
         name="attachment"
         type="file"
         accept={ALLOWED_ATTACHMENT_ACCEPT}
+        onChange={handleFileChange}
         className={inputClassName}
-        aria-invalid={!!error}
+        aria-invalid={!!displayError}
       />
       <p className="text-xs text-muted-foreground">
-        PDF and DOCX up to {MAX_DOCUMENT_BYTES / (1024 * 1024)} MB · JPG/PNG up
-        to {MAX_IMAGE_BYTES / (1024 * 1024)} MB
+        PDF, Word, Excel, PowerPoint, TXT, JPG, PNG, ZIP (max{" "}
+        {MAX_UPLOAD_BYTES / (1024 * 1024)} MB). Images up to 5 MB.
       </p>
-      {error && (
+      {displayError && (
         <p className="text-sm text-destructive" role="alert">
-          {error}
+          {displayError}
         </p>
       )}
     </div>

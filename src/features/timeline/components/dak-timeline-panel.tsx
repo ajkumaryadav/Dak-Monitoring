@@ -67,7 +67,7 @@ interface DakTimelinePanelProps {
 export function DakTimelinePanel({
   events,
   title = "DAK Timeline",
-  description = "Complete chronological history of this DAK",
+  description = "Latest activity first — complete history of this DAK",
   compact = false,
 }: DakTimelinePanelProps) {
   const content = !events.length ? (
@@ -77,6 +77,7 @@ export function DakTimelinePanel({
   ) : (
     <ol className="relative space-y-0 border-l border-primary/20 pl-6">
       {events.map((event, index) => {
+        const isLatest = index === 0;
         const isLast = index === events.length - 1;
         const Icon = actionIcons[event.actionType] ?? Clock;
         const fromStatus = event.metadata.from_status as string | undefined;
@@ -87,7 +88,7 @@ export function DakTimelinePanel({
             <span
               className={cn(
                 "absolute top-1 -left-[calc(0.75rem+1px)] flex size-3 items-center justify-center rounded-full ring-4 ring-background",
-                isLast ? "bg-primary" : "bg-primary/40"
+                isLatest ? "bg-primary" : "bg-primary/40"
               )}
             />
             <div className="flex flex-wrap items-center gap-2">

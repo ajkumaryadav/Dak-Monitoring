@@ -4,10 +4,12 @@ import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
 
 import { createTaskFormAction } from "@/features/tasks/actions/task-actions";
+import { usePriorityDueDate } from "@/features/dak/hooks/use-priority-due-date";
 import { ASSIGN_PRIORITY_OPTIONS } from "@/features/dak/schemas/dak-schema";
 import type { AssignFormOptions } from "@/features/dak/services/get-assign-form-options";
 import { buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import type { PriorityLevel } from "@/types";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -20,6 +22,14 @@ interface CreateTaskFormProps {
 }
 
 export function CreateTaskForm({ options, minDueDate }: CreateTaskFormProps) {
+  const {
+    priority,
+    setPriority,
+    dueDate,
+    setDueDate,
+    minDate,
+    manualOverride,
+  } = usePriorityDueDate({ initialPriority: "important", minDate: minDueDate });
   const [state, formAction, isPending] = useActionState(createTaskFormAction, {
     message: undefined as string | undefined,
   });
@@ -90,7 +100,8 @@ export function CreateTaskForm({ options, minDueDate }: CreateTaskFormProps) {
             name="priority"
             required
             className={inputClassName}
-            defaultValue="important"
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as PriorityLevel)}
           >
             {ASSIGN_PRIORITY_OPTIONS.map((p) => (
               <option key={p.value} value={p.value}>
@@ -106,9 +117,16 @@ export function CreateTaskForm({ options, minDueDate }: CreateTaskFormProps) {
             name="dueDate"
             type="date"
             required
-            min={minDueDate}
+            min={minDate}
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
             className={inputClassName}
           />
+          <p className="text-xs text-muted-foreground">
+            {manualOverride
+              ? "Manually adjusted due date."
+              : "Auto-calculated from priority."}
+          </p>
         </div>
       </div>
       <div className="space-y-2">

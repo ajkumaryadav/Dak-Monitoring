@@ -1,10 +1,15 @@
 import { notFound } from "next/navigation";
 
-import { DakDetailView } from "@/features/dak/components/dak-detail-view";
 import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
-import { getAssignFormOptions } from "@/features/dak/services/get-assign-form-options";
-import { getDepartments } from "@/features/dak/services/get-departments";
-import { getDakById } from "@/features/dak/services/get-dak-by-id";
+import { DakDetailView } from "@/features/dak/components/dak-detail-view";
+import { OperatorDakDetailView } from "@/features/dak/components/operator-dak-detail-view";
+import {
+  extractOperatorReturnNotice,
+  filterAttachmentsForOperator,
+  filterTimelineForOperator,
+  findFirstAssignmentTimestamp,
+  isOperatorDakViewer,
+} from "@/features/dak/lib/operator-dak-access";
 import {
   canAssignStatus,
   canApproveClosure,
@@ -21,11 +26,13 @@ import {
   getDakRemarks,
 } from "@/features/remarks/services/get-remarks";
 import { getDakTimeline } from "@/features/timeline/services/timeline";
+import { getAssignFormOptions } from "@/features/dak/services/get-assign-form-options";
+import { getDepartments } from "@/features/dak/services/get-departments";
+import { getDakById } from "@/features/dak/services/get-dak-by-id";
 import {
-  hasPermission,
   canReassignDakRole,
   canUpdateDakStatusRole,
-  isOperatorDashboardRole,
+  hasPermission,
   PERMISSIONS,
   requirePermission,
 } from "@/lib/auth";
@@ -44,20 +51,39 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     notFound();
   }
 
-  if (
-    isOperatorDashboardRole(user.role) &&
-    dak.created_by !== user.id
-  ) {
+  if (isOperatorDakViewer(user) && dak.created_by !== user.id) {
     notFound();
   }
 
-  const [timeline, attachments, assignOptions, remarks, atrRecords, departments, dakRequests] =
+  const fullTimeline = await getDakTimeline(id, user);
+
+  if (isOperatorDakViewer(user)) {
+    const assignmentAt = findFirstAssignmentTimestamp(fullTimeline);
+    const allAttachments = await getDakAttachments(id);
+    const operatorTimeline = filterTimelineForOperator(fullTimeline);
+    const operatorAttachments = filterAttachmentsForOperator(
+      allAttachments,
+      dak.created_by,
+      assignmentAt
+    );
+    const returnNotice = extractOperatorReturnNotice(fullTimeline);
+
+    return (
+      <OperatorDakDetailView
+        dak={dak}
+        timeline={operatorTimeline}
+        attachments={operatorAttachments}
+        returnNotice={returnNotice}
+      />
+    );
+  }
+
+  const [attachments, assignOptions, remarks, atrRecords, departments, dakRequests] =
     await Promise.all([
-      getDakTimeline(id, user),
       getDakAttachments(id),
       getAssignFormOptions(),
       getDakRemarks(id, user),
-      getDakAtrRecords(id),
+      getDakAtrRecords(id, user),
       getDepartments(),
       getDakRequestsForDak(id),
     ]);
@@ -90,7 +116,7 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
   return (
     <DakDetailView
       dak={dak}
-      timeline={timeline}
+      timeline={fullTimeline}
       attachments={attachments}
       assignOptions={assignOptions}
       showAssignForm={showAssignForm}

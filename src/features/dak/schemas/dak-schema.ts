@@ -1,13 +1,26 @@
 import { z } from "zod";
 
+import { PRIORITY_DISPOSAL_DAYS } from "@/lib/constants/priority-due-date";
 import type { PriorityLevel } from "@/types";
 
 /** Collector-facing priority labels at assignment time. */
 export const ASSIGN_PRIORITY_OPTIONS = [
-  { value: "immediate", label: "Immediate — Due Today" },
-  { value: "urgent", label: "High — 3 Days" },
-  { value: "important", label: "Normal — 15 Days" },
-  { value: "routine", label: "Low — 30 Days" },
+  {
+    value: "immediate",
+    label: `Immediate — Due Today (${PRIORITY_DISPOSAL_DAYS.immediate} days)`,
+  },
+  {
+    value: "urgent",
+    label: `Urgent — ${PRIORITY_DISPOSAL_DAYS.urgent} Days`,
+  },
+  {
+    value: "important",
+    label: `Normal — ${PRIORITY_DISPOSAL_DAYS.important} Days`,
+  },
+  {
+    value: "routine",
+    label: `Low — ${PRIORITY_DISPOSAL_DAYS.routine} Days`,
+  },
 ] as const satisfies ReadonlyArray<{ value: PriorityLevel; label: string }>;
 
 export const PRIORITY_OPTIONS = [

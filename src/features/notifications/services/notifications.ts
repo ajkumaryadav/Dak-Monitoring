@@ -1,4 +1,5 @@
 import type { NotificationType } from "@/features/notifications/lib/notification-types";
+import { filterNotificationsForRole } from "@/features/notifications/lib/operator-notifications";
 import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SessionUser } from "@/types";
@@ -247,32 +248,20 @@ export async function getUserNotifications(
     mapNotificationRow(row as Record<string, unknown>)
   );
 
-  return attachDakNumbers(records);
+  const withDakNumbers = await attachDakNumbers(records);
+  return filterNotificationsForRole(user, withDakNumbers);
 }
 
 /** Count unread notifications for header badge. */
 export async function getUnreadNotificationCount(
   user: SessionUser
 ): Promise<number> {
-  const supabase = createAdminClient();
+  const notifications = await getUserNotifications(user, {
+    limit: 200,
+    unreadOnly: true,
+  });
 
-  let query = supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .is("read_at", null);
-
-  if (!canViewAllNotifications(user)) {
-    query = query.eq("user_id", user.id);
-  }
-
-  const { count, error } = await query;
-
-  if (error) {
-    logNotificationError("getUnreadNotificationCount", error);
-    return 0;
-  }
-
-  return count ?? 0;
+  return notifications.length;
 }
 
 /** Mark a single notification as read (RBAC enforced). */

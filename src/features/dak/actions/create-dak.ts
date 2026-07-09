@@ -14,7 +14,7 @@ import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
 import { createActivityLog } from "@/features/activity/services/activity-log";
 import { notifyDakCreated } from "@/features/notifications/services/notify-dak-event";
-import { hasPermission, PERMISSIONS } from "@/lib/auth";
+import { hasPermission, isOperatorDashboardRole, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 
@@ -82,6 +82,9 @@ export async function createDak(
 
     const supabase = createAdminClient();
     const receivedDate = getDistrictDateString();
+    const departmentId = isOperatorDashboardRole(user.role)
+      ? null
+      : parsed.data.departmentId ?? null;
 
     const { data: inserted, error } = await supabase
       .from("dak_entries")
@@ -93,7 +96,7 @@ export async function createDak(
         applicant_mobile: parsed.data.applicantMobile,
         applicant_reference: parsed.data.applicantReference ?? null,
         priority: "routine",
-        department_id: parsed.data.departmentId ?? null,
+        department_id: departmentId,
         source_id: parsed.data.sourceId,
         due_date: null,
         sla_due_date: null,

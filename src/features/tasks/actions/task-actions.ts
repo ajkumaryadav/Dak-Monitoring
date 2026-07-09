@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { isValidDisposalDueDate } from "@/lib/constants/priority-due-date";
 import { canManageTasks, PERMISSIONS, hasPermission } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
@@ -14,7 +15,12 @@ const createTaskSchema = z.object({
   departmentId: z.string().uuid(),
   assignedTo: z.string().uuid(),
   priority: z.enum(["routine", "important", "urgent", "immediate"]),
-  dueDate: z.string().min(1),
+  dueDate: z
+    .string()
+    .min(1, "Due date is required")
+    .refine((value) => isValidDisposalDueDate(value.slice(0, 10)), {
+      message: "Due date must be on or after today",
+    }),
   remarks: z.string().max(500).optional(),
 });
 
