@@ -10,14 +10,16 @@ import { cn } from "@/lib/utils";
 interface NotificationWidgetProps {
   notifications: NotificationRecord[];
   unreadCount: number;
+  limit?: number;
 }
 
 /** Dashboard widget showing recent notifications. */
 export function NotificationWidget({
   notifications,
   unreadCount,
+  limit = 5,
 }: NotificationWidgetProps) {
-  const recent = notifications.slice(0, 5);
+  const recent = notifications.slice(0, limit);
 
   return (
     <div className="space-y-3">

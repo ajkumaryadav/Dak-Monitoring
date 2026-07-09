@@ -6,7 +6,7 @@ import {
   normalizeDakStatus,
   getStatusLabel,
 } from "@/features/dak/lib/workflow";
-import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
+import { getDistrictDateString, addDaysToDateString } from "@/features/dak/lib/dak-dates";
 import { DAK_SOURCE_WIDGETS } from "@/lib/constants/dak-sources";
 import {
   isCollectorDashboardRole,
@@ -35,9 +35,15 @@ const PENDING_DB_STATUSES = [
 export interface DashboardStatSummary {
   total: number;
   pending: number;
+  assigned: number;
   overdue: number;
   highPriority: number;
+  mediumPriority: number;
+  lowPriority: number;
   completed: number;
+  dueToday: number;
+  dueThisWeek: number;
+  completionRatePct: number;
   cmoDak: number;
   janSunwaiDak: number;
   mlaReferences: number;
@@ -627,36 +633,42 @@ async function fetchSectionDashboardAnalytics(
 async function fetchCollectorDashboardAnalytics(): Promise<CollectorDashboardData> {
   const supabase = createAdminClient();
   const today = getDistrictDateString();
+  const weekEnd = addDaysToDateString(today, 7);
   const entries = await fetchDashboardEntries(supabase);
   const highPrioritySet = new Set<PriorityLevel>(["urgent", "immediate"]);
 
   let pending = 0;
+  let assigned = 0;
   let completed = 0;
   let highPriority = 0;
+  let mediumPriority = 0;
+  let lowPriority = 0;
   let overdue = 0;
+  let dueToday = 0;
+  let dueThisWeek = 0;
   let internalSectionPending = 0;
   let departmentPending = 0;
 
   for (const entry of entries) {
     const status = entry.status;
+    const due = entry.due_date?.slice(0, 10);
+    const isDone = isCompletedDbStatus(status);
+
     if (isPendingDbStatus(status)) {
       pending += 1;
       if (entry.assignment_type === "section") internalSectionPending += 1;
       if (entry.assignment_type === "department" || entry.department_id) {
         departmentPending += 1;
       }
+      if (status === "assigned") assigned += 1;
+      if (!isDone && highPrioritySet.has(entry.priority)) highPriority += 1;
+      if (!isDone && entry.priority === "important") mediumPriority += 1;
+      if (!isDone && entry.priority === "routine") lowPriority += 1;
     }
-    if (isCompletedDbStatus(status)) completed += 1;
-    if (
-      entry.due_date &&
-      entry.due_date < today &&
-      !isCompletedDbStatus(status)
-    ) {
-      overdue += 1;
-    }
-    if (!isCompletedDbStatus(status) && highPrioritySet.has(entry.priority)) {
-      highPriority += 1;
-    }
+    if (isDone) completed += 1;
+    if (due && due < today && !isDone) overdue += 1;
+    if (due === today && !isDone) dueToday += 1;
+    if (due && due > today && due <= weekEnd && !isDone) dueThisWeek += 1;
   }
 
   const departmentPerformance = buildDepartmentPerformance(entries, today);
@@ -674,9 +686,18 @@ async function fetchCollectorDashboardAnalytics(): Promise<CollectorDashboardDat
     stats: {
       total: entries.length,
       pending,
+      assigned,
       overdue,
       highPriority,
+      mediumPriority,
+      lowPriority,
       completed,
+      dueToday,
+      dueThisWeek,
+      completionRatePct:
+        entries.length > 0
+          ? Math.round((completed / entries.length) * 100)
+          : 0,
       cmoDak: countBySource(entries, DAK_SOURCE_WIDGETS.CMO),
       janSunwaiDak: countBySource(entries, DAK_SOURCE_WIDGETS.JAN_SUNWAI),
       mlaReferences: countBySource(entries, DAK_SOURCE_WIDGETS.MLA),

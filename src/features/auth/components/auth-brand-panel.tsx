@@ -53,39 +53,41 @@ const highlights = [
 
 export function AuthBrandPanel() {
   return (
-    <div className="relative hidden flex-1 flex-col overflow-y-auto border-r border-border/60 bg-muted/30 p-8 text-foreground dark:bg-background lg:flex xl:p-10">
+    <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-card/85 p-5 shadow-lg backdrop-blur-sm sm:p-6 lg:p-7">
+      <div className="auth-visual-orb auth-visual-orb-a pointer-events-none absolute -top-8 -right-8 size-32 rounded-full bg-primary/10 blur-2xl" />
+
       <div className="relative z-10 flex min-w-0 items-center gap-3">
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
-          <Landmark className="size-6" />
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+          <Landmark className="size-7" />
         </div>
         <div className="min-w-0">
-          <p className="truncate font-semibold text-foreground">
+          <p className="truncate text-base font-semibold text-foreground">
             {appConfig.name}
           </p>
           <p className="truncate text-sm text-muted-foreground">
-            {appConfig.shortName}
+            {appConfig.shortName} · {appConfig.districtTagline}
           </p>
         </div>
       </div>
 
-      <div className="relative z-10 mt-8 max-w-2xl space-y-6">
-        <div className="space-y-3">
-          <h1 className="text-2xl leading-tight font-semibold tracking-tight text-foreground xl:text-3xl">
+      <div className="relative z-10 mt-5 space-y-5">
+        <div className="space-y-2">
+          <h1 className="text-xl leading-tight font-semibold tracking-tight text-foreground sm:text-2xl xl:text-[1.65rem]">
             {appConfig.fullName}
           </h1>
-          <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
             Secure district platform for DAK tracking, workflow management, task
             compliance, and administrative oversight under Rajasthan Government
             digital governance standards.
           </p>
         </div>
 
-        <ul className="grid gap-2.5">
+        <ul className="grid gap-2.5 lg:grid-cols-3">
           {highlights.map(({ icon: Icon, title, description, tag, colors }) => (
             <li
               key={title}
               className={cn(
-                "group relative overflow-hidden rounded-xl border border-border/60 bg-card/80 p-3.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:shadow-md",
+                "group relative overflow-hidden rounded-xl border border-border/60 bg-background/70 p-3.5 shadow-sm transition-all duration-200 hover:shadow-md",
                 colors.card
               )}
             >

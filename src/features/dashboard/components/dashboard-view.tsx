@@ -80,8 +80,6 @@ export function DashboardView({
       overdueEntries={overdueEntries}
       escalatedEntries={escalatedEntries}
       dueTodayEntries={dueTodayEntries}
-      highPriorityEntries={highPriorityEntries}
-      immediateEntries={immediateEntries}
       userStats={userStats}
       taskStats={taskStats}
     />

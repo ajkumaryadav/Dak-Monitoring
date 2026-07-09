@@ -42,6 +42,7 @@ export default async function DashboardPage() {
   const showScopedAlerts = isDepartment;
   const showTaskStats =
     user.role === "collector" ||
+    user.role === "acp" ||
     user.role === "adm" ||
     isDepartment ||
     isSection;
@@ -64,8 +65,8 @@ export default async function DashboardPage() {
     taskStats,
   ] = await Promise.all([
     fetchDashboardAnalytics(user),
-    isOperator ? Promise.resolve([]) : getRecentActivity(user, 8),
-    getUserNotifications(user, { limit: 8 }),
+    isOperator ? Promise.resolve([]) : getRecentActivity(user, 3),
+    getUserNotifications(user, { limit: 3 }),
     getUnreadNotificationCount(user),
     showDistrictAlerts || showScopedAlerts
       ? fetchSlaDashboardData(user)

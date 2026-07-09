@@ -39,6 +39,30 @@ const variantStyles: Record<
     title: "text-destructive",
     badge: "bg-destructive/10 text-destructive",
   },
+  purple: {
+    card: "border-violet-500/25 hover:border-violet-500/45 bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-background",
+    icon: "bg-violet-600 text-white shadow-violet-600/30",
+    title: "text-violet-700 dark:text-violet-300",
+    badge: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
+  },
+  teal: {
+    card: "border-teal-500/25 hover:border-teal-500/45 bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-background",
+    icon: "bg-teal-600 text-white shadow-teal-600/30",
+    title: "text-teal-700 dark:text-teal-300",
+    badge: "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
+  },
+  indigo: {
+    card: "border-indigo-500/25 hover:border-indigo-500/45 bg-gradient-to-br from-indigo-500/10 via-indigo-500/5 to-background",
+    icon: "bg-indigo-600 text-white shadow-indigo-600/30",
+    title: "text-indigo-700 dark:text-indigo-300",
+    badge: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
+  },
+  orange: {
+    card: "border-orange-500/25 hover:border-orange-500/45 bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-background",
+    icon: "bg-orange-600 text-white shadow-orange-600/30",
+    title: "text-orange-700 dark:text-orange-300",
+    badge: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
+  },
 };
 
 interface ReportLinkCardProps {

@@ -6,7 +6,7 @@ interface DashboardSectionProps {
   title: string;
   description: string;
   icon: LucideIcon;
-  variant?: "primary" | "neutral";
+  variant?: "primary" | "neutral" | "blue" | "red" | "purple" | "teal" | "indigo";
   children: React.ReactNode;
   className?: string;
 }
@@ -23,6 +23,36 @@ const sectionStyles = {
       "border-border/80 bg-gradient-to-br from-muted/60 via-background to-background",
     icon: "bg-secondary text-secondary-foreground shadow-sm",
     accent: "bg-muted-foreground/30",
+  },
+  blue: {
+    wrapper:
+      "border-[oklch(0.55_0.12_240)]/20 bg-gradient-to-br from-[oklch(0.55_0.12_240)]/[0.08] via-background to-background",
+    icon: "bg-[oklch(0.45_0.11_240)] text-white shadow-md",
+    accent: "bg-[oklch(0.55_0.12_240)]/50",
+  },
+  red: {
+    wrapper:
+      "border-destructive/20 bg-gradient-to-br from-destructive/[0.06] via-background to-background",
+    icon: "bg-destructive text-white shadow-md shadow-destructive/20",
+    accent: "bg-destructive/50",
+  },
+  purple: {
+    wrapper:
+      "border-violet-500/20 bg-gradient-to-br from-violet-500/[0.07] via-background to-background",
+    icon: "bg-violet-600 text-white shadow-md shadow-violet-600/20",
+    accent: "bg-violet-500/50",
+  },
+  teal: {
+    wrapper:
+      "border-teal-500/20 bg-gradient-to-br from-teal-500/[0.07] via-background to-background",
+    icon: "bg-teal-600 text-white shadow-md shadow-teal-600/20",
+    accent: "bg-teal-500/50",
+  },
+  indigo: {
+    wrapper:
+      "border-indigo-500/20 bg-gradient-to-br from-indigo-500/[0.07] via-background to-background",
+    icon: "bg-indigo-600 text-white shadow-md shadow-indigo-600/20",
+    accent: "bg-indigo-500/50",
   },
 };
 

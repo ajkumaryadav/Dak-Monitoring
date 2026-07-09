@@ -78,6 +78,7 @@ export const ACP_ROLE_PERMISSIONS: readonly Permission[] = [
   PERMISSIONS.TASKS,
   PERMISSIONS.REPORTS,
   PERMISSIONS.NOTIFICATIONS,
+  PERMISSIONS.USERS,
 ];
 
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
@@ -226,9 +227,9 @@ export function isCollectorDashboardRole(role: UserRole): boolean {
   return COLLECTOR_DASHBOARD_ROLES.includes(role);
 }
 
-/** Only Collector can manage district user accounts. */
+/** Collector and ACP can manage district user accounts. */
 export function canManageUsers(role: UserRole): boolean {
-  return role === "collector";
+  return role === "collector" || role === "acp";
 }
 
 /** Collector or ACP — district-wide oversight (remarks, alerts). */

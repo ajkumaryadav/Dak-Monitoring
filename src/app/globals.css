@@ -134,6 +134,33 @@
   }
 }
 
+/* Auth portal — Rajasthan-themed responsive shell */
+.auth-portal-shell {
+  background: linear-gradient(
+    145deg,
+    oklch(0.97 0.02 55) 0%,
+    oklch(0.98 0.01 85) 35%,
+    oklch(0.96 0.03 25) 100%
+  );
+}
+
+.dark .auth-portal-shell {
+  background: linear-gradient(
+    145deg,
+    oklch(0.16 0.02 55) 0%,
+    oklch(0.14 0.01 85) 50%,
+    oklch(0.12 0.02 25) 100%
+  );
+}
+
+.auth-portal-bg {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% 20%, oklch(0.75 0.12 35 / 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 10%, oklch(0.65 0.1 145 / 0.1), transparent),
+    radial-gradient(ellipse 70% 45% at 50% 90%, oklch(0.7 0.08 55 / 0.08), transparent),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c45c26' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
 @keyframes auth-step-rise {
   from {
     opacity: 0;
@@ -314,4 +341,167 @@
 
 .auth-dot-pulse {
   animation: auth-dot-pulse 2s ease-in-out infinite;
+}
+
+/* Login aside — Rajasthan branding accents */
+.auth-tricolor-bar {
+  background: linear-gradient(
+    90deg,
+    #ff9933 0%,
+    #ff9933 33%,
+    #ffffff 33%,
+    #ffffff 66%,
+    #138808 66%,
+    #138808 100%
+  );
+}
+
+.dark .auth-tricolor-bar {
+  background: linear-gradient(
+    90deg,
+    #c4761f 0%,
+    #c4761f 33%,
+    #4a4a4a 33%,
+    #4a4a4a 66%,
+    #0d5c06 66%,
+    #0d5c06 100%
+  );
+}
+
+@keyframes auth-emblem-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 25%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.auth-emblem-pulse {
+  animation: auth-emblem-pulse 3s ease-in-out infinite;
+}
+
+.auth-fort-silhouette {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 80' preserveAspectRatio='none'%3E%3Cpath fill='%23c45c26' d='M0 80V50h20v-20h15v20h20V35h15v15h20V25h15v25h20V40h15v15h20V30h15v20h20V45h15v15h20V35h15v25h20V50h20v30z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+@keyframes auth-badge-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-badge-fade {
+  animation: auth-badge-fade-in 0.5s ease-out both;
+}
+
+@keyframes auth-stat-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.auth-stat-pop {
+  animation: auth-stat-pop 0.45s ease-out both;
+}
+
+/* Portal info footer — distinctive typography */
+.auth-portal-admin-title {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.auth-portal-tagline {
+  font-family: Georgia, "Times New Roman", ui-serif, serif;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  background: linear-gradient(
+    135deg,
+    oklch(0.45 0.12 35),
+    oklch(0.5 0.1 55),
+    oklch(0.42 0.11 25)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.dark .auth-portal-tagline {
+  background: linear-gradient(
+    135deg,
+    oklch(0.78 0.1 55),
+    oklch(0.82 0.08 85),
+    oklch(0.75 0.09 35)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.auth-portal-copyright {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  letter-spacing: 0.01em;
+}
+
+.auth-portal-info-card {
+  backdrop-filter: blur(8px);
+}
+
+.auth-portal-support-chip,
+.auth-portal-ip-chip {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-portal-support-chip:hover,
+.auth-portal-ip-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.06);
+}
+
+.auth-district-glance {
+  backdrop-filter: blur(6px);
+}
+
+@keyframes auth-chart-bar-grow {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+  }
+}
+
+.auth-chart-bar {
+  animation: auth-chart-bar-grow 0.65s ease-out both;
+}
+
+@keyframes auth-wf-bar-rise {
+  from {
+    transform: scaleY(0);
+    transform-origin: bottom center;
+    opacity: 0.4;
+  }
+  to {
+    transform: scaleY(1);
+    transform-origin: bottom center;
+    opacity: 1;
+  }
+}
+
+.auth-wf-bar {
+  animation: auth-wf-bar-rise 0.7s ease-out both;
 }

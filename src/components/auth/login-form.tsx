@@ -32,9 +32,12 @@ export function LoginForm() {
   );
 
   return (
-    <Card className="w-full max-w-md border-border/60 shadow-xl">
-      <CardHeader className="space-y-1 pb-2 text-center">
+    <Card className="w-full border-primary/20 bg-card/95 shadow-2xl backdrop-blur-sm">
+      <CardHeader className="space-y-2 border-b border-border/50 bg-primary/[0.04] pb-4 text-center">
         <LoginBrandTitle />
+        <p className="text-xs text-muted-foreground">
+          Government of Rajasthan · Secure Official Access
+        </p>
       </CardHeader>
 
       <CardContent>

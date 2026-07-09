@@ -47,19 +47,37 @@ export const userFormSchema = z
     isActive: z.coerce.boolean().default(true),
   })
   .superRefine((data, ctx) => {
-    if (data.role === "department_user" && !data.departmentId) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Department is required for department users",
-        path: ["departmentId"],
-      });
+    if (data.role === "department_user") {
+      if (!data.departmentId) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Department is required for department users",
+          path: ["departmentId"],
+        });
+      }
+      if (data.sectionId) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Section must be empty for department users",
+          path: ["sectionId"],
+        });
+      }
     }
-    if (data.role === "section_user" && !data.sectionId) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Section is required for section users",
-        path: ["sectionId"],
-      });
+    if (data.role === "section_user") {
+      if (!data.sectionId) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Internal section is required for section users",
+          path: ["sectionId"],
+        });
+      }
+      if (data.departmentId) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Department must be empty for internal section users",
+          path: ["departmentId"],
+        });
+      }
     }
   });
 

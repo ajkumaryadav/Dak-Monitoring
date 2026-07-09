@@ -6,6 +6,11 @@ import { z } from "zod";
 
 import { isValidDisposalDueDate } from "@/lib/constants/priority-due-date";
 import { canManageTasks, PERMISSIONS, hasPermission } from "@/lib/auth";
+import { uploadDakFile } from "@/features/dak/actions/upload-attachment";
+import {
+  sanitizeFileName,
+  validateAttachmentFile,
+} from "@/features/dak/lib/attachment-validation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 
@@ -169,11 +174,31 @@ export async function submitTaskComplianceFormAction(
     return { message: parsed.error.issues[0]?.message ?? "Invalid compliance" };
   }
 
+  const attachment = formData.get("attachment");
+  const file =
+    attachment instanceof File && attachment.size > 0 ? attachment : null;
+
+  let attachmentPath: string | null = null;
+
+  if (file) {
+    const validation = validateAttachmentFile(file);
+    if (!validation.valid) {
+      return { message: validation.message };
+    }
+
+    const upload = await uploadDakFile(`tasks/${parsed.data.taskId}`, file);
+    if (!upload.success) {
+      return { message: upload.message };
+    }
+    attachmentPath = upload.filePath;
+  }
+
   const supabase = createAdminClient();
   await supabase.from("task_compliance").insert({
     task_id: parsed.data.taskId,
     submitted_by: user.id,
     compliance_text: parsed.data.complianceText,
+    attachment_path: attachmentPath,
   });
 
   await supabase
@@ -181,11 +206,15 @@ export async function submitTaskComplianceFormAction(
     .update({ status: "compliance_submitted", updated_at: new Date().toISOString() })
     .eq("id", parsed.data.taskId);
 
+  const attachmentNote = file
+    ? ` · Attachment: ${sanitizeFileName(file.name)}`
+    : "";
+
   await supabase.from("task_timeline").insert({
     task_id: parsed.data.taskId,
     user_id: user.id,
-    action: "Compliance Submitted",
-    remarks: parsed.data.complianceText.slice(0, 200),
+    action: "ATR / Compliance Submitted",
+    remarks: `${parsed.data.complianceText.slice(0, 180)}${attachmentNote}`,
   });
 
   revalidatePath(`/dashboard/tasks/${parsed.data.taskId}`);

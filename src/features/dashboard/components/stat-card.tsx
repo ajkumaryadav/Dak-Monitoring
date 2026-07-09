@@ -8,7 +8,11 @@ export type StatCardVariant =
   | "info"
   | "warning"
   | "success"
-  | "danger";
+  | "danger"
+  | "purple"
+  | "teal"
+  | "indigo"
+  | "orange";
 
 const variantStyles: Record<
   StatCardVariant,
@@ -38,6 +42,26 @@ const variantStyles: Record<
     card: "border-destructive/25 bg-gradient-to-br from-destructive/10 via-destructive/5 to-background",
     icon: "bg-destructive text-white shadow-destructive/30",
     value: "text-destructive",
+  },
+  purple: {
+    card: "border-violet-500/25 bg-gradient-to-br from-violet-500/10 via-violet-500/5 to-background",
+    icon: "bg-violet-600 text-white shadow-violet-600/30",
+    value: "text-violet-700 dark:text-violet-300",
+  },
+  teal: {
+    card: "border-teal-500/25 bg-gradient-to-br from-teal-500/10 via-teal-500/5 to-background",
+    icon: "bg-teal-600 text-white shadow-teal-600/30",
+    value: "text-teal-700 dark:text-teal-300",
+  },
+  indigo: {
+    card: "border-indigo-500/25 bg-gradient-to-br from-indigo-500/10 via-indigo-500/5 to-background",
+    icon: "bg-indigo-600 text-white shadow-indigo-600/30",
+    value: "text-indigo-700 dark:text-indigo-300",
+  },
+  orange: {
+    card: "border-orange-500/25 bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-background",
+    icon: "bg-orange-600 text-white shadow-orange-600/30",
+    value: "text-orange-700 dark:text-orange-300",
   },
 };
 

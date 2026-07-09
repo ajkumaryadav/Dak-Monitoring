@@ -1,35 +1,79 @@
 import Link from "next/link";
 import { ListTodo, Plus } from "lucide-react";
 
+import { TaskListFilters } from "@/features/tasks/components/task-list-filters";
 import { TaskListTable } from "@/features/tasks/components/task-list-table";
 import { getTaskStats, getTasks } from "@/features/tasks/services/tasks";
+import { getDepartments } from "@/features/dak/services/get-departments";
+import { getAssignmentUnits } from "@/features/dak/services/get-assignment-units";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
 import { StatCard } from "@/features/dashboard/components/stat-card";
 import { buttonVariants } from "@/components/ui/button";
 import {
   canManageTasks,
+  isCollectorDashboardRole,
   isDepartmentDashboardRole,
   PERMISSIONS,
   requirePermission,
 } from "@/lib/auth";
+import { sanitizeDateRangeParams } from "@/lib/validation/date-range";
 import { getSessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
+import type { PriorityLevel } from "@/types";
+import type { TaskStatus } from "@/features/tasks/services/tasks";
 
 export const dynamic = "force-dynamic";
 
-export default async function TasksPage() {
+interface TasksPageProps {
+  searchParams: Promise<{
+    status?: string;
+    priority?: string;
+    department?: string;
+    section?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }>;
+}
+
+export default async function TasksPage({ searchParams }: TasksPageProps) {
   await requirePermission(PERMISSIONS.TASKS);
   const user = await getSessionUser();
-  const scope =
-    user && isDepartmentDashboardRole(user.role)
-      ? { departmentId: user.departmentId }
-      : user?.role === "section_user"
-        ? { assignedTo: user.id }
-        : undefined;
+  const params = await searchParams;
+  const { dateFrom, dateTo } = sanitizeDateRangeParams(
+    params.dateFrom,
+    params.dateTo
+  );
 
-  const [tasks, stats] = await Promise.all([
-    getTasks(scope),
+  const isDepartment = user && isDepartmentDashboardRole(user.role);
+  const isDistrict = user && isCollectorDashboardRole(user.role);
+
+  const scope =
+    user?.role === "section_user"
+      ? { assignedTo: user.id }
+      : isDepartment && user.departmentId
+        ? { departmentId: user.departmentId }
+        : params.department
+          ? { departmentId: params.department }
+          : undefined;
+
+  const filterScope = {
+    ...scope,
+    status: (params.status || undefined) as
+      | TaskStatus
+      | "pending"
+      | "completed"
+      | "overdue"
+      | undefined,
+    priority: (params.priority || undefined) as PriorityLevel | undefined,
+    dateFrom,
+    dateTo,
+  };
+
+  const [tasks, stats, departments, sections] = await Promise.all([
+    getTasks(filterScope),
     getTaskStats(scope),
+    isDistrict ? getDepartments() : Promise.resolve([]),
+    isDistrict ? getAssignmentUnits("section") : Promise.resolve([]),
   ]);
 
   const canCreate = user && canManageTasks(user.role);
@@ -38,7 +82,7 @@ export default async function TasksPage() {
     <div className="space-y-6">
       <DakPageHeader
         title="Administrative Tasks"
-        description="Parallel task assignments — election prep, VIP visits, inspections, and meeting decisions."
+        description="Task workflow with ATR/compliance upload, priority tracking, and district monitoring."
         icon={ListTodo}
       />
 
@@ -53,6 +97,15 @@ export default async function TasksPage() {
           variant="success"
         />
       </div>
+
+      {isDistrict && (
+        <TaskListFilters
+          departments={departments}
+          sections={sections}
+          showDepartmentFilter
+          showSectionFilter={false}
+        />
+      )}
 
       {canCreate && (
         <Link
