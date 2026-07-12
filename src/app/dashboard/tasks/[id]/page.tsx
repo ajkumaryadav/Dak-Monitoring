@@ -1,18 +1,33 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download, History, Paperclip } from "lucide-react";
+import { ArrowLeft, History } from "lucide-react";
 
-import { TaskActionPanel } from "@/features/tasks/components/task-action-panel";
+import { TaskCollectorReviewPanel } from "@/features/tasks/components/task-collector-review-panel";
+import { TaskMyAssignmentPanel } from "@/features/tasks/components/task-my-assignment-panel";
+import { TaskProgressPanel } from "@/features/tasks/components/task-progress-panel";
 import { TaskTimelinePanel } from "@/features/tasks/components/task-timeline-panel";
 import {
+  getAssigneeComplianceHistory,
+  getMyTaskAssignment,
+  getTaskAssignees,
+} from "@/features/tasks/services/task-assignees";
+import {
+  getConsolidatedReportDownloadUrl,
   getTaskById,
-  getTaskComplianceHistory,
   getTaskTimeline,
 } from "@/features/tasks/services/tasks";
+import {
+  TASK_ASSIGNMENT_MODE_OPTIONS,
+  TASK_CATEGORY_OPTIONS,
+} from "@/features/tasks/lib/task-types";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDakDateTime } from "@/features/dak/lib/dak-display";
-import { canManageTasks, requirePermission, PERMISSIONS } from "@/lib/auth";
+import {
+  canManageTasks,
+  requirePermission,
+  PERMISSIONS,
+} from "@/lib/auth";
 import { getSessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
@@ -32,21 +47,50 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
   const user = await getSessionUser();
   const { id } = await params;
 
-  const [task, timeline, complianceHistory] = await Promise.all([
-    getTaskById(id),
-    getTaskTimeline(id),
-    getTaskComplianceHistory(id),
-  ]);
-
+  const task = await getTaskById(id);
   if (!task) notFound();
 
   const isTaskManager = user && canManageTasks(user.role);
-  const deptName = Array.isArray(task.departments)
-    ? task.departments[0]?.name
-    : task.departments?.name;
-  const assigneeName = Array.isArray(task.assignee)
-    ? task.assignee[0]?.name
-    : task.assignee?.name;
+  const myAssignment =
+    user && !isTaskManager
+      ? await getMyTaskAssignment(id, user.id)
+      : null;
+
+  if (!isTaskManager && !myAssignment) {
+    notFound();
+  }
+
+  const [assignees, masterTimeline] = await Promise.all([
+    isTaskManager ? getTaskAssignees(id) : Promise.resolve([]),
+    getTaskTimeline(
+      id,
+      isTaskManager || !myAssignment
+        ? {}
+        : { assigneeId: myAssignment.id }
+    ),
+  ]);
+
+  const assigneesWithCompliance = isTaskManager
+    ? await Promise.all(
+        assignees.map(async (assignee) => ({
+          ...assignee,
+          compliance: await getAssigneeComplianceHistory(assignee.id),
+        }))
+      )
+    : [];
+
+  const consolidatedReportUrl = task.consolidated_report_path
+    ? await getConsolidatedReportDownloadUrl(task.consolidated_report_path)
+    : null;
+
+  const categoryLabel =
+    TASK_CATEGORY_OPTIONS.find((c) => c.value === (task.category ?? "general"))
+      ?.label ?? "General";
+
+  const modeLabel =
+    TASK_ASSIGNMENT_MODE_OPTIONS.find(
+      (m) => m.value === (task.assignment_mode ?? "parallel")
+    )?.label ?? "Parallel";
 
   return (
     <div className="space-y-6">
@@ -70,82 +114,57 @@ export default async function TaskDetailPage({ params }: TaskDetailPageProps) {
           >
             {task.priority}
           </Badge>
+          <Badge variant="outline">{categoryLabel}</Badge>
+          <Badge variant="outline">{modeLabel}</Badge>
         </div>
         <p className="text-sm text-muted-foreground">{task.description || "—"}</p>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+        <dl className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <span className="text-muted-foreground">Department:</span>{" "}
-            {deptName ?? "—"}
-          </div>
-          <div>
-            <span className="text-muted-foreground">Officer:</span>{" "}
-            {assigneeName ?? "—"}
-          </div>
-          <div>
-            <span className="text-muted-foreground">Due:</span>{" "}
+            <span className="text-muted-foreground">Due Date:</span>{" "}
             {task.due_date ?? "—"}
           </div>
           <div>
             <span className="text-muted-foreground">Created:</span>{" "}
             {formatDakDateTime(task.created_at)}
           </div>
+          {task.assigneeCount ? (
+            <div>
+              <span className="text-muted-foreground">Assignees:</span>{" "}
+              {task.assigneeCount}
+            </div>
+          ) : null}
+          {task.remarks && (
+            <div className="sm:col-span-2 lg:col-span-3">
+              <span className="text-muted-foreground">Instructions:</span>{" "}
+              {task.remarks}
+            </div>
+          )}
         </dl>
       </div>
 
-      <TaskActionPanel
-        taskId={task.id}
-        status={task.status}
-        isTaskManager={!!isTaskManager}
-      />
+      {isTaskManager && task.progress && task.progress.total > 0 && (
+        <TaskProgressPanel progress={task.progress} />
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <History className="size-4 text-primary" />
-            <h2 className="font-semibold">Task Timeline</h2>
-          </div>
-          <TaskTimelinePanel entries={timeline} />
-        </div>
+      {isTaskManager ? (
+        <TaskCollectorReviewPanel
+          task={task}
+          assignees={assigneesWithCompliance}
+          consolidatedReportUrl={consolidatedReportUrl}
+          isTaskManager
+        />
+      ) : myAssignment ? (
+        <TaskMyAssignmentPanel task={task} assignment={myAssignment} />
+      ) : null}
 
-        <div className="rounded-xl border p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <Paperclip className="size-4 text-primary" />
-            <h2 className="font-semibold">ATR & Compliance History</h2>
-          </div>
-          {!complianceHistory.length ? (
-            <p className="text-sm text-muted-foreground">
-              No ATR or compliance submissions yet.
-            </p>
-          ) : (
-            <ol className="space-y-3">
-              {complianceHistory.map((record) => (
-                <li
-                  key={record.id}
-                  className="rounded-lg border border-border/60 bg-muted/20 p-3"
-                >
-                  <p className="text-xs text-muted-foreground">
-                    {formatDakDateTime(record.createdAt)}
-                    {record.submitterName ? ` · ${record.submitterName}` : ""}
-                  </p>
-                  <p className="mt-2 text-sm whitespace-pre-wrap">
-                    {record.complianceText}
-                  </p>
-                  {record.downloadUrl && (
-                    <a
-                      href={record.downloadUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                    >
-                      <Download className="size-3.5" />
-                      Download attachment
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
+      <div className="rounded-xl border p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <History className="size-4 text-primary" />
+          <h2 className="font-semibold">
+            {isTaskManager ? "Task Activity" : "My Activity Timeline"}
+          </h2>
         </div>
+        <TaskTimelinePanel entries={masterTimeline} />
       </div>
     </div>
   );

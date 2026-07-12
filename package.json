@@ -9,6 +9,8 @@
     "lint": "eslint",
     "db:apply-audit-history": "node scripts/apply-dak-history-migration.mjs",
     "db:apply-notifications": "node scripts/apply-notifications-migration.mjs",
+    "db:apply-compliance-drafts": "node scripts/apply-compliance-drafts-migration.mjs",
+    "db:apply-storage-mime-types": "node scripts/apply-storage-mime-migration.mjs",
     "sla:monitor": "node scripts/run-sla-monitor.mjs"
   },
   "dependencies": {

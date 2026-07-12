@@ -30,19 +30,24 @@ interface DakDepartmentActionsPanelProps {
 
 const ACTION_OPTIONS: { value: DakRequestType; label: string; description: string }[] = [
   {
+    value: "clarification",
+    label: "Seek Clarification",
+    description: "Ask the Collector/DM a question before proceeding",
+  },
+  {
     value: "transfer",
     label: "Request Transfer",
     description: "When this DAK belongs to another department",
   },
   {
-    value: "escalation",
-    label: "Request Escalation",
-    description: "When administrative guidance is required",
-  },
-  {
     value: "extension",
     label: "Request Due Date Extension",
     description: "When more time is needed for disposal",
+  },
+  {
+    value: "escalation",
+    label: "Request Escalation",
+    description: "When administrative guidance is required",
   },
 ];
 
@@ -51,7 +56,7 @@ export function DakDepartmentActionsPanel({
   departments,
   currentDepartmentId,
 }: DakDepartmentActionsPanelProps) {
-  const [action, setAction] = useState<DakRequestType>("transfer");
+  const [action, setAction] = useState<DakRequestType>("clarification");
   const [state, formAction, isPending] = useActionState(
     submitDakRequestFormAction,
     {}
@@ -67,8 +72,8 @@ export function DakDepartmentActionsPanel({
       <CardHeader className="border-b border-border/60">
         <CardTitle className="text-base">Department Actions</CardTitle>
         <CardDescription>
-          Submit transfer, escalation, or extension requests for Collector/ADM
-          approval. ATR/compliance is submitted from the ATR tab.
+          Submit clarification, transfer, extension, or escalation requests for
+          Collector/ADM approval. Compliance is submitted separately below.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5 pt-4">
@@ -133,7 +138,11 @@ export function DakDepartmentActionsPanel({
 
           <div className="space-y-2">
             <Label htmlFor="requestRemarks">
-              {action === "extension" ? "Reason *" : "Remarks *"}
+              {action === "clarification"
+                ? "Your Question *"
+                : action === "extension"
+                  ? "Reason *"
+                  : "Remarks *"}
             </Label>
             <textarea
               id="requestRemarks"
@@ -141,7 +150,11 @@ export function DakDepartmentActionsPanel({
               required
               minLength={5}
               rows={3}
-              placeholder="Provide mandatory justification for this request..."
+              placeholder={
+                action === "clarification"
+                  ? "Enter your question for the Collector/DM..."
+                  : "Provide mandatory justification for this request..."
+              }
               className={cn(inputClassName, "min-h-20 resize-y py-2")}
             />
           </div>

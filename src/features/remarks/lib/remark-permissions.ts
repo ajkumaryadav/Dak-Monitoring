@@ -15,32 +15,13 @@ export interface RemarkPermissions {
   canAddCollectorNote: boolean;
   canAddDepartmentRemark: boolean;
   canSubmitAtr: boolean;
+  canSubmitCompliance: boolean;
   isReadOnly: boolean;
   allowedRemarkTypes: DakRemarkType[];
 }
 
-const DISTRICT_REMARK_TYPES: DakRemarkType[] = [
-  "remark",
-  "internal_note",
-  "collector_note",
-];
-
 function isDistrictAdmin(role: UserRole): boolean {
   return DISTRICT_ADMIN_ROLES.includes(role);
-}
-
-function districtAdminPermissions(): RemarkPermissions {
-  return {
-    canViewAll: true,
-    canViewRestricted: true,
-    canAddRemark: true,
-    canAddInternalNote: true,
-    canAddCollectorNote: true,
-    canAddDepartmentRemark: false,
-    canSubmitAtr: false,
-    isReadOnly: false,
-    allowedRemarkTypes: DISTRICT_REMARK_TYPES,
-  };
 }
 
 export function getRemarkPermissions(user: SessionUser): RemarkPermissions {
@@ -55,26 +36,42 @@ export function getRemarkPermissions(user: SessionUser): RemarkPermissions {
       canAddCollectorNote: false,
       canAddDepartmentRemark: false,
       canSubmitAtr: false,
+      canSubmitCompliance: false,
       isReadOnly: true,
       allowedRemarkTypes: [],
     };
   }
 
   if (isDistrictAdmin(role) || role === "adm") {
-    return districtAdminPermissions();
+    const allowedRemarkTypes: DakRemarkType[] =
+      role === "acp" ? ["internal_note"] : ["collector_note"];
+
+    return {
+      canViewAll: true,
+      canViewRestricted: true,
+      canAddRemark: true,
+      canAddInternalNote: role === "acp",
+      canAddCollectorNote: role !== "acp",
+      canAddDepartmentRemark: false,
+      canSubmitAtr: false,
+      canSubmitCompliance: false,
+      isReadOnly: false,
+      allowedRemarkTypes,
+    };
   }
 
   if (role === "department_user") {
     return {
       canViewAll: false,
       canViewRestricted: false,
-      canAddRemark: true,
+      canAddRemark: false,
       canAddInternalNote: false,
       canAddCollectorNote: false,
-      canAddDepartmentRemark: true,
-      canSubmitAtr: true,
+      canAddDepartmentRemark: false,
+      canSubmitAtr: false,
+      canSubmitCompliance: true,
       isReadOnly: false,
-      allowedRemarkTypes: ["remark", "department_remark"],
+      allowedRemarkTypes: [],
     };
   }
 
@@ -82,13 +79,14 @@ export function getRemarkPermissions(user: SessionUser): RemarkPermissions {
     return {
       canViewAll: false,
       canViewRestricted: false,
-      canAddRemark: true,
+      canAddRemark: false,
       canAddInternalNote: false,
       canAddCollectorNote: false,
       canAddDepartmentRemark: false,
       canSubmitAtr: false,
+      canSubmitCompliance: true,
       isReadOnly: false,
-      allowedRemarkTypes: ["remark"],
+      allowedRemarkTypes: [],
     };
   }
 
@@ -100,6 +98,7 @@ export function getRemarkPermissions(user: SessionUser): RemarkPermissions {
     canAddCollectorNote: false,
     canAddDepartmentRemark: false,
     canSubmitAtr: false,
+    canSubmitCompliance: false,
     isReadOnly: true,
     allowedRemarkTypes: [],
   };

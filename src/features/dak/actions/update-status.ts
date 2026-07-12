@@ -62,7 +62,8 @@ export async function updateDakStatus(
     ) {
       return {
         success: false,
-        message: "You do not have permission to update DAK status.",
+        message:
+          "Status is updated automatically when you save or submit compliance. Use the Action Taken section on the DAK page.",
       };
     }
 

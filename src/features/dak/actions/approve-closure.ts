@@ -1,12 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { logWorkflowAction } from "@/features/dak/services/log-workflow";
-import { notifyDakStatusChange } from "@/features/notifications/services/notify-dak-event";
-import { notifyClosureApproved } from "@/features/dak-requests/services/notify-dak-request-event";
+import {
+  notifyClosureApproved,
+  notifyReturnedForRework,
+} from "@/features/dak-requests/services/notify-dak-request-event";
 import { canApproveClosure } from "@/features/dak/lib/workflow";
+import { isMissingAtrDraftColumnError } from "@/features/remarks/lib/atr-draft-support";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
 
@@ -63,10 +67,24 @@ export async function approveDakClosure(
     };
   }
 
-  const { count } = await supabase
+  let countQuery = await supabase
     .from("dak_atr")
     .select("id", { count: "exact", head: true })
-    .eq("dak_id", parsed.data.dakId);
+    .eq("dak_id", parsed.data.dakId)
+    .eq("is_draft", false);
+
+  if (countQuery.error && isMissingAtrDraftColumnError(countQuery.error.message)) {
+    countQuery = await supabase
+      .from("dak_atr")
+      .select("id", { count: "exact", head: true })
+      .eq("dak_id", parsed.data.dakId);
+  }
+
+  const count = countQuery.count;
+
+  if (countQuery.error) {
+    return { success: false, message: countQuery.error.message };
+  }
 
   if (!count) {
     return { success: false, message: "An ATR must be submitted before closure." };
@@ -165,44 +183,52 @@ export async function returnDakForRework(
     userId: user.id,
     eventType: "status_changed",
     timelineActionType: "status_changed",
-    action: "Returned for Rework",
-    remarks: parsed.data.remarks,
-    fromStatus: dak.status as string,
-    toStatus: "in_progress",
+      action: "Returned for Rework",
+      remarks: parsed.data.remarks,
+      fromStatus: dak.status as string,
+      toStatus: "in_progress",
+      metadata: { returned_for_rework: true },
   });
 
-  await notifyDakStatusChange({
+  await notifyReturnedForRework({
     dakId: parsed.data.dakId,
     dakNumber: dak.dak_number as string,
-    fromStatus: dak.status as string,
-    toStatus: "in_progress",
     assignedToUserId: (dak.assigned_to as string | null) ?? null,
     actorUserId: user.id,
     actorName: user.name,
+    reason: parsed.data.remarks,
   });
 
   revalidateDak(parsed.data.dakId);
   return { success: true };
 }
 
+export type ClosureFormState = { message?: string };
+
 export async function approveClosureFormAction(
-  _prev: { message?: string },
+  _prev: ClosureFormState,
   formData: FormData
-) {
+): Promise<ClosureFormState> {
   const result = await approveDakClosure({
     dakId: formData.get("dakId") as string,
     remarks: (formData.get("remarks") as string) ?? "",
   });
-  return result.success ? {} : { message: result.message };
+  if (result.success) {
+    redirect("/dashboard/dak/pending-approval");
+  }
+  return { message: result.message };
 }
 
 export async function returnForReworkFormAction(
-  _prev: { message?: string },
+  _prev: ClosureFormState,
   formData: FormData
-) {
+): Promise<ClosureFormState> {
   const result = await returnDakForRework({
     dakId: formData.get("dakId") as string,
     remarks: formData.get("remarks") as string,
   });
-  return result.success ? {} : { message: result.message };
+  if (result.success) {
+    redirect("/dashboard/dak/pending-approval");
+  }
+  return { message: result.message };
 }

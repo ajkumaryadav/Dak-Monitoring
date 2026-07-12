@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 
 import {
   getFileExtension,
+  resolveUploadContentType,
   sanitizeFileName,
   validateAttachmentFile,
 } from "@/features/dak/lib/attachment-validation";
@@ -52,7 +53,7 @@ export async function uploadDakFile(
   const { error } = await supabase.storage
     .from(STORAGE_BUCKET)
     .upload(filePath, fileBuffer, {
-      contentType: file.type || "application/octet-stream",
+      contentType: resolveUploadContentType(file),
       upsert: false,
     });
 

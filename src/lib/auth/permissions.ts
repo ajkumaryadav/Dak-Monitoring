@@ -247,7 +247,12 @@ export function canManageTasks(role: UserRole): boolean {
   return TASK_MANAGE_ROLES.includes(role);
 }
 
-/** Only department/section officers update operational DAK status. */
-export function canUpdateDakStatusRole(role: UserRole): boolean {
+/** Department/section officers use the compliance workflow — not manual status. */
+export function canUpdateDakStatusRole(_role: UserRole): boolean {
+  return false;
+}
+
+/** Department and internal section officers submit compliance. */
+export function canSubmitComplianceRole(role: UserRole): boolean {
   return role === "department_user" || role === "section_user";
 }

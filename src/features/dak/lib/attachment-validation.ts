@@ -115,6 +115,12 @@ export function getMaxBytesForExtension(extension: string): number {
   return MAX_UPLOAD_BYTES;
 }
 
+export function resolveUploadContentType(file: File): string {
+  const extension = getFileExtension(file.name);
+  const mapped = EXTENSION_MIME_MAP[extension]?.[0];
+  return mapped ?? file.type ?? "application/octet-stream";
+}
+
 export function validateAttachmentFile(
   file: File
 ): { valid: true } | { valid: false; message: string } {
@@ -150,7 +156,15 @@ export function validateAttachmentFile(
   const allowedMimes = EXTENSION_MIME_MAP[extension] ?? [];
 
   if (file.type && allowedMimes.length > 0 && !allowedMimes.includes(file.type)) {
-    return { valid: false, message: UNSUPPORTED_FILE_TYPE_MESSAGE };
+    const genericOfficeMime =
+      file.type === "application/octet-stream" &&
+      ALLOWED_ATTACHMENT_EXTENSIONS.includes(
+        extension as (typeof ALLOWED_ATTACHMENT_EXTENSIONS)[number]
+      );
+
+    if (!genericOfficeMime) {
+      return { valid: false, message: UNSUPPORTED_FILE_TYPE_MESSAGE };
+    }
   }
 
   return { valid: true };

@@ -25,7 +25,7 @@ export default async function NewTaskPage() {
       </Link>
       <DakPageHeader
         title="Create Task"
-        description="Assign a non-DAK administrative task to a department officer."
+        description="Create a district coordination task and assign multiple departments or officers."
         icon={ListTodo}
       />
       <CreateTaskForm options={options} minDueDate={minDue} />

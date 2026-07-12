@@ -20,6 +20,7 @@ export {
   canManageTasks,
   canManageUsers,
   canReassignDakRole,
+  canSubmitComplianceRole,
   canUpdateDakStatusRole,
   getPermissionsForRole,
   hasMinimumRole,

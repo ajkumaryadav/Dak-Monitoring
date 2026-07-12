@@ -84,6 +84,24 @@ if (existsSync(completePath)) {
     console.log("Applying 000016_notifications_message_column.sql...");
     await db.unsafe(readFileSync(messagePath, "utf8"));
   }
+
+  const realtimePath = resolve(
+    process.cwd(),
+    "supabase/migrations/000023_notifications_realtime.sql"
+  );
+  if (existsSync(realtimePath)) {
+    console.log("Applying 000023_notifications_realtime.sql...");
+    await db.unsafe(readFileSync(realtimePath, "utf8"));
+  }
+
+  const realtimeRepairPath = resolve(
+    process.cwd(),
+    "supabase/migrations/000037_notifications_realtime_repair.sql"
+  );
+  if (existsSync(realtimeRepairPath)) {
+    console.log("Applying 000037_notifications_realtime_repair.sql...");
+    await db.unsafe(readFileSync(realtimeRepairPath, "utf8"));
+  }
 } catch (error) {
   console.error("Migration failed:", error);
   process.exit(1);

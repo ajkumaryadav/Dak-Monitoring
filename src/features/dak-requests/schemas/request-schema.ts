@@ -32,10 +32,16 @@ export const submitExtensionRequestSchema = z.object({
     }),
 });
 
+export const submitClarificationRequestSchema = z.object({
+  ...baseRequestFields,
+  requestType: z.literal("clarification"),
+});
+
 export const submitDakRequestSchema = z.discriminatedUnion("requestType", [
   submitTransferRequestSchema,
   submitEscalationRequestSchema,
   submitExtensionRequestSchema,
+  submitClarificationRequestSchema,
 ]);
 
 export const reviewDakRequestSchema = z.object({

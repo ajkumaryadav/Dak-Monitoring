@@ -23,11 +23,17 @@ import {
 import type { DakListEntry } from "@/features/dak/services/get-dak-stats";
 import { cn } from "@/lib/utils";
 
+interface StatusDisplay {
+  label: string;
+  className: string;
+}
+
 interface DakListTableProps {
   entries: DakListEntry[];
   emptyTitle: string;
   emptyDescription: string;
   showRegisterAction?: boolean;
+  statusOverrides?: Record<string, StatusDisplay>;
 }
 
 export function DakListTable({
@@ -35,6 +41,7 @@ export function DakListTable({
   emptyTitle,
   emptyDescription,
   showRegisterAction = false,
+  statusOverrides = {},
 }: DakListTableProps) {
   if (!entries.length) {
     return (
@@ -107,12 +114,24 @@ export function DakListTable({
               </Badge>
             </TableCell>
             <TableCell className="px-4">
-                <Badge
-                  variant="outline"
-                  className={cn("capitalize", getStatusStyle(entry.status))}
-                >
-                {formatDakStatus(entry.status)}
-              </Badge>
+              {(() => {
+                const override = statusOverrides[entry.id];
+                if (override) {
+                  return (
+                    <Badge variant="outline" className={cn("capitalize", override.className)}>
+                      {override.label}
+                    </Badge>
+                  );
+                }
+                return (
+                  <Badge
+                    variant="outline"
+                    className={cn("capitalize", getStatusStyle(entry.status))}
+                  >
+                    {formatDakStatus(entry.status)}
+                  </Badge>
+                );
+              })()}
             </TableCell>
             <TableCell className="px-4 text-muted-foreground">
               {formatDakDate(entry.due_date)}

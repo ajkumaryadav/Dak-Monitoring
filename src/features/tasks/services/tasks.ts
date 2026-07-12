@@ -1,19 +1,34 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { PriorityLevel } from "@/types";
+import {
+  computeTaskProgress,
+  type TaskAssignmentMode,
+  type TaskCategory,
+  type TaskProgressSummary,
+} from "@/features/tasks/lib/task-types";
+import {
+  getTaskIdsForDepartment,
+  getTaskIdsForUser,
+  getTaskProgressForIds,
+} from "@/features/tasks/services/task-assignees";
 
 export type TaskStatus =
   | "draft"
   | "assigned"
+  | "awaiting_consolidation"
+  | "closed"
   | "accepted"
   | "in_progress"
   | "compliance_submitted"
-  | "approved"
-  | "closed";
+  | "approved";
 
 export interface TaskRecord {
   id: string;
   title: string;
   description: string | null;
+  category: TaskCategory;
+  assignment_mode: TaskAssignmentMode;
+  lead_department_id: string | null;
   department_id: string | null;
   assigned_to: string | null;
   assigned_by: string | null;
@@ -21,34 +36,71 @@ export interface TaskRecord {
   due_date: string | null;
   status: TaskStatus;
   remarks: string | null;
+  consolidated_report_text: string | null;
+  consolidated_report_path: string | null;
+  consolidated_report_at: string | null;
   created_at: string;
+  closed_at: string | null;
   departments: { name: string } | { name: string }[] | null;
   assignee: { name: string } | { name: string }[] | null;
+  progress?: TaskProgressSummary;
+  assigneeCount?: number;
 }
 
-const TASK_SELECT =
-  "id, title, description, department_id, assigned_to, assigned_by, priority, due_date, status, remarks, created_at, departments(name), assignee:users!tasks_assigned_to_fkey(name)";
+const TASK_SELECT = `
+  id,
+  title,
+  description,
+  category,
+  assignment_mode,
+  lead_department_id,
+  department_id,
+  assigned_to,
+  assigned_by,
+  priority,
+  due_date,
+  status,
+  remarks,
+  consolidated_report_text,
+  consolidated_report_path,
+  consolidated_report_at,
+  created_at,
+  closed_at,
+  departments:departments!tasks_department_id_fkey(name),
+  assignee:users!tasks_assigned_to_fkey(name)
+`;
+
+const COMPLETED_STATUSES: TaskStatus[] = ["closed", "approved"];
 
 export async function getTasks(scope?: {
   departmentId?: string | null;
   assignedTo?: string | null;
+  taskIds?: string[];
   status?: TaskStatus | "pending" | "completed" | "overdue";
   priority?: PriorityLevel;
   dateFrom?: string;
   dateTo?: string;
 }): Promise<TaskRecord[]> {
   const supabase = createAdminClient();
+
+  let taskIds = scope?.taskIds;
+
+  if (scope?.assignedTo && !taskIds) {
+    taskIds = await getTaskIdsForUser(scope.assignedTo);
+  } else if (scope?.departmentId && !taskIds) {
+    taskIds = await getTaskIdsForDepartment(scope.departmentId);
+  }
+
   let query = supabase
     .from("tasks")
     .select(TASK_SELECT)
     .order("created_at", { ascending: false });
 
-  if (scope?.departmentId) {
-    query = query.eq("department_id", scope.departmentId);
+  if (taskIds !== undefined) {
+    if (!taskIds.length) return [];
+    query = query.in("id", taskIds);
   }
-  if (scope?.assignedTo) {
-    query = query.eq("assigned_to", scope.assignedTo);
-  }
+
   if (scope?.priority) {
     query = query.eq("priority", scope.priority);
   }
@@ -83,7 +135,12 @@ export async function getTasks(scope?: {
     tasks = tasks.filter((t) => t.status === scope.status);
   }
 
-  return tasks;
+  const progressMap = await getTaskProgressForIds(tasks.map((t) => t.id));
+  return tasks.map((task) => ({
+    ...task,
+    progress: progressMap.get(task.id),
+    assigneeCount: progressMap.get(task.id)?.total ?? 0,
+  }));
 }
 
 export async function getTaskById(id: string): Promise<TaskRecord | null> {
@@ -95,7 +152,13 @@ export async function getTaskById(id: string): Promise<TaskRecord | null> {
     .maybeSingle();
 
   if (error || !data) return null;
-  return data as TaskRecord;
+
+  const progressMap = await getTaskProgressForIds([id]);
+  return {
+    ...(data as TaskRecord),
+    progress: progressMap.get(id),
+    assigneeCount: progressMap.get(id)?.total ?? 0,
+  };
 }
 
 export interface TaskStatsSummary {
@@ -108,13 +171,6 @@ export interface TaskStatsSummary {
   completionPct: number;
 }
 
-const COMPLETED_STATUSES: TaskStatus[] = ["approved", "closed"];
-const IN_PROGRESS_STATUSES: TaskStatus[] = [
-  "accepted",
-  "in_progress",
-  "compliance_submitted",
-];
-
 export async function getTaskStats(scope?: {
   departmentId?: string | null;
   assignedTo?: string | null;
@@ -124,11 +180,20 @@ export async function getTaskStats(scope?: {
 
   const completed = tasks.filter((t) => COMPLETED_STATUSES.includes(t.status));
   const active = tasks.filter((t) => !COMPLETED_STATUSES.includes(t.status));
-  const assigned = tasks.filter(
-    (t) => t.status !== "draft" && !COMPLETED_STATUSES.includes(t.status)
+  const assigned = active.filter((t) => t.status !== "draft");
+  const inProgress = active.filter(
+    (t) => t.progress && t.progress.inProgress > 0
   );
-  const inProgress = tasks.filter((t) => IN_PROGRESS_STATUSES.includes(t.status));
   const overdue = active.filter((t) => t.due_date && t.due_date < today);
+
+  const totalAssignees = tasks.reduce(
+    (sum, t) => sum + (t.progress?.total ?? 0),
+    0
+  );
+  const completedAssignees = tasks.reduce(
+    (sum, t) => sum + (t.progress?.completed ?? 0),
+    0
+  );
 
   return {
     total: tasks.length,
@@ -138,7 +203,11 @@ export async function getTaskStats(scope?: {
     completed: completed.length,
     overdue: overdue.length,
     completionPct:
-      tasks.length > 0 ? Math.round((completed.length / tasks.length) * 100) : 0,
+      totalAssignees > 0
+        ? Math.round((completedAssignees / totalAssignees) * 100)
+        : tasks.length > 0
+          ? Math.round((completed.length / tasks.length) * 100)
+          : 0,
   };
 }
 
@@ -148,31 +217,31 @@ export interface TaskTimelineEntry {
   remarks: string | null;
   createdAt: string;
   performerName: string | null;
-}
-
-export interface TaskComplianceRecord {
-  id: string;
-  complianceText: string;
-  attachmentPath: string | null;
-  createdAt: string;
-  submitterName: string | null;
-  downloadUrl: string | null;
+  assigneeId: string | null;
 }
 
 const STORAGE_BUCKET = "dak-attachments";
 
 export async function getTaskTimeline(
-  taskId: string
+  taskId: string,
+  options?: { assigneeId?: string; masterOnly?: boolean }
 ): Promise<TaskTimelineEntry[]> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("task_timeline")
     .select(
-      "id, action, remarks, created_at, user:users!task_timeline_user_id_fkey(name)"
+      "id, action, remarks, created_at, assignee_id, user:users!task_timeline_user_id_fkey(name)"
     )
     .eq("task_id", taskId)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false });
+    .order("created_at", { ascending: false });
+
+  if (options?.assigneeId) {
+    query = query.eq("assignee_id", options.assigneeId);
+  } else if (options?.masterOnly) {
+    query = query.is("assignee_id", null);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("[getTaskTimeline]", error.message);
@@ -188,21 +257,39 @@ export async function getTaskTimeline(
       remarks: (row.remarks as string | null) ?? null,
       createdAt: row.created_at as string,
       performerName: (userData as { name?: string } | null)?.name ?? null,
+      assigneeId: (row.assignee_id as string | null) ?? null,
     };
   });
 }
 
+export interface TaskComplianceRecord {
+  id: string;
+  assigneeId: string | null;
+  complianceText: string;
+  attachmentPath: string | null;
+  createdAt: string;
+  submitterName: string | null;
+  downloadUrl: string | null;
+}
+
 export async function getTaskComplianceHistory(
-  taskId: string
+  taskId: string,
+  options?: { assigneeId?: string }
 ): Promise<TaskComplianceRecord[]> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("task_compliance")
     .select(
-      "id, compliance_text, attachment_path, created_at, submitter:users!task_compliance_submitted_by_fkey(name)"
+      "id, assignee_id, compliance_text, attachment_path, created_at, submitter:users!task_compliance_submitted_by_fkey(name)"
     )
     .eq("task_id", taskId)
     .order("created_at", { ascending: false });
+
+  if (options?.assigneeId) {
+    query = query.eq("assignee_id", options.assigneeId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("[getTaskComplianceHistory]", error.message);
@@ -226,6 +313,7 @@ export async function getTaskComplianceHistory(
 
     records.push({
       id: row.id as string,
+      assigneeId: (row.assignee_id as string | null) ?? null,
       complianceText: row.compliance_text as string,
       attachmentPath,
       createdAt: row.created_at as string,
@@ -237,3 +325,15 @@ export async function getTaskComplianceHistory(
 
   return records;
 }
+
+export async function getConsolidatedReportDownloadUrl(
+  path: string
+): Promise<string | null> {
+  const supabase = createAdminClient();
+  const { data } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(path, 3600);
+  return data?.signedUrl ?? null;
+}
+
+export { computeTaskProgress };

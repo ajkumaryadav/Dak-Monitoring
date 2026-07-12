@@ -505,3 +505,49 @@
 .auth-wf-bar {
   animation: auth-wf-bar-rise 0.7s ease-out both;
 }
+
+@keyframes auth-glance-progress {
+  from {
+    transform: scaleX(0);
+    transform-origin: left center;
+    opacity: 0.5;
+  }
+  to {
+    transform: scaleX(1);
+    transform-origin: left center;
+    opacity: 1;
+  }
+}
+
+.auth-glance-progress {
+  animation: auth-glance-progress 1s ease-out both;
+}
+
+@keyframes auth-glance-ring-spin {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
+  }
+}
+
+.auth-glance-ring-track {
+  animation: auth-glance-ring-spin 18s linear infinite;
+}
+
+@keyframes auth-glance-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+.auth-glance-glow {
+  animation: auth-glance-pulse-glow 4s ease-in-out infinite;
+}

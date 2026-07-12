@@ -2,6 +2,8 @@ import { createBrowserClient } from "@supabase/ssr";
 
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
+let browserClient: ReturnType<typeof createBrowserClient> | undefined;
+
 export function createClient() {
   const { url, anonKey, isConfigured } = getSupabaseEnv();
 
@@ -11,5 +13,10 @@ export function createClient() {
     );
   }
 
-  return createBrowserClient(url, anonKey);
+  if (typeof window !== "undefined" && browserClient) {
+    return browserClient;
+  }
+
+  browserClient = createBrowserClient(url, anonKey);
+  return browserClient;
 }

@@ -1,9 +1,9 @@
 import {
   ArrowUpRight,
   Building2,
-  FileCheck,
+  ClipboardCheck,
   Landmark,
-  Shield,
+  Route,
 } from "lucide-react";
 
 import { appConfig } from "@/lib/constants/navigation";
@@ -11,10 +11,11 @@ import { cn } from "@/lib/utils";
 
 const highlights = [
   {
-    icon: FileCheck,
-    title: "DAK Tracking",
-    description: "Monitor every correspondence from receipt to final disposal.",
-    tag: "Live pipeline",
+    icon: Route,
+    title: "End-to-End Workflow",
+    description:
+      "From diary registration and Collector assignment to compliance review and verified closure.",
+    tag: "Full lifecycle",
     colors: {
       card: "hover:border-emerald-200/80",
       icon: "bg-emerald-100 text-emerald-600 ring-emerald-200/80",
@@ -25,9 +26,10 @@ const highlights = [
   },
   {
     icon: Building2,
-    title: "Department Workflow",
-    description: "Assign tasks and track progress across all departments.",
-    tag: "Multi-dept",
+    title: "Multi-Department Routing",
+    description:
+      "Assign DAK to departments and sections with clear ownership and progress tracking.",
+    tag: "Collectorate",
     colors: {
       card: "hover:border-sky-200/80",
       icon: "bg-sky-100 text-sky-600 ring-sky-200/80",
@@ -37,16 +39,17 @@ const highlights = [
     },
   },
   {
-    icon: Shield,
-    title: "Secure Access",
-    description: "Role-based permissions with a complete audit trail.",
-    tag: "RBAC",
+    icon: ClipboardCheck,
+    title: "Compliance & Closure",
+    description:
+      "Departments submit action taken and ATR; Collector approves or returns for rework.",
+    tag: "ATR review",
     colors: {
-      card: "hover:border-violet-200/80",
-      icon: "bg-violet-100 text-violet-600 ring-violet-200/80",
-      title: "text-violet-700",
-      tag: "bg-violet-100 text-violet-700",
-      arrow: "group-hover:text-violet-600",
+      card: "hover:border-amber-200/80",
+      icon: "bg-amber-100 text-amber-700 ring-amber-200/80",
+      title: "text-amber-800",
+      tag: "bg-amber-100 text-amber-800",
+      arrow: "group-hover:text-amber-700",
     },
   },
 ] as const;
@@ -76,9 +79,9 @@ export function AuthBrandPanel() {
             {appConfig.fullName}
           </h1>
           <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Secure district platform for DAK tracking, workflow management, task
-            compliance, and administrative oversight under Rajasthan Government
-            digital governance standards.
+            Official Khairthal-Tijara district portal for correspondence
+            monitoring, departmental compliance, Collector review, and
+            administrative oversight under Rajasthan e-Governance standards.
           </p>
         </div>
 

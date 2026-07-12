@@ -9,7 +9,7 @@ import {
   addRemarkFormAction,
   type AddRemarkFormState,
 } from "@/features/remarks/actions/add-remark";
-import { getRemarkTypeLabel } from "@/features/remarks/lib/remark-types";
+import type { DakRemarkType } from "@/features/remarks/lib/remark-types";
 import type { RemarkPermissions } from "@/features/remarks/lib/remark-permissions";
 import { cn } from "@/lib/utils";
 
@@ -18,53 +18,49 @@ const inputClassName = cn(
   "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
 );
 
+function getRemarkFieldLabel(type: DakRemarkType): string {
+  switch (type) {
+    case "collector_note":
+      return "Collector Review Remark";
+    case "internal_note":
+      return "Internal Note";
+    case "department_remark":
+      return "Department Remark";
+    default:
+      return "Remark";
+  }
+}
+
 interface AddRemarkFormProps {
   dakId: string;
   permissions: RemarkPermissions;
 }
 
-/** Form to add remarks, internal notes, or department remarks based on role. */
+/** Form to add remarks based on role — remark type is inferred automatically. */
 export function AddRemarkForm({ dakId, permissions }: AddRemarkFormProps) {
   const [state, formAction, isPending] = useActionState(
     addRemarkFormAction,
     {} as AddRemarkFormState
   );
 
-  const defaultType = permissions.allowedRemarkTypes[0];
-  if (!defaultType) return null;
+  const remarkType = permissions.allowedRemarkTypes[0];
+  if (!remarkType) return null;
+
+  const fieldLabel = getRemarkFieldLabel(remarkType);
 
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="dakId" value={dakId} />
-
-      {permissions.allowedRemarkTypes.length > 1 ? (
-        <div className="space-y-2">
-          <Label htmlFor="remarkType">Type</Label>
-          <select
-            id="remarkType"
-            name="remarkType"
-            defaultValue={defaultType}
-            className="h-9 w-full rounded-lg border border-input px-2.5 text-sm"
-          >
-            {permissions.allowedRemarkTypes.map((type) => (
-              <option key={type} value={type}>
-                {getRemarkTypeLabel(type)}
-              </option>
-            ))}
-          </select>
-        </div>
-      ) : (
-        <input type="hidden" name="remarkType" value={defaultType} />
-      )}
+      <input type="hidden" name="remarkType" value={remarkType} />
 
       <div className="space-y-2">
-        <Label htmlFor="body">Remark</Label>
+        <Label htmlFor="body">{fieldLabel}</Label>
         <textarea
           id="body"
           name="body"
           required
           maxLength={2000}
-          placeholder="Enter your remark..."
+          placeholder={`Enter ${fieldLabel.toLowerCase()}...`}
           className={inputClassName}
         />
       </div>
@@ -75,7 +71,7 @@ export function AddRemarkForm({ dakId, permissions }: AddRemarkFormProps) {
         </p>
       )}
       {state.success && (
-        <p className="text-sm text-emerald-600">Remark saved.</p>
+        <p className="text-sm text-emerald-600">{fieldLabel} saved.</p>
       )}
 
       <button
@@ -88,7 +84,7 @@ export function AddRemarkForm({ dakId, permissions }: AddRemarkFormProps) {
         ) : (
           <MessageSquare className="size-4" />
         )}
-        Save Remark
+        Save {fieldLabel}
       </button>
     </form>
   );

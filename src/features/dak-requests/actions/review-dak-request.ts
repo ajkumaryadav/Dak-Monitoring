@@ -151,20 +151,28 @@ export async function reviewDakRequest(
 
   const label = DAK_REQUEST_TYPE_LABELS[request.request_type];
   const decisionLabel =
-    parsed.data.decision === "approved" ? "Approved" : "Rejected";
+    request.request_type === "clarification" && parsed.data.decision === "approved"
+      ? "Answered"
+      : parsed.data.decision === "approved"
+        ? "Approved"
+        : "Rejected";
 
   if (parsed.data.decision === "approved") {
-    const applied = await applyApprovedRequest(
-      request.request_type,
-      request.dak_id,
-      request.target_department_id,
-      request.requested_due_date,
-      parsed.data.reviewRemarks,
-      user.id
-    );
+    if (request.request_type === "clarification") {
+      // Clarification "approval" means the collector provided a reply — no DAK mutation.
+    } else {
+      const applied = await applyApprovedRequest(
+        request.request_type,
+        request.dak_id,
+        request.target_department_id,
+        request.requested_due_date,
+        parsed.data.reviewRemarks,
+        user.id
+      );
 
-    if (!applied.ok) {
-      return { success: false, message: applied.message };
+      if (!applied.ok) {
+        return { success: false, message: applied.message };
+      }
     }
   }
 

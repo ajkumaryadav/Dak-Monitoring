@@ -60,6 +60,12 @@ function requestNotificationType(
       rejected: "extension_rejected",
       resolved: "extension_approved",
     },
+    clarification: {
+      requested: "clarification_requested",
+      approved: "clarification_replied",
+      rejected: "clarification_replied",
+      resolved: "clarification_replied",
+    },
   };
 
   return map[requestType][phase];
@@ -102,7 +108,12 @@ export async function notifyDakRequestReviewed(params: {
     params.decision === "approved" ? "approved" : "rejected"
   );
   const label = DAK_REQUEST_TYPE_LABELS[params.requestType];
-  const verb = params.decision === "approved" ? "approved" : "rejected";
+  const verb =
+    params.requestType === "clarification" && params.decision === "approved"
+      ? "answered"
+      : params.decision === "approved"
+        ? "approved"
+        : "rejected";
 
   await sendNotifications(
     [...new Set([params.requesterUserId, params.actorUserId])].map((userId) => ({
@@ -115,6 +126,51 @@ export async function notifyDakRequestReviewed(params: {
         request_type: params.requestType,
         decision: params.decision,
       },
+    }))
+  );
+}
+
+export async function notifyReturnedForRework(params: {
+  dakId: string;
+  dakNumber: string;
+  assignedToUserId: string | null;
+  actorUserId: string;
+  actorName: string;
+  reason: string;
+}): Promise<void> {
+  const recipients = [
+    params.assignedToUserId,
+    params.actorUserId,
+  ].filter(Boolean) as string[];
+
+  await sendNotifications(
+    [...new Set(recipients)].map((userId) => ({
+      userId,
+      type: "returned_for_rework",
+      title: "Returned for Rework",
+      body: `DAK ${params.dakNumber} was returned by ${params.actorName}. ${params.reason.slice(0, 120)}`,
+      dakId: params.dakId,
+      metadata: { returned_for_rework: true },
+    }))
+  );
+}
+
+export async function notifyComplianceResubmitted(params: {
+  dakId: string;
+  dakNumber: string;
+  actorUserId: string;
+  actorName: string;
+}): Promise<void> {
+  const reviewers = await getCollectorAdmUserIds();
+
+  await sendNotifications(
+    [...new Set([params.actorUserId, ...reviewers])].map((userId) => ({
+      userId,
+      type: "compliance_resubmitted",
+      title: "Revised Compliance Submitted",
+      body: `${params.actorName} resubmitted compliance for ${params.dakNumber}.`,
+      dakId: params.dakId,
+      metadata: { resubmitted: true },
     }))
   );
 }

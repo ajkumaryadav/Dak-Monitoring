@@ -1,4 +1,4 @@
-import { Copyright, Headphones, Landmark, Shield } from "lucide-react";
+import { Copyright, Headphones, Landmark, Phone } from "lucide-react";
 
 import { appConfig } from "@/lib/constants/navigation";
 
@@ -55,12 +55,9 @@ export function AuthPortalFooter() {
             </div>
 
             <div className="auth-portal-ip-chip inline-flex items-center gap-2 rounded-lg border border-violet-500/20 bg-violet-500/[0.06] px-3 py-2">
-              <Shield className="size-3.5 shrink-0 text-violet-600 dark:text-violet-400" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-violet-700/80 dark:text-violet-300/80">
-                Portal IP
-              </span>
-              <span className="font-mono text-sm font-bold tabular-nums text-violet-700 dark:text-violet-300">
-                {appConfig.portalIpCode}
+              <Phone className="size-3.5 shrink-0 text-violet-600 dark:text-violet-400" />
+              <span className="text-[11px] font-semibold text-violet-700 dark:text-violet-300">
+                IP Phone = {appConfig.portalIpCode}
               </span>
             </div>
           </div>

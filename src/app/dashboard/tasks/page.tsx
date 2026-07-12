@@ -12,7 +12,6 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   canManageTasks,
   isCollectorDashboardRole,
-  isDepartmentDashboardRole,
   PERMISSIONS,
   requirePermission,
 } from "@/lib/auth";
@@ -44,17 +43,14 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
     params.dateTo
   );
 
-  const isDepartment = user && isDepartmentDashboardRole(user.role);
   const isDistrict = user && isCollectorDashboardRole(user.role);
 
   const scope =
-    user?.role === "section_user"
+    user && !isDistrict
       ? { assignedTo: user.id }
-      : isDepartment && user.departmentId
-        ? { departmentId: user.departmentId }
-        : params.department
-          ? { departmentId: params.department }
-          : undefined;
+      : params.department
+        ? { departmentId: params.department }
+        : undefined;
 
   const filterScope = {
     ...scope,
@@ -82,7 +78,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
     <div className="space-y-6">
       <DakPageHeader
         title="Administrative Tasks"
-        description="Task workflow with ATR/compliance upload, priority tracking, and district monitoring."
+        description="Multi-department task coordination with independent submissions, progress tracking, and consolidated reporting."
         icon={ListTodo}
       />
 
@@ -117,7 +113,7 @@ export default async function TasksPage({ searchParams }: TasksPageProps) {
         </Link>
       )}
 
-      <TaskListTable tasks={tasks} />
+      <TaskListTable tasks={tasks} showProgress={!!isDistrict} />
     </div>
   );
 }

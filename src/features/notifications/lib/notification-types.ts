@@ -22,7 +22,15 @@ export type NotificationType =
   | "extension_requested"
   | "extension_approved"
   | "extension_rejected"
-  | "closure_approved";
+  | "closure_approved"
+  | "returned_for_rework"
+  | "compliance_resubmitted"
+  | "clarification_requested"
+  | "clarification_replied"
+  | "task_assigned"
+  | "task_assignee_completed"
+  | "task_consolidation_required"
+  | "task_closed";
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   dak_created: "New DAK Registered",
@@ -48,6 +56,14 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   extension_approved: "Extension Approved",
   extension_rejected: "Extension Rejected",
   closure_approved: "Closure Approved",
+  returned_for_rework: "Returned for Rework",
+  compliance_resubmitted: "Revised Compliance Submitted",
+  clarification_requested: "Clarification Requested",
+  clarification_replied: "Clarification Reply Received",
+  task_assigned: "Task Assigned",
+  task_assignee_completed: "Task Submission Received",
+  task_consolidation_required: "Consolidated Report Required",
+  task_closed: "Task Closed",
 };
 
 /** Supabase Realtime channel name — subscribe per user in future. */

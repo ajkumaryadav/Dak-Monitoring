@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 
 import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
+import { DakCollectorReviewView } from "@/features/dak/components/dak-collector-review-view";
 import { DakDetailView } from "@/features/dak/components/dak-detail-view";
 import { OperatorDakDetailView } from "@/features/dak/components/operator-dak-detail-view";
+import { canShowComplianceWorkflow } from "@/features/dak/lib/compliance-workflow";
 import {
   extractOperatorReturnNotice,
   filterAttachmentsForOperator,
@@ -22,6 +24,7 @@ import {
 import { getDakRequestsForDak } from "@/features/dak-requests/services/dak-requests";
 import { getRemarkPermissions } from "@/features/remarks/lib/remark-permissions";
 import {
+  getComplianceDraft,
   getDakAtrRecords,
   getDakRemarks,
 } from "@/features/remarks/services/get-remarks";
@@ -31,7 +34,7 @@ import { getDepartments } from "@/features/dak/services/get-departments";
 import { getDakById } from "@/features/dak/services/get-dak-by-id";
 import {
   canReassignDakRole,
-  canUpdateDakStatusRole,
+  canSubmitComplianceRole,
   hasPermission,
   PERMISSIONS,
   requirePermission,
@@ -39,6 +42,21 @@ import {
 
 interface DakDetailPageProps {
   params: Promise<{ id: string }>;
+}
+
+function assertOfficerScope(
+  user: Awaited<ReturnType<typeof requirePermission>>,
+  dak: NonNullable<Awaited<ReturnType<typeof getDakById>>>
+): boolean {
+  if (user.role === "department_user" && user.departmentId) {
+    return dak.department_id === user.departmentId;
+  }
+
+  if (user.role === "section_user" && user.sectionId) {
+    return dak.assignment_unit_id === user.sectionId;
+  }
+
+  return true;
 }
 
 export default async function DakDetailPage({ params }: DakDetailPageProps) {
@@ -52,6 +70,10 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
   }
 
   if (isOperatorDakViewer(user) && dak.created_by !== user.id) {
+    notFound();
+  }
+
+  if (canSubmitComplianceRole(user.role) && !assertOfficerScope(user, dak)) {
     notFound();
   }
 
@@ -78,7 +100,10 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     );
   }
 
-  const [attachments, assignOptions, remarks, atrRecords, departments, dakRequests] =
+  const showComplianceWorkflow =
+    canSubmitComplianceRole(user.role) && canShowComplianceWorkflow(dak.status);
+
+  const [attachments, assignOptions, remarks, atrRecords, departments, dakRequests, complianceDraft] =
     await Promise.all([
       getDakAttachments(id),
       getAssignFormOptions(),
@@ -86,6 +111,7 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
       getDakAtrRecords(id, user),
       getDepartments(),
       getDakRequestsForDak(id),
+      showComplianceWorkflow ? getComplianceDraft(id, user.id) : Promise.resolve(null),
     ]);
 
   const remarkPermissions = getRemarkPermissions(user);
@@ -101,8 +127,6 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
 
   const showAssignForm = canInitialAssign || canReassign;
 
-  const canUpdateStatus = canUpdateDakStatusRole(user.role);
-
   const showApprovalPanel =
     canApproveClosure(dak.status) &&
     (user.role === "collector" || user.role === "adm");
@@ -113,6 +137,19 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     canReviewDepartmentRequests(user) &&
     dakRequests.some((request) => request.status === "pending");
 
+  if (showApprovalPanel) {
+    return (
+      <DakCollectorReviewView
+        dak={dak}
+        timeline={fullTimeline}
+        attachments={attachments}
+        atrRecords={atrRecords}
+        dakRequests={dakRequests}
+        showRequestReview={showRequestReview}
+      />
+    );
+  }
+
   return (
     <DakDetailView
       dak={dak}
@@ -121,14 +158,14 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
       assignOptions={assignOptions}
       showAssignForm={showAssignForm}
       isReassign={canReassign}
-      canUpdateStatus={canUpdateStatus}
-      showApprovalPanel={showApprovalPanel}
       showDepartmentActions={showDepartmentActions}
       showRequestReview={showRequestReview}
+      showComplianceWorkflow={showComplianceWorkflow}
       dakRequests={dakRequests}
       departments={departments}
       remarks={remarks}
       atrRecords={atrRecords}
+      complianceDraft={complianceDraft}
       remarkPermissions={remarkPermissions}
     />
   );

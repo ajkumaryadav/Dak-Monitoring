@@ -186,6 +186,12 @@ export async function submitDakRequestFormAction(
       requestedDueDate: formData.get("requestedDueDate") as string,
       remarks: formData.get("remarks") as string,
     };
+  } else if (requestType === "clarification") {
+    input = {
+      dakId: formData.get("dakId") as string,
+      requestType: "clarification",
+      remarks: formData.get("remarks") as string,
+    };
   } else {
     input = {
       dakId: formData.get("dakId") as string,

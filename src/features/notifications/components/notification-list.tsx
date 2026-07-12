@@ -12,7 +12,9 @@ import {
   FileText,
   KeyRound,
   MessageSquare,
+  RotateCcw,
   ShieldAlert,
+  ListTodo,
   UserCheck,
   UserPlus,
   UserX,
@@ -52,6 +54,14 @@ const typeIcons: Record<NotificationType, typeof Bell> = {
   extension_approved: CalendarClock,
   extension_rejected: AlertTriangle,
   closure_approved: CheckCircle2,
+  returned_for_rework: RotateCcw,
+  compliance_resubmitted: FileText,
+  clarification_requested: MessageSquare,
+  clarification_replied: MessageSquare,
+  task_assigned: ListTodo,
+  task_assignee_completed: CheckCircle2,
+  task_consolidation_required: ClipboardList,
+  task_closed: CheckCircle2,
 };
 
 interface NotificationListProps {
@@ -100,15 +110,21 @@ export function NotificationList({
             typeof notification.metadata?.target_user_id === "string"
               ? notification.metadata.target_user_id
               : null;
+          const taskId =
+            typeof notification.metadata?.taskId === "string"
+              ? notification.metadata.taskId
+              : null;
           const isUserNotification = notification.type.startsWith("user_") ||
             notification.type === "password_reset";
           const href = notification.dakId
             ? `/dashboard/dak/${notification.dakId}`
-            : targetUserId
-              ? `/dashboard/admin/users/${targetUserId}`
-              : isUserNotification
-                ? "/dashboard/admin/users"
-                : "/dashboard/notifications";
+            : taskId
+              ? `/dashboard/tasks/${taskId}`
+              : targetUserId
+                ? `/dashboard/admin/users/${targetUserId}`
+                : isUserNotification
+                  ? "/dashboard/admin/users"
+                  : "/dashboard/notifications";
 
           return (
             <li key={notification.id}>

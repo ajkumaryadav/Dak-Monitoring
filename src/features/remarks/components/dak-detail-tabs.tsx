@@ -32,9 +32,12 @@ interface DakDetailTabsProps {
   atrRecords: DakAtrRecord[];
   attachments: DakAttachmentWithUrl[];
   permissions: RemarkPermissions;
+  /** Process-driven workflow: timeline + attachments only (no separate remark/ATR tabs). */
+  complianceMode?: boolean;
+  defaultTab?: DetailTab;
 }
 
-const tabs: { id: DetailTab; label: string; icon: typeof Clock }[] = [
+const allTabs: { id: DetailTab; label: string; icon: typeof Clock }[] = [
   { id: "timeline", label: "Timeline", icon: Clock },
   { id: "remarks", label: "Remarks", icon: MessageSquare },
   { id: "atr", label: "ATR", icon: FileText },
@@ -48,17 +51,26 @@ export function DakDetailTabs({
   atrRecords,
   attachments,
   permissions,
+  complianceMode = false,
+  defaultTab = "timeline",
 }: DakDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState<DetailTab>("timeline");
+  const tabs = complianceMode
+    ? allTabs.filter((tab) => tab.id === "timeline")
+    : allTabs;
+
+  const [activeTab, setActiveTab] = useState<DetailTab>(defaultTab);
 
   return (
     <Card className="border-primary/15 lg:col-span-5">
       <CardHeader className="border-b border-border/60">
         <CardTitle>DAK Correspondence</CardTitle>
         <CardDescription>
-          Workflow timeline, remarks, action taken reports, and attachments
+          {complianceMode
+            ? "Read-only workflow history"
+            : "Workflow timeline, remarks, action taken reports, and attachments"}
         </CardDescription>
-        <div className="flex flex-wrap gap-2 pt-2">
+        {!complianceMode && (
+          <div className="flex flex-wrap gap-2 pt-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -78,7 +90,8 @@ export function DakDetailTabs({
               </button>
             );
           })}
-        </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="pt-4">
         {activeTab === "timeline" && (

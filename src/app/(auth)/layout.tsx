@@ -2,9 +2,9 @@ import { AuthBrandPanel } from "@/features/auth/components/auth-brand-panel";
 import { AuthDakVisualPanel } from "@/features/auth/components/auth-dak-visual-panel";
 import { AuthDecorations } from "@/features/auth/components/auth-decorations";
 import { AuthDistrictGlancePanel } from "@/features/auth/components/auth-district-glance-panel";
-import { AuthFeatureCards } from "@/features/auth/components/auth-feature-cards";
 import { AuthGovernancePillars } from "@/features/auth/components/auth-governance-pillars";
 import { AuthLoginAsidePanel } from "@/features/auth/components/auth-login-aside-panel";
+import { AuthPortalBridgePanel } from "@/features/auth/components/auth-portal-bridge-panel";
 import { AuthPortalFooter } from "@/features/auth/components/auth-portal-footer";
 import { AuthWorkflowStatusPanel } from "@/features/auth/components/auth-workflow-status-panel";
 import { fetchPortalWorkflowStats } from "@/features/auth/services/portal-workflow-stats";
@@ -24,20 +24,24 @@ export default async function AuthLayout({
       <AuthDecorations />
 
       <div className="relative z-10 mx-auto w-full max-w-[1700px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8 xl:py-7">
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(380px,460px)] lg:gap-7 xl:gap-8">
-          <div className="flex min-w-0 flex-col gap-4 lg:gap-5">
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(380px,460px)] lg:items-stretch lg:gap-7 xl:gap-8">
+          <div className="flex min-w-0 flex-col gap-4 lg:h-full lg:gap-5">
             <AuthBrandPanel />
-            <AuthFeatureCards />
             <AuthGovernancePillars />
             <AuthDakVisualPanel />
-            <AuthPortalFooter />
+            <div className="flex w-full flex-col gap-4 lg:mt-auto lg:flex-1 lg:justify-end">
+              <AuthPortalBridgePanel />
+              <AuthPortalFooter />
+            </div>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-4 lg:gap-5">
+          <div className="flex min-w-0 flex-col gap-4 lg:h-full lg:gap-5">
             {children}
             <AuthLoginAsidePanel />
             <AuthWorkflowStatusPanel statusData={workflowStats} />
-            <AuthDistrictGlancePanel />
+            <div className="flex w-full flex-col lg:mt-auto lg:flex-1 lg:justify-end">
+              <AuthDistrictGlancePanel />
+            </div>
           </div>
         </div>
       </div>

@@ -265,7 +265,7 @@ export const appConfig = {
   district: "Khairthal-Tijara",
   districtAdministration: "Khairthal-Tijara @ Administration",
   districtTagline: "District Governance · Administrative Monitoring",
-  supportEmail: "dlo.doit.khairthaltijara@rajasthan.gov.in",
+  supportEmail: "dlo.doit.khairthal@rajasthan.gov.in",
   portalIpCode: "33217",
   copyrightHolder: "DOIT&C Khairthal-Tijara",
 } as const;
