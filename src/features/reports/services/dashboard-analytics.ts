@@ -556,7 +556,6 @@ async function fetchOperatorDashboardAnalytics(
 
   let todayEntries = 0;
   let monthEntries = 0;
-  let forwarded = 0;
   let returned = 0;
 
   const monthPrefix = today.slice(0, 7);
@@ -565,8 +564,9 @@ async function fetchOperatorDashboardAnalytics(
     const createdDate = entry.created_at.slice(0, 10);
     if (createdDate === today) todayEntries += 1;
     if (createdDate.startsWith(monthPrefix)) monthEntries += 1;
-    if (entry.status === "received") forwarded += 1;
   }
+
+  const forwarded = entries.length;
 
   return {
     variant: "operator",

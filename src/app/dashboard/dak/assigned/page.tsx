@@ -50,15 +50,15 @@ export default async function AssignedDakPage({
   const hasQuery = Boolean(searchQuery || filtersActive);
   const pageTitle = isOperator
     ? hasQuery
-      ? "Forwarded DAK — Filtered"
-      : "Forwarded DAK"
+      ? "Forwarded & Tracking — Filtered"
+      : "Forwarded & Tracking"
     : hasQuery
       ? "Assigned DAK — Filtered"
       : "Assigned DAK";
   const pageDescription = isOperator
     ? hasQuery
-      ? "Your forwarded correspondence matching the filters."
-      : "DAK you have registered and forwarded to Collector/ADM for review."
+      ? "Your registered correspondence matching the filters."
+      : "Every DAK you have registered, with live status from Collector review through closure."
     : hasQuery
       ? "Allotted correspondence matching your filters."
       : "All DAK currently allotted — assigned, in progress, pending, or completed awaiting closure.";
@@ -84,7 +84,7 @@ export default async function AssignedDakPage({
         {hasQuery
           ? "matching"
           : isOperator
-            ? "forwarded"
+            ? "tracked"
             : "assigned"}{" "}
         entr
         {dakEntries.length === 1 ? "y" : "ies"}
@@ -108,17 +108,17 @@ export default async function AssignedDakPage({
           emptyTitle={
             hasQuery
               ? isOperator
-                ? "No matching forwarded DAK"
+                ? "No matching tracked DAK"
                 : "No matching assigned DAK"
               : isOperator
-                ? "No forwarded DAK entries"
+                ? "No tracked DAK entries"
                 : "No assigned DAK entries"
           }
           emptyDescription={
             hasQuery
               ? "Try different filters or search terms."
               : isOperator
-                ? "Registered DAK forwarded to Collector/ADM will appear here."
+                ? "Registered DAK will appear here and stay visible through their full lifecycle."
                 : "Assigned correspondence will appear here after Collector allocation."
           }
         />

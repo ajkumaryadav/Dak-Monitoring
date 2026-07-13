@@ -268,7 +268,10 @@ async function fetchDakListRows(
   } else if (filter === "assigned") {
     query = query.in("status", ASSIGNED_DB_STATUSES);
   } else if (filter === "forwarded") {
-    query = query.eq("status", "received");
+    // Operator tracking register: all entries created by the operator, any status.
+    if (!scope.createdBy) {
+      query = query.neq("status", "received");
+    }
   } else if (filter === "pending_approval") {
     query = query.eq("status", "pending_approval");
   } else if (filter === "atr_compliance") {
@@ -315,7 +318,9 @@ async function fetchDakListRows(
   } else if (filter === "assigned") {
     fallbackQuery = fallbackQuery.in("status", ASSIGNED_DB_STATUSES);
   } else if (filter === "forwarded") {
-    fallbackQuery = fallbackQuery.neq("status", "received");
+    if (!scope.createdBy) {
+      fallbackQuery = fallbackQuery.neq("status", "received");
+    }
   } else if (filter === "pending_approval") {
     fallbackQuery = fallbackQuery.eq("status", "pending_approval");
   } else if (filter === "atr_compliance") {

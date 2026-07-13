@@ -187,7 +187,7 @@ const ROLE_NAV_TITLE_OVERRIDES: Partial<
   Record<UserRole, Partial<Record<string, string>>>
 > = {
   dak_operator: {
-    "/dashboard/dak/assigned": "Forwarded DAK",
+    "/dashboard/dak/assigned": "Forwarded & Tracking",
   },
   acp: {
     "/dashboard/tasks": "Task Monitoring",

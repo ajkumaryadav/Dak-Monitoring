@@ -33,11 +33,11 @@ export function OperatorStatCards({ stats }: OperatorStatCardsProps) {
       </Link>
       <Link href="/dashboard/dak/assigned">
         <StatCard
-          title="Forwarded DAK"
+          title="Forwarded & Tracking"
           value={stats.forwarded}
           icon={Send}
           variant="success"
-          description="With Collector/ADM for review"
+          description="Registered entries tracked through lifecycle"
         />
       </Link>
       <Link href="/dashboard/dak">

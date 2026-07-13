@@ -28,7 +28,7 @@ export function OperatorDashboard({
       <DashboardHero
         user={user}
         title="Operator Dashboard"
-        description="Your registration workload — diary entries you have captured and forwarded."
+        description="Your registration workload — diary entries you capture and track through closure."
       />
 
       <OperatorStatCards stats={analytics.stats} />
