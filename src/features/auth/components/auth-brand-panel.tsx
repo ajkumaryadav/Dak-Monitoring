@@ -56,26 +56,30 @@ const highlights = [
 
 export function AuthBrandPanel() {
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-card/85 p-5 shadow-lg backdrop-blur-sm sm:p-6 lg:p-7">
+    <div className="relative w-full overflow-hidden rounded-2xl border border-primary/15 bg-card/90 p-5 shadow-lg backdrop-blur-sm sm:p-6 lg:p-7">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-[oklch(0.45_0.12_255)] to-primary/60" />
       <div className="auth-visual-orb auth-visual-orb-a pointer-events-none absolute -top-8 -right-8 size-32 rounded-full bg-primary/10 blur-2xl" />
 
       <div className="relative z-10 flex min-w-0 items-center gap-3">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20 ring-1 ring-primary/20">
           <Landmark className="size-7" />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-base font-semibold text-foreground">
+          <p className="truncate text-base font-bold text-foreground">
             {appConfig.name}
           </p>
           <p className="truncate text-sm text-muted-foreground">
-            {appConfig.shortName} · {appConfig.districtTagline}
+            {appConfig.shortName} · DOIT&C Rajasthan
           </p>
         </div>
       </div>
 
       <div className="relative z-10 mt-5 space-y-5">
         <div className="space-y-2">
-          <h1 className="text-xl leading-tight font-semibold tracking-tight text-foreground sm:text-2xl xl:text-[1.65rem]">
+          <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+            Government of Rajasthan · District Portal
+          </p>
+          <h1 className="text-xl leading-tight font-bold tracking-tight text-foreground sm:text-2xl xl:text-[1.65rem]">
             {appConfig.fullName}
           </h1>
           <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">

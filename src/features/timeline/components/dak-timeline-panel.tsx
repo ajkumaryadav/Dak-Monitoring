@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   ArrowRightLeft,
   Clock,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -62,6 +64,7 @@ interface DakTimelinePanelProps {
   title?: string;
   description?: string;
   compact?: boolean;
+  maxItems?: number;
 }
 
 export function DakTimelinePanel({
@@ -69,69 +72,94 @@ export function DakTimelinePanel({
   title = "DAK Timeline",
   description = "Latest activity first — complete history of this DAK",
   compact = false,
+  maxItems,
 }: DakTimelinePanelProps) {
+  const [expanded, setExpanded] = useState(false);
+  const limit = maxItems && !expanded ? maxItems : undefined;
+  const visibleEvents = limit ? events.slice(0, limit) : events;
+  const hasMore = !!maxItems && events.length > maxItems && !expanded;
+
   const content = !events.length ? (
     <p className="py-6 text-center text-sm text-muted-foreground">
       No timeline events recorded yet.
     </p>
   ) : (
-    <ol className="relative space-y-0 border-l border-primary/20 pl-6">
-      {events.map((event, index) => {
-        const isLatest = index === 0;
-        const isLast = index === events.length - 1;
-        const Icon = actionIcons[event.actionType] ?? Clock;
-        const fromStatus = event.metadata.from_status as string | undefined;
-        const toStatus = event.metadata.to_status as string | undefined;
+    <>
+      <ol
+        className={cn(
+          "relative space-y-0 border-l border-primary/20 pl-6",
+          maxItems && !expanded && "max-h-72 overflow-y-auto pr-1"
+        )}
+      >
+        {visibleEvents.map((event, index) => {
+          const isLatest = index === 0;
+          const isLast = index === visibleEvents.length - 1;
+          const Icon = actionIcons[event.actionType] ?? Clock;
+          const fromStatus = event.metadata.from_status as string | undefined;
+          const toStatus = event.metadata.to_status as string | undefined;
 
-        return (
-          <li key={event.id} className={cn("relative pb-6", isLast && "pb-0")}>
-            <span
-              className={cn(
-                "absolute top-1 -left-[calc(0.75rem+1px)] flex size-3 items-center justify-center rounded-full ring-4 ring-background",
-                isLatest ? "bg-primary" : "bg-primary/40"
-              )}
-            />
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant="outline"
-                className={cn("gap-1 capitalize", actionStyles[event.actionType])}
-              >
-                <Icon className="size-3" />
-                {getTimelineActionLabel(event.actionType)}
-              </Badge>
-              <p className="text-sm font-medium text-foreground">
-                {event.actionTitle}
-              </p>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {formatDakDateTime(event.createdAt)}
-              {event.performerName ? (
-                <>
-                  {" · "}
-                  <span className="font-medium text-foreground/80">
-                    {event.performerName}
-                  </span>
-                  {event.performerRole
-                    ? ` (${event.performerRole.replace(/_/g, " ")})`
-                    : ""}
-                </>
-              ) : null}
-            </p>
-            {(fromStatus || toStatus) && (
+          return (
+            <li key={event.id} className={cn("relative pb-6", isLast && "pb-0")}>
+              <span
+                className={cn(
+                  "absolute top-1 -left-[calc(0.75rem+1px)] flex size-3 items-center justify-center rounded-full ring-4 ring-background",
+                  isLatest ? "bg-primary" : "bg-primary/40"
+                )}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn("gap-1 capitalize", actionStyles[event.actionType])}
+                >
+                  <Icon className="size-3" />
+                  {getTimelineActionLabel(event.actionType)}
+                </Badge>
+                <p className="text-sm font-medium text-foreground">
+                  {event.actionTitle}
+                </p>
+              </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {fromStatus ? formatDakStatus(fromStatus) : "—"} →{" "}
-                {toStatus ? formatDakStatus(toStatus) : "—"}
+                {formatDakDateTime(event.createdAt)}
+                {event.performerName ? (
+                  <>
+                    {" · "}
+                    <span className="font-medium text-foreground/80">
+                      {event.performerName}
+                    </span>
+                    {event.performerRole
+                      ? ` (${event.performerRole.replace(/_/g, " ")})`
+                      : ""}
+                  </>
+                ) : null}
               </p>
-            )}
-            {event.description?.trim() && (
-              <p className="mt-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs whitespace-pre-wrap text-muted-foreground">
-                {event.description}
-              </p>
-            )}
-          </li>
-        );
-      })}
-    </ol>
+              {(fromStatus || toStatus) && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {fromStatus ? formatDakStatus(fromStatus) : "—"} →{" "}
+                  {toStatus ? formatDakStatus(toStatus) : "—"}
+                </p>
+              )}
+              {event.description?.trim() && (
+                <p className="mt-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs whitespace-pre-wrap text-muted-foreground">
+                  {event.description}
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      {hasMore && (
+        <div className="mt-3 flex justify-center border-t border-border/60 pt-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setExpanded(true)}
+          >
+            View Complete Timeline ({events.length} events)
+          </Button>
+        </div>
+      )}
+    </>
   );
 
   if (compact) {

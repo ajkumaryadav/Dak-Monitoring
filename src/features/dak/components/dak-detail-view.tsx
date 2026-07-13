@@ -70,6 +70,7 @@ interface DakDetailViewProps {
   assignOptions: AssignFormOptions;
   showAssignForm: boolean;
   isReassign?: boolean;
+  assignmentMode?: boolean;
   showDepartmentActions?: boolean;
   showRequestReview?: boolean;
   showComplianceWorkflow?: boolean;
@@ -104,6 +105,7 @@ export function DakDetailView({
   assignOptions,
   showAssignForm,
   isReassign = false,
+  assignmentMode = false,
   showDepartmentActions = false,
   showRequestReview = false,
   showComplianceWorkflow = false,
@@ -351,7 +353,22 @@ export function DakDetailView({
         <DakComplianceReworkHistory versions={complianceVersions} />
       )}
 
-      {showComplianceWorkflow ? (
+      {assignmentMode ? (
+        <div className="grid gap-5 lg:grid-cols-2">
+          <DakDetailTabs
+            dakId={dak.id}
+            timeline={timeline}
+            remarks={remarks}
+            atrRecords={atrRecords}
+            attachments={attachments}
+            permissions={remarkPermissions}
+            assignmentMode
+            compactTimeline
+            defaultTab="timeline"
+          />
+          <AttachmentCard attachments={attachments} scrollable />
+        </div>
+      ) : showComplianceWorkflow ? (
         <div className="grid gap-5 lg:grid-cols-2">
           <Card className="border-primary/15">
             <CardHeader className="border-b border-border/60">
@@ -369,11 +386,12 @@ export function DakDetailView({
                 attachments={attachments}
                 permissions={remarkPermissions}
                 complianceMode
+                compactTimeline
                 defaultTab="timeline"
               />
             </CardContent>
           </Card>
-          <AttachmentCard attachments={attachments} />
+          <AttachmentCard attachments={attachments} scrollable />
         </div>
       ) : (
         <DakDetailTabs
@@ -383,6 +401,7 @@ export function DakDetailView({
           atrRecords={atrRecords}
           attachments={attachments}
           permissions={remarkPermissions}
+          compactTimeline
         />
       )}
     </div>

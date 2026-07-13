@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
+import { CollectorAtrViewTracker } from "@/features/dak/components/collector-atr-view-tracker";
 import { DakCollectorReviewView } from "@/features/dak/components/dak-collector-review-view";
 import { DakDetailView } from "@/features/dak/components/dak-detail-view";
 import { OperatorDakDetailView } from "@/features/dak/components/operator-dak-detail-view";
@@ -126,6 +127,7 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     canReassignStatus(dak.status);
 
   const showAssignForm = canInitialAssign || canReassign;
+  const assignmentMode = canInitialAssign;
 
   const showApprovalPanel =
     canApproveClosure(dak.status) &&
@@ -139,34 +141,41 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
 
   if (showApprovalPanel) {
     return (
-      <DakCollectorReviewView
-        dak={dak}
-        timeline={fullTimeline}
-        attachments={attachments}
-        atrRecords={atrRecords}
-        dakRequests={dakRequests}
-        showRequestReview={showRequestReview}
-      />
+      <>
+        <CollectorAtrViewTracker dakId={dak.id} status={dak.status} />
+        <DakCollectorReviewView
+          dak={dak}
+          timeline={fullTimeline}
+          attachments={attachments}
+          atrRecords={atrRecords}
+          dakRequests={dakRequests}
+          showRequestReview={showRequestReview}
+        />
+      </>
     );
   }
 
   return (
-    <DakDetailView
-      dak={dak}
-      timeline={fullTimeline}
-      attachments={attachments}
-      assignOptions={assignOptions}
-      showAssignForm={showAssignForm}
-      isReassign={canReassign}
-      showDepartmentActions={showDepartmentActions}
-      showRequestReview={showRequestReview}
-      showComplianceWorkflow={showComplianceWorkflow}
-      dakRequests={dakRequests}
-      departments={departments}
-      remarks={remarks}
-      atrRecords={atrRecords}
-      complianceDraft={complianceDraft}
-      remarkPermissions={remarkPermissions}
-    />
+    <>
+      <CollectorAtrViewTracker dakId={dak.id} status={dak.status} />
+      <DakDetailView
+        dak={dak}
+        timeline={fullTimeline}
+        attachments={attachments}
+        assignOptions={assignOptions}
+        showAssignForm={showAssignForm}
+        isReassign={canReassign}
+        assignmentMode={assignmentMode}
+        showDepartmentActions={showDepartmentActions}
+        showRequestReview={showRequestReview}
+        showComplianceWorkflow={showComplianceWorkflow}
+        dakRequests={dakRequests}
+        departments={departments}
+        remarks={remarks}
+        atrRecords={atrRecords}
+        complianceDraft={complianceDraft}
+        remarkPermissions={remarkPermissions}
+      />
+    </>
   );
 }

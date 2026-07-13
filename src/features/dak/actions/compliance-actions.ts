@@ -54,6 +54,7 @@ function revalidateDakPaths(dakId: string) {
   revalidatePath("/dashboard/dak/assigned");
   revalidatePath("/dashboard/dak/pending");
   revalidatePath("/dashboard/dak/pending-approval");
+  revalidatePath("/dashboard/dak/atr-compliance");
   revalidatePath("/dashboard/dak/completed");
   revalidatePath("/dashboard");
 }

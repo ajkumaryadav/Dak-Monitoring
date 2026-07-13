@@ -26,6 +26,7 @@ export type ClosureApprovalResult =
 function revalidateDak(dakId: string) {
   revalidatePath(`/dashboard/dak/${dakId}`);
   revalidatePath("/dashboard/dak/pending-approval");
+  revalidatePath("/dashboard/dak/atr-compliance");
   revalidatePath("/dashboard/dak/assigned");
   revalidatePath("/dashboard/dak/completed");
   revalidatePath("/dashboard");

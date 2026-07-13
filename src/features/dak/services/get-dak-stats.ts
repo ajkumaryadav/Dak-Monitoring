@@ -18,7 +18,8 @@ export type DakListFilter =
   | "forwarded"
   | "completed"
   | "assignments"
-  | "pending_approval";
+  | "pending_approval"
+  | "atr_compliance";
 
 export interface DakListFilters {
   searchQuery?: string;
@@ -270,6 +271,8 @@ async function fetchDakListRows(
     query = query.eq("status", "received");
   } else if (filter === "pending_approval") {
     query = query.eq("status", "pending_approval");
+  } else if (filter === "atr_compliance") {
+    query = query.in("status", ["atr_submitted", "pending_approval"]);
   } else if (filter === "completed") {
     query = query.in("status", COMPLETED_DB_STATUSES);
   }
@@ -315,6 +318,11 @@ async function fetchDakListRows(
     fallbackQuery = fallbackQuery.neq("status", "received");
   } else if (filter === "pending_approval") {
     fallbackQuery = fallbackQuery.eq("status", "pending_approval");
+  } else if (filter === "atr_compliance") {
+    fallbackQuery = fallbackQuery.in("status", [
+      "atr_submitted",
+      "pending_approval",
+    ]);
   } else if (filter === "completed") {
     fallbackQuery = fallbackQuery.in("status", COMPLETED_DB_STATUSES);
   }

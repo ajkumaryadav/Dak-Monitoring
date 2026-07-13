@@ -1,5 +1,6 @@
 import { AlertTriangle, Bell, History, ListTodo, Sparkles } from "lucide-react";
 
+import { CollectorAtrDashboardBanner } from "@/features/dak/components/collector-atr-dashboard-banner";
 import { RecentActivityWidget } from "@/features/audit/components/recent-activity-widget";
 import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
 import { CollectorSegmentedDashboard } from "@/features/dashboard/components/collector-segmented-dashboard";
@@ -51,6 +52,8 @@ export function CollectorDashboard({
 
   return (
     <div className="space-y-6">
+      <CollectorAtrDashboardBanner />
+
       <DashboardHero
         user={user}
         title={dashboardTitle}

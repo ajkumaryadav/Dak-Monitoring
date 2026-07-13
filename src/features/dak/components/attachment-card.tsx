@@ -9,11 +9,13 @@ import {
 } from "@/components/ui/card";
 import { formatFileSize } from "@/features/dak/lib/attachment-validation";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
+import { cn } from "@/lib/utils";
 
 interface AttachmentCardProps {
   attachments: DakAttachmentWithUrl[];
-  /** When true, render list only (inside a tab panel). */
   embedded?: boolean;
+  scrollable?: boolean;
+  maxHeightClassName?: string;
 }
 
 function AttachmentList({ attachments }: { attachments: DakAttachmentWithUrl[] }) {
@@ -49,9 +51,20 @@ function AttachmentList({ attachments }: { attachments: DakAttachmentWithUrl[] }
   );
 }
 
-export function AttachmentCard({ attachments, embedded = false }: AttachmentCardProps) {
+export function AttachmentCard({
+  attachments,
+  embedded = false,
+  scrollable = false,
+  maxHeightClassName = "max-h-64",
+}: AttachmentCardProps) {
+  const list = (
+    <div className={cn(scrollable && `${maxHeightClassName} overflow-y-auto pr-1`)}>
+      <AttachmentList attachments={attachments} />
+    </div>
+  );
+
   if (embedded) {
-    return <AttachmentList attachments={attachments} />;
+    return list;
   }
 
   return (
@@ -69,9 +82,7 @@ export function AttachmentCard({ attachments, embedded = false }: AttachmentCard
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-4">
-        <AttachmentList attachments={attachments} />
-      </CardContent>
+      <CardContent className="pt-4">{list}</CardContent>
     </Card>
   );
 }

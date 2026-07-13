@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ClipboardList,
   Clock,
+  FileCheck2,
   FilePlus2,
   FileText,
   History,
@@ -86,6 +87,12 @@ export const mainNavItems: NavItem[] = [
     permission: PERMISSIONS.DAK_ASSIGN,
   },
   {
+    title: "ATR / Compliance Received",
+    href: "/dashboard/dak/atr-compliance",
+    icon: FileCheck2,
+    permission: PERMISSIONS.DAK_ASSIGN,
+  },
+  {
     title: "Tasks",
     href: "/dashboard/tasks",
     icon: ListTodo,
@@ -131,15 +138,19 @@ export const mainNavGroups: NavGroup[] = [
   },
   {
     label: "DAK Operations",
-    items: mainNavItems.slice(1, 9),
+    items: mainNavItems.slice(1, 10),
   },
   {
-    label: "Analytics",
-    items: mainNavItems.slice(9, 13),
+    label: "Tasks",
+    items: [mainNavItems[10]],
+  },
+  {
+    label: "Reports",
+    items: mainNavItems.slice(11, 14),
   },
   {
     label: "Administration",
-    items: mainNavItems.slice(13),
+    items: mainNavItems.slice(14),
   },
 ];
 
@@ -154,6 +165,7 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
   collector: [
     "/dashboard",
     "/dashboard/dak/assignments",
+    "/dashboard/dak/atr-compliance",
     "/dashboard/dak/assigned",
     "/dashboard/tasks",
     "/dashboard/reports",
@@ -193,16 +205,16 @@ function groupNavItems(items: NavItem[], role?: UserRole): NavGroup[] {
   const dakOps = items.filter((item) =>
     item.href.startsWith("/dashboard/dak")
   );
-  const analytics = items.filter(
+  const tasks = items.filter((item) => item.href.startsWith("/dashboard/tasks"));
+  const reports = items.filter(
     (item) =>
-      item.href.startsWith("/dashboard/tasks") ||
-      item.href.startsWith("/dashboard/reports")
+      item.href.startsWith("/dashboard/reports") ||
+      item.href.startsWith("/dashboard/audit") ||
+      item.href.startsWith("/dashboard/activity")
   );
   const admin = items.filter(
     (item) =>
       item.href.startsWith("/dashboard/admin") ||
-      item.href.startsWith("/dashboard/audit") ||
-      item.href.startsWith("/dashboard/activity") ||
       item.href.startsWith("/dashboard/notifications")
   );
 
@@ -210,11 +222,12 @@ function groupNavItems(items: NavItem[], role?: UserRole): NavGroup[] {
     role === "dak_operator" ? "DAK Registration" : "DAK Operations";
 
   const groups: NavGroup[] = [];
-  if (overview.length) groups.push({ label: "Overview", items: overview });
+  if (overview.length) groups.push({ label: "Dashboard", items: overview });
   if (dakOps.length) groups.push({ label: dakGroupLabel, items: dakOps });
-  if (analytics.length) groups.push({ label: "Analytics", items: analytics });
+  if (tasks.length) groups.push({ label: "Tasks", items: tasks });
+  if (reports.length) groups.push({ label: "Reports", items: reports });
   if (admin.length) {
-    const adminLabel = role === "dak_operator" ? "Alerts" : "Administration";
+    const adminLabel = role === "dak_operator" ? "Notifications" : "Administration";
     groups.push({ label: adminLabel, items: admin });
   }
   return groups;
@@ -251,7 +264,7 @@ export function getNavGroupsForRole(role: UserRole): NavGroup[] {
         role === "dak_operator" && group.label === "DAK Operations"
           ? "DAK Registration"
           : role === "dak_operator" && group.label === "Administration"
-            ? "Alerts"
+            ? "Notifications"
             : group.label,
       items: group.items.filter((item) => visibleItems.includes(item)),
     }))

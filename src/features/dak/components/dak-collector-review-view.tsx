@@ -242,7 +242,7 @@ export function DakCollectorReviewView({
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
-          <DakTimelinePanel events={timeline} compact />
+          <DakTimelinePanel events={timeline} compact maxItems={5} />
         </CardContent>
       </Card>
 

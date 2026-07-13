@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
-import { ChangePasswordForm } from "@/features/profile/components/change-password-form";
 import { PERMISSIONS, requirePermission } from "@/lib/auth";
 
 export default async function ProfilePage() {
@@ -45,19 +44,6 @@ export default async function ProfilePage() {
               </Badge>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="max-w-2xl border-border/60" id="change-password">
-        <CardHeader>
-          <CardTitle className="text-lg">Change Password</CardTitle>
-          <CardDescription>
-            Update your login password. Use a strong password with mixed case,
-            numbers, and symbols.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChangePasswordForm />
         </CardContent>
       </Card>
     </div>

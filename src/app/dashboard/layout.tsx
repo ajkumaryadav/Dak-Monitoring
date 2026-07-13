@@ -1,6 +1,7 @@
 import { AdminShell } from "@/components/layout/admin-shell";
 import { AppToaster } from "@/components/ui/sonner";
 import { syncUserProfile } from "@/features/auth/actions/sync-user";
+import { getAtrCompliancePendingDakIds } from "@/features/dak/services/get-atr-compliance-received";
 import { runSlaMonitor } from "@/jobs/sla-monitor";
 import {
   getUnreadNotificationCount,
@@ -20,9 +21,18 @@ export default async function DashboardLayout({
   await syncUserProfile();
   await runSlaMonitor();
 
-  const [notifications, unreadCount] = await Promise.all([
+  const isCollectorQueueRole =
+    user.role === "collector" || user.role === "adm";
+
+  const [notifications, unreadCount, atrPendingDakIds] = await Promise.all([
     getUserNotifications(user, { limit: 100 }),
     getUnreadNotificationCount(user),
+    isCollectorQueueRole
+      ? getAtrCompliancePendingDakIds().catch((error) => {
+          console.error("[dashboard layout] ATR compliance queue:", error);
+          return [] as string[];
+        })
+      : Promise.resolve([] as string[]),
   ]);
 
   return (
@@ -31,6 +41,7 @@ export default async function DashboardLayout({
         user={user}
         notifications={notifications}
         unreadCount={unreadCount}
+        atrPendingDakIds={atrPendingDakIds}
       >
         {children}
       </AdminShell>

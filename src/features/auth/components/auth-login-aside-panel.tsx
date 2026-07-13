@@ -9,7 +9,7 @@ import { appConfig } from "@/lib/constants/navigation";
 const trustBadges = [
   "Digital Governance",
   "Audit Ready",
-  "NIC Standards",
+  "DOIT&C Standards",
   "e-Office Compatible",
 ] as const;
 

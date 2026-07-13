@@ -61,7 +61,7 @@ export function UserForm({ mode, options, user }: UserFormProps) {
   const isDepartmentUser = role === "department_user";
   const isSectionUser = role === "section_user";
   const departmentDisabled = isSectionUser;
-  const sectionDisabled = isDepartmentUser;
+  const sectionDisabled = !isSectionUser;
 
   const roleOptions = useMemo(
     () =>
@@ -233,7 +233,7 @@ export function UserForm({ mode, options, user }: UserFormProps) {
           {sectionDisabled && <input type="hidden" name="sectionId" value="" />}
           {sectionDisabled && (
             <p className="text-xs text-muted-foreground">
-              Disabled for Department users.
+              Only Internal Section users are mapped to a section.
             </p>
           )}
         </div>

@@ -138,30 +138,32 @@ export function DepartmentDashboard({
         }
       />
 
-      <DashboardSection
-        title="Recent Activity"
-        description={
-          isSection
-            ? "Latest workflow actions in your section"
-            : "Latest workflow actions in your department"
-        }
-        icon={History}
-        variant="neutral"
-      >
-        <RecentActivityWidget entries={recentActivity} />
-      </DashboardSection>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DashboardSection
+          title="Recent Activity"
+          description={
+            isSection
+              ? "Latest workflow actions in your section"
+              : "Latest workflow actions in your department"
+          }
+          icon={History}
+          variant="neutral"
+        >
+          <RecentActivityWidget entries={recentActivity} />
+        </DashboardSection>
 
-      <DashboardSection
-        title="Notifications"
-        description="Recent alerts and workflow updates"
-        icon={Bell}
-        variant="neutral"
-      >
-        <NotificationWidget
-          notifications={notifications}
-          unreadCount={unreadCount}
-        />
-      </DashboardSection>
+        <DashboardSection
+          title="Notifications"
+          description="Recent alerts and workflow updates"
+          icon={Bell}
+          variant="neutral"
+        >
+          <NotificationWidget
+            notifications={notifications}
+            unreadCount={unreadCount}
+          />
+        </DashboardSection>
+      </div>
     </div>
   );
 }
