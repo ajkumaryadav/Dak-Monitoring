@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Loader2, Save, UserPlus } from "lucide-react";
 import { useActionState, useMemo, useState } from "react";
 
 import {
@@ -59,9 +60,10 @@ export function UserForm({ mode, options, user }: UserFormProps) {
   const [sectionId, setSectionId] = useState(user?.sectionId ?? "");
 
   const isDepartmentUser = role === "department_user";
-  const isSectionUser = role === "section_user";
-  const departmentDisabled = isSectionUser;
-  const sectionDisabled = !isSectionUser;
+  const isSectionMappedRole =
+    role === "section_user" || role === "dak_operator";
+  const departmentDisabled = isSectionMappedRole;
+  const sectionDisabled = !isSectionMappedRole;
 
   const roleOptions = useMemo(
     () =>
@@ -77,10 +79,12 @@ export function UserForm({ mode, options, user }: UserFormProps) {
     if (nextRole === "department_user") {
       setSectionId("");
     }
-    if (nextRole === "section_user") {
+    if (nextRole === "section_user" || nextRole === "dak_operator") {
       setDepartmentId("");
     }
   }
+
+  const isSuccess = state.success === true;
 
   return (
     <form action={formAction} className="space-y-6">
@@ -90,8 +94,13 @@ export function UserForm({ mode, options, user }: UserFormProps) {
 
       {state.message && (
         <p
-          className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          role="alert"
+          className={cn(
+            "rounded-lg border px-4 py-3 text-sm",
+            isSuccess
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+              : "border-destructive/30 bg-destructive/10 text-destructive"
+          )}
+          role={isSuccess ? "status" : "alert"}
         >
           {state.message}
         </p>
@@ -204,20 +213,20 @@ export function UserForm({ mode, options, user }: UserFormProps) {
           )}
           {departmentDisabled && (
             <p className="text-xs text-muted-foreground">
-              Disabled for Internal Section users.
+              Disabled for DAK Operator and Internal Section users.
             </p>
           )}
         </div>
         <div className="grid gap-2">
           <Label htmlFor="sectionId">
-            Internal Section {isSectionUser ? "(required)" : ""}
+            Internal Section {isSectionMappedRole ? "(required)" : ""}
           </Label>
           <select
             id="sectionId"
             name={sectionDisabled ? undefined : "sectionId"}
             value={sectionId}
             disabled={sectionDisabled}
-            required={isSectionUser}
+            required={isSectionMappedRole}
             onChange={(e) => setSectionId(e.target.value)}
             className={inputClassName}
           >
@@ -233,7 +242,14 @@ export function UserForm({ mode, options, user }: UserFormProps) {
           {sectionDisabled && <input type="hidden" name="sectionId" value="" />}
           {sectionDisabled && (
             <p className="text-xs text-muted-foreground">
-              Only Internal Section users are mapped to a section.
+              Only DAK Operator and Internal Section users are mapped to a
+              section.
+            </p>
+          )}
+          {role === "dak_operator" && !sectionDisabled && (
+            <p className="text-xs text-muted-foreground">
+              Map the operator to their registry section (e.g. Receipt /
+              Dispatch).
             </p>
           )}
         </div>
@@ -250,7 +266,17 @@ export function UserForm({ mode, options, user }: UserFormProps) {
         </div>
       </div>
 
-      <div className="flex justify-end border-t pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+        <Link
+          href="/dashboard/admin/users"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "h-9 gap-1.5 px-4"
+          )}
+        >
+          <ArrowLeft className="size-4" />
+          Back to User Management
+        </Link>
         <button
           type="submit"
           disabled={isPending}
@@ -258,8 +284,10 @@ export function UserForm({ mode, options, user }: UserFormProps) {
         >
           {isPending ? (
             <Loader2 className="size-4 animate-spin" />
-          ) : (
+          ) : mode === "create" ? (
             <UserPlus className="size-4" />
+          ) : (
+            <Save className="size-4" />
           )}
           {mode === "create" ? "Create User" : "Save Changes"}
         </button>

@@ -172,6 +172,16 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
     "/dashboard/notifications",
     "/dashboard/admin/users",
   ],
+  /** Same curated Collector menu, without User Management. */
+  adm: [
+    "/dashboard",
+    "/dashboard/dak/assignments",
+    "/dashboard/dak/atr-compliance",
+    "/dashboard/dak/assigned",
+    "/dashboard/tasks",
+    "/dashboard/reports",
+    "/dashboard/notifications",
+  ],
   acp: [
     "/dashboard",
     "/dashboard/dak/assigned",
@@ -233,7 +243,7 @@ function groupNavItems(items: NavItem[], role?: UserRole): NavGroup[] {
   return groups;
 }
 
-/** Role-aware navigation — Collector and ACP use curated menus; others use permission filtering. */
+/** Role-aware navigation — Collector, ADM, and ACP use curated menus; others use permission filtering. */
 export function getNavGroupsForRole(role: UserRole): NavGroup[] {
   const roleHrefs = ROLE_NAV_HREFS[role];
 

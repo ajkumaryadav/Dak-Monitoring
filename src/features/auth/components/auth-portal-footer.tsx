@@ -5,22 +5,22 @@ import { appConfig } from "@/lib/constants/navigation";
 /** Styled administration footer — sits below Digital DAK Lifecycle (left column). */
 export function AuthPortalFooter() {
   return (
-    <footer className="auth-step-rise auth-portal-info-card overflow-hidden rounded-2xl border border-primary/15 shadow-lg">
+    <footer className="auth-step-rise auth-portal-info-card overflow-hidden rounded-2xl border border-primary/15 shadow-md">
       <div className="auth-tricolor-bar h-1 w-full" aria-hidden />
 
-      <div className="relative bg-gradient-to-br from-primary/[0.07] via-card to-amber-500/[0.05] p-4 sm:p-5">
-        <div className="auth-visual-orb pointer-events-none absolute -bottom-8 -left-8 size-32 rounded-full bg-primary/8 blur-2xl" />
+      <div className="relative bg-gradient-to-br from-primary/[0.07] via-card to-amber-500/[0.05] p-3.5 sm:p-4">
+        <div className="auth-visual-orb pointer-events-none absolute -bottom-8 -left-8 size-28 rounded-full bg-primary/8 blur-2xl" />
 
-        <div className="relative space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20">
-              <Landmark className="size-5" />
+        <div className="relative space-y-3">
+          <div className="flex items-start gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary ring-1 ring-primary/20">
+              <Landmark className="size-4" />
             </div>
             <div className="min-w-0">
-              <p className="auth-portal-admin-title text-base font-bold tracking-tight text-foreground sm:text-lg">
+              <p className="auth-portal-admin-title text-sm font-bold tracking-tight text-foreground sm:text-base">
                 {appConfig.districtAdministration}
               </p>
-              <p className="auth-portal-tagline mt-1.5 text-sm font-medium tracking-wide text-primary/90">
+              <p className="auth-portal-tagline mt-1 text-xs font-medium tracking-wide text-primary/90">
                 {appConfig.districtTagline}
               </p>
             </div>

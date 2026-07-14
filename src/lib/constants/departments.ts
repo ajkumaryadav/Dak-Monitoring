@@ -50,6 +50,7 @@ export const INTERNAL_SECTIONS = [
   "ACEM",
   "PRO",
   "Revenue",
+  "Receipt / Dispatch",
 ] as const;
 
 export type InternalSectionName = (typeof INTERNAL_SECTIONS)[number];

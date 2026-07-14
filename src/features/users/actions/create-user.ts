@@ -21,6 +21,7 @@ export type CreateUserResult =
 
 export type CreateUserFormState = {
   message?: string;
+  success?: boolean;
   errors?: Record<string, string[]>;
 };
 
@@ -145,8 +146,8 @@ export async function createUserFormAction(
   });
 
   if (!result.success) {
-    return { message: result.message };
+    return { success: false, message: result.message };
   }
 
-  redirect(`/dashboard/admin/users/${result.userId}`);
+  redirect("/dashboard/admin/users?created=1");
 }

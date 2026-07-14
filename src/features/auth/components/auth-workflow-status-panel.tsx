@@ -12,11 +12,13 @@ const maxBarHeight = 82;
 
 interface AuthWorkflowStatusPanelProps {
   statusData: PortalWorkflowStatusRow[];
+  unavailable?: boolean;
 }
 
 /** Live workflow status chart for the login portal. */
 export function AuthWorkflowStatusPanel({
   statusData,
+  unavailable = false,
 }: AuthWorkflowStatusPanelProps) {
   const total = statusData.reduce((sum, row) => sum + row.value, 0);
   const max = Math.max(...statusData.map((row) => row.value), 1);
@@ -26,17 +28,17 @@ export function AuthWorkflowStatusPanel({
     <div className="auth-step-rise overflow-hidden rounded-2xl border border-border/60 bg-card/90 shadow-lg backdrop-blur-sm">
       <div className="auth-tricolor-bar h-1 w-full" aria-hidden />
 
-      <div className="relative p-4 sm:p-5">
-        <div className="auth-visual-orb pointer-events-none absolute -right-4 -top-4 size-24 rounded-full bg-primary/8 blur-2xl" />
+      <div className="relative p-3.5 sm:p-4">
+        <div className="auth-visual-orb pointer-events-none absolute -right-4 -top-4 size-20 rounded-full bg-primary/8 blur-2xl" />
 
-        <div className="relative flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20">
-              <BarChart3 className="size-4.5" />
+        <div className="relative flex flex-wrap items-start justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+              <BarChart3 className="size-4" />
             </div>
             <div>
               <p className="text-sm font-bold text-foreground">Workflow Status</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[10px] text-muted-foreground">
                 Live district DAK pipeline
               </p>
             </div>
@@ -54,7 +56,12 @@ export function AuthWorkflowStatusPanel({
           </div>
         </div>
 
-        {!hasData ? (
+        {unavailable ? (
+          <p className="mt-4 rounded-xl border border-dashed border-amber-500/40 bg-amber-500/[0.07] px-4 py-8 text-center text-xs text-amber-800 dark:text-amber-200">
+            Workflow counts are temporarily unavailable. Please refresh in a
+            moment.
+          </p>
+        ) : !hasData ? (
           <p className="mt-4 rounded-xl border border-dashed border-border/60 bg-muted/30 px-4 py-8 text-center text-xs text-muted-foreground">
             No DAK records registered yet. Counts will appear here as entries
             are added to the system.
@@ -68,7 +75,7 @@ export function AuthWorkflowStatusPanel({
                     key={row.label}
                     className="auth-chart-bar relative min-w-[2px] transition-opacity hover:opacity-90"
                     style={{
-                      width: `${(row.value / total) * 100}%`,
+                      width: `${Math.max((row.value / total) * 100, row.value > 0 ? 1.5 : 0)}%`,
                       background: `linear-gradient(180deg, ${row.gradientFrom}, ${row.gradientTo})`,
                       animationDelay: `${i * 0.07}s`,
                     }}
@@ -137,49 +144,53 @@ export function AuthWorkflowStatusPanel({
                   const height =
                     row.value > 0
                       ? Math.max((row.value / max) * maxBarHeight, 10)
-                      : 0;
+                      : 4;
                   const y = chartBaseY - height;
 
                   return (
                     <g key={row.label}>
+                      <rect
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height={height}
+                        rx="6"
+                        fill={
+                          row.value > 0
+                            ? `url(#auth-wf-grad-${i})`
+                            : "currentColor"
+                        }
+                        fillOpacity={row.value > 0 ? 1 : 0.12}
+                        filter={row.value > 0 ? "url(#auth-wf-shadow)" : undefined}
+                        className="auth-wf-bar"
+                        style={{ animationDelay: `${0.15 + i * 0.08}s` }}
+                      />
                       {row.value > 0 && (
-                        <>
-                          <rect
-                            x={x}
-                            y={y}
-                            width={barWidth}
-                            height={height}
-                            rx="6"
-                            fill={`url(#auth-wf-grad-${i})`}
-                            filter="url(#auth-wf-shadow)"
-                            className="auth-wf-bar"
-                            style={{ animationDelay: `${0.15 + i * 0.08}s` }}
-                          />
-                          <rect
-                            x={x + 4}
-                            y={y + 4}
-                            width={barWidth - 14}
-                            height={Math.min(height * 0.35, 12)}
-                            rx="3"
-                            fill="white"
-                            opacity="0.22"
-                          />
-                          <text
-                            x={x + barWidth / 2}
-                            y={y - 6}
-                            textAnchor="middle"
-                            className="fill-foreground text-[10px] font-bold"
-                            style={{ fontSize: 10 }}
-                          >
-                            {row.value}
-                          </text>
-                        </>
+                        <rect
+                          x={x + 4}
+                          y={y + 4}
+                          width={barWidth - 14}
+                          height={Math.min(height * 0.35, 12)}
+                          rx="3"
+                          fill="white"
+                          opacity="0.22"
+                        />
                       )}
+                      <text
+                        x={x + barWidth / 2}
+                        y={y - 6}
+                        textAnchor="middle"
+                        fill="currentColor"
+                        style={{ fontSize: 10, fontWeight: 700 }}
+                      >
+                        {row.value}
+                      </text>
                       <text
                         x={x + barWidth / 2}
                         y={chartBaseY + 12}
                         textAnchor="middle"
-                        className="fill-muted-foreground"
+                        fill="currentColor"
+                        fillOpacity="0.65"
                         style={{ fontSize: 8 }}
                       >
                         {row.short}

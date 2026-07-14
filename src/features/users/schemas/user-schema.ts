@@ -63,18 +63,24 @@ export const userFormSchema = z
         });
       }
     }
-    if (data.role === "section_user") {
+    if (data.role === "section_user" || data.role === "dak_operator") {
       if (!data.sectionId) {
         ctx.addIssue({
           code: "custom",
-          message: "Internal section is required for section users",
+          message:
+            data.role === "dak_operator"
+              ? "Internal section is required for DAK Operator"
+              : "Internal section is required for section users",
           path: ["sectionId"],
         });
       }
       if (data.departmentId) {
         ctx.addIssue({
           code: "custom",
-          message: "Department must be empty for internal section users",
+          message:
+            data.role === "dak_operator"
+              ? "Department must be empty for DAK Operator"
+              : "Department must be empty for internal section users",
           path: ["departmentId"],
         });
       }

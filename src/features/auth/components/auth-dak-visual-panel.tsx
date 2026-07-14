@@ -69,16 +69,16 @@ const governancePoints = [
 /** Full-width animated DAK workflow banner spanning the login page. */
 export function AuthDakVisualPanel() {
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-5 shadow-lg backdrop-blur-sm sm:p-6 lg:p-8">
-      <div className="auth-visual-orb auth-visual-orb-a pointer-events-none absolute -top-10 -right-10 size-40 rounded-full bg-primary/10 blur-2xl" />
-      <div className="auth-visual-orb auth-visual-orb-b pointer-events-none absolute -bottom-8 -left-6 size-32 rounded-full bg-emerald-500/10 blur-2xl" />
+    <div className="relative w-full overflow-hidden rounded-2xl border border-border/60 bg-card/80 p-3.5 shadow-md backdrop-blur-sm sm:p-4 lg:p-5">
+      <div className="auth-visual-orb auth-visual-orb-a pointer-events-none absolute -top-10 -right-10 size-32 rounded-full bg-primary/10 blur-2xl" />
+      <div className="auth-visual-orb auth-visual-orb-b pointer-events-none absolute -bottom-8 -left-6 size-24 rounded-full bg-emerald-500/10 blur-2xl" />
 
-      <div className="relative flex flex-col gap-4 lg:gap-5">
+      <div className="relative flex flex-col gap-3">
         <div className="text-center lg:text-left">
-          <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
             Digital DAK Lifecycle
           </p>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
             From receipt at Collectorate to verified closure — fully traceable.
           </p>
         </div>
@@ -168,12 +168,12 @@ export function AuthDakVisualPanel() {
           )}
         </ol>
 
-        <div className="grid gap-4 border-t border-border/50 pt-4 lg:grid-cols-[minmax(0,1fr)_7.5rem] lg:items-center lg:gap-6">
-          <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 border-t border-border/50 pt-3 lg:grid-cols-[minmax(0,1fr)_6rem] lg:items-center lg:gap-4">
+          <ul className="grid gap-1.5 sm:grid-cols-2 xl:grid-cols-4">
             {governancePoints.map((point, index) => (
               <li
                 key={point}
-                className="auth-point-fade flex items-center gap-2 rounded-lg border border-border/50 bg-background/60 px-3 py-2.5 text-xs text-muted-foreground"
+                className="auth-point-fade flex items-center gap-2 rounded-lg border border-border/50 bg-background/60 px-2.5 py-2 text-[11px] text-muted-foreground"
                 style={{ animationDelay: `${0.2 + index * 0.1}s` }}
               >
                 <span
@@ -185,12 +185,12 @@ export function AuthDakVisualPanel() {
             ))}
           </ul>
 
-          <div className="auth-doc-float relative mx-auto h-24 w-28 shrink-0 lg:mx-0 lg:ml-auto">
-            <div className="auth-doc-layer auth-doc-layer-back absolute top-5 left-1 size-14 rotate-[-8deg] rounded-xl border border-border/60 bg-muted/40 shadow-sm" />
-            <div className="auth-doc-layer auth-doc-layer-mid absolute top-2 left-4 size-16 rotate-[4deg] rounded-xl border border-primary/20 bg-primary/5 shadow-md" />
-            <div className="auth-doc-layer auth-doc-layer-front absolute top-3 left-7 flex size-20 flex-col items-center justify-center gap-1 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/15 to-background shadow-lg">
-              <FileText className="size-7 text-primary" />
-              <span className="text-[9px] font-semibold tracking-wider text-primary uppercase">
+          <div className="auth-doc-float relative mx-auto h-20 w-24 shrink-0 lg:mx-0 lg:ml-auto">
+            <div className="auth-doc-layer auth-doc-layer-back absolute top-4 left-1 size-12 rotate-[-8deg] rounded-lg border border-border/60 bg-muted/40 shadow-sm" />
+            <div className="auth-doc-layer auth-doc-layer-mid absolute top-2 left-3 size-14 rotate-[4deg] rounded-lg border border-primary/20 bg-primary/5 shadow-md" />
+            <div className="auth-doc-layer auth-doc-layer-front absolute top-2 left-6 flex size-16 flex-col items-center justify-center gap-0.5 rounded-lg border border-primary/25 bg-gradient-to-br from-primary/15 to-background shadow-lg">
+              <FileText className="size-5 text-primary" />
+              <span className="text-[8px] font-semibold tracking-wider text-primary uppercase">
                 DAK File
               </span>
             </div>

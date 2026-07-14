@@ -7,7 +7,8 @@ export interface AssignmentUnitOption {
   unit_type: "department" | "section";
 }
 
-async function seedSectionsIfEmpty() {
+/** Ensure every INTERNAL_SECTIONS entry exists (safe to call repeatedly). */
+async function ensureInternalSectionsSeeded() {
   const supabase = createAdminClient();
 
   const rows = INTERNAL_SECTIONS.map((unit_name) => ({
@@ -16,7 +17,10 @@ async function seedSectionsIfEmpty() {
     is_active: true,
   }));
 
-  await supabase.from("assignment_units").insert(rows);
+  await supabase.from("assignment_units").upsert(rows, {
+    onConflict: "unit_name",
+    ignoreDuplicates: true,
+  });
 }
 
 /** Load internal Collectorate sections alphabetically. */
@@ -26,31 +30,16 @@ export async function getAssignmentUnits(
   try {
     const supabase = createAdminClient();
 
-    let { data, error } = await supabase
+    if (unitType === "section") {
+      await ensureInternalSectionsSeeded();
+    }
+
+    const { data, error } = await supabase
       .from("assignment_units")
       .select("id, unit_name, unit_type")
       .eq("is_active", true)
       .eq("unit_type", unitType)
       .order("unit_name", { ascending: true });
-
-    if (error) {
-      console.error("[getAssignmentUnits]", error.message);
-      return [];
-    }
-
-    if (!data?.length && unitType === "section") {
-      await seedSectionsIfEmpty();
-
-      const retry = await supabase
-        .from("assignment_units")
-        .select("id, unit_name, unit_type")
-        .eq("is_active", true)
-        .eq("unit_type", unitType)
-        .order("unit_name", { ascending: true });
-
-      data = retry.data;
-      error = retry.error;
-    }
 
     if (error) {
       console.error("[getAssignmentUnits]", error.message);

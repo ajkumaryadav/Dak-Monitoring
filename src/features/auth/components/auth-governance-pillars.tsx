@@ -60,41 +60,43 @@ const governancePillars = [
   },
 ] as const;
 
-/** Six distinct platform capabilities — fills the left column without repeating brand highlights. */
+/** Compact platform capabilities grid — no vertical stretch padding. */
 export function AuthGovernancePillars() {
   return (
-    <div className="auth-step-rise space-y-3">
+    <div className="auth-step-rise space-y-2">
       <div className="flex items-center gap-2 px-0.5">
-        <span className="h-4 w-1 rounded-full bg-primary" aria-hidden />
-        <p className="text-xs font-bold tracking-wide text-foreground uppercase">
+        <span className="h-3.5 w-1 rounded-full bg-primary" aria-hidden />
+        <p className="text-[11px] font-bold tracking-wide text-foreground uppercase">
           Platform Capabilities
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
         {governancePillars.map(
           ({ icon: Icon, label, detail, color, bg, delay }) => (
             <div
               key={label}
               className={cn(
-                "group rounded-xl border border-border/50 bg-card/85 p-3.5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+                "group rounded-lg border border-border/50 bg-card/85 px-2.5 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
                 bg
               )}
               style={{ animationDelay: delay }}
             >
-              <div className="flex items-start gap-2.5">
+              <div className="flex items-start gap-2">
                 <div
                   className={cn(
-                    "flex size-9 shrink-0 items-center justify-center rounded-lg ring-1",
+                    "flex size-7 shrink-0 items-center justify-center rounded-md ring-1",
                     bg,
                     color
                   )}
                 >
-                  <Icon className="size-4" />
+                  <Icon className="size-3.5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-foreground">{label}</p>
-                  <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
+                  <p className="text-[11px] font-semibold leading-tight text-foreground">
+                    {label}
+                  </p>
+                  <p className="mt-0.5 text-[9px] leading-snug text-muted-foreground">
                     {detail}
                   </p>
                 </div>

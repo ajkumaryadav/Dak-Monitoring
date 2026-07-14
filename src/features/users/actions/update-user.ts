@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import {
   updateUserSchema,
@@ -18,6 +19,7 @@ export type UpdateUserResult =
 
 export type UpdateUserFormState = {
   message?: string;
+  success?: boolean;
   errors?: Record<string, string[]>;
 };
 
@@ -128,8 +130,8 @@ export async function updateUserFormAction(
   });
 
   if (!result.success) {
-    return { message: result.message };
+    return { success: false, message: result.message };
   }
 
-  return {};
+  redirect("/dashboard/admin/users?updated=1");
 }
