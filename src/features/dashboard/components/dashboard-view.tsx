@@ -6,6 +6,11 @@ import type { NotificationRecord } from "@/features/notifications/services/notif
 import type { PriorityDakRow } from "@/features/notifications/services/notify-dak-event";
 import type { SlaDakRow } from "@/features/sla/lib/sla-types";
 import type { DashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
+import type { BackupRecord } from "@/features/system-admin/services/backup";
+import type {
+  DatabaseStats,
+  StorageStats,
+} from "@/features/system-admin/services/stats";
 import type { TaskStatsSummary } from "@/features/tasks/services/tasks";
 import type { UserStatsSummary } from "@/features/users/services/get-users";
 import type { SessionUser } from "@/types";
@@ -24,6 +29,13 @@ interface DashboardViewProps {
   immediateEntries: PriorityDakRow[];
   userStats?: UserStatsSummary | null;
   taskStats?: TaskStatsSummary | null;
+  systemHealth?: {
+    database: DatabaseStats;
+    storage: StorageStats;
+    lastBackup: BackupRecord | null;
+    orphanFileCount: number;
+    orphanRecordCount: number;
+  } | null;
 }
 
 /** Route to the correct role-scoped dashboard view. */
@@ -41,6 +53,7 @@ export function DashboardView({
   immediateEntries,
   userStats,
   taskStats,
+  systemHealth,
 }: DashboardViewProps) {
   if (analytics.variant === "operator") {
     return (
@@ -82,6 +95,7 @@ export function DashboardView({
       dueTodayEntries={dueTodayEntries}
       userStats={userStats}
       taskStats={taskStats}
+      systemHealth={systemHealth}
     />
   );
 }

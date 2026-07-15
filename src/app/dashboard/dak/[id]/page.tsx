@@ -2,12 +2,12 @@ import { notFound } from "next/navigation";
 
 import { getDakAttachments } from "@/features/dak/actions/upload-attachment";
 import { CollectorAtrViewTracker } from "@/features/dak/components/collector-atr-view-tracker";
-import { DakCollectorReviewView } from "@/features/dak/components/dak-collector-review-view";
-import { DakDetailView } from "@/features/dak/components/dak-detail-view";
-import { OperatorDakDetailView } from "@/features/dak/components/operator-dak-detail-view";
+import {
+  DakDetailView,
+  type DakDetailCapabilities,
+} from "@/features/dak/components/dak-detail-view";
 import { canShowComplianceWorkflow } from "@/features/dak/lib/compliance-workflow";
 import {
-  extractOperatorReturnNotice,
   filterAttachmentsForOperator,
   filterTimelineForOperator,
   findFirstAssignmentTimestamp,
@@ -40,6 +40,7 @@ import {
   PERMISSIONS,
   requirePermission,
 } from "@/lib/auth";
+import { canMoveDakToRecycleBin } from "@/features/system-admin/lib/permissions";
 
 interface DakDetailPageProps {
   params: Promise<{ id: string }>;
@@ -78,103 +79,99 @@ export default async function DakDetailPage({ params }: DakDetailPageProps) {
     notFound();
   }
 
+  const isOperator = isOperatorDakViewer(user);
+  const showComplianceWorkflow =
+    !isOperator &&
+    canSubmitComplianceRole(user.role) &&
+    canShowComplianceWorkflow(dak.status);
+
   const fullTimeline = await getDakTimeline(id, user);
 
-  if (isOperatorDakViewer(user)) {
+  const [
+    allAttachments,
+    assignOptions,
+    remarks,
+    atrRecords,
+    departments,
+    dakRequests,
+    complianceDraft,
+  ] = await Promise.all([
+    getDakAttachments(id),
+    getAssignFormOptions(),
+    isOperator ? Promise.resolve([]) : getDakRemarks(id, user),
+    isOperator ? Promise.resolve([]) : getDakAtrRecords(id, user),
+    getDepartments(),
+    getDakRequestsForDak(id),
+    showComplianceWorkflow
+      ? getComplianceDraft(id, user.id)
+      : Promise.resolve(null),
+  ]);
+
+  let timeline = fullTimeline;
+  let attachments = allAttachments;
+
+  if (isOperator) {
     const assignmentAt = findFirstAssignmentTimestamp(fullTimeline);
-    const allAttachments = await getDakAttachments(id);
-    const operatorTimeline = filterTimelineForOperator(fullTimeline);
-    const operatorAttachments = filterAttachmentsForOperator(
+    timeline = filterTimelineForOperator(fullTimeline);
+    attachments = filterAttachmentsForOperator(
       allAttachments,
       dak.created_by,
       assignmentAt
     );
-    const returnNotice = extractOperatorReturnNotice(fullTimeline);
-
-    return (
-      <OperatorDakDetailView
-        dak={dak}
-        timeline={operatorTimeline}
-        attachments={operatorAttachments}
-        returnNotice={returnNotice}
-      />
-    );
   }
-
-  const showComplianceWorkflow =
-    canSubmitComplianceRole(user.role) && canShowComplianceWorkflow(dak.status);
-
-  const [attachments, assignOptions, remarks, atrRecords, departments, dakRequests, complianceDraft] =
-    await Promise.all([
-      getDakAttachments(id),
-      getAssignFormOptions(),
-      getDakRemarks(id, user),
-      getDakAtrRecords(id, user),
-      getDepartments(),
-      getDakRequestsForDak(id),
-      showComplianceWorkflow ? getComplianceDraft(id, user.id) : Promise.resolve(null),
-    ]);
 
   const remarkPermissions = getRemarkPermissions(user);
 
   const canInitialAssign =
+    !isOperator &&
     hasPermission(user.role, PERMISSIONS.DAK_ASSIGN) &&
     canAssignStatus(dak.status);
 
   const canReassign =
+    !isOperator &&
     canReassignDakRole(user.role) &&
     hasPermission(user.role, PERMISSIONS.DAK_ASSIGN) &&
     canReassignStatus(dak.status);
 
-  const showAssignForm = canInitialAssign || canReassign;
-  const assignmentMode = canInitialAssign;
-
   const showApprovalPanel =
+    !isOperator &&
     canApproveClosure(dak.status) &&
     (user.role === "collector" || user.role === "adm");
 
-  const showDepartmentActions = canSubmitDepartmentRequests(user, dak.status);
-
-  const showRequestReview =
-    canReviewDepartmentRequests(user) &&
-    dakRequests.some((request) => request.status === "pending");
-
-  if (showApprovalPanel) {
-    return (
-      <>
-        <CollectorAtrViewTracker dakId={dak.id} status={dak.status} />
-        <DakCollectorReviewView
-          dak={dak}
-          timeline={fullTimeline}
-          attachments={attachments}
-          atrRecords={atrRecords}
-          dakRequests={dakRequests}
-          showRequestReview={showRequestReview}
-        />
-      </>
-    );
-  }
+  const capabilities: DakDetailCapabilities = {
+    showAssignForm: canInitialAssign || canReassign,
+    isReassign: canReassign,
+    showDepartmentActions:
+      !isOperator && canSubmitDepartmentRequests(user, dak.status),
+    showRequestReview:
+      !isOperator &&
+      canReviewDepartmentRequests(user) &&
+      dakRequests.some((request) => request.status === "pending"),
+    showComplianceWorkflow,
+    showApprovalPanel,
+    canMoveToRecycleBin: !isOperator && canMoveDakToRecycleBin(user.role),
+    isOperatorView: isOperator,
+    backHref: showApprovalPanel
+      ? "/dashboard/dak/pending-approval"
+      : "/dashboard/dak",
+    backLabel: showApprovalPanel ? "Back to Pending Approval" : "Back to All DAK",
+  };
 
   return (
     <>
       <CollectorAtrViewTracker dakId={dak.id} status={dak.status} />
       <DakDetailView
         dak={dak}
-        timeline={fullTimeline}
+        timeline={timeline}
         attachments={attachments}
         assignOptions={assignOptions}
-        showAssignForm={showAssignForm}
-        isReassign={canReassign}
-        assignmentMode={assignmentMode}
-        showDepartmentActions={showDepartmentActions}
-        showRequestReview={showRequestReview}
-        showComplianceWorkflow={showComplianceWorkflow}
         dakRequests={dakRequests}
         departments={departments}
         remarks={remarks}
         atrRecords={atrRecords}
         complianceDraft={complianceDraft}
         remarkPermissions={remarkPermissions}
+        capabilities={capabilities}
       />
     </>
   );

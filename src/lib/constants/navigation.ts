@@ -2,9 +2,11 @@ import {
   Activity,
   BarChart3,
   Bell,
+  Building2,
   CheckCircle2,
   ClipboardList,
   Clock,
+  Database,
   FileCheck2,
   FilePlus2,
   FileText,
@@ -128,6 +130,18 @@ export const mainNavItems: NavItem[] = [
     icon: Users,
     permission: PERMISSIONS.USERS,
   },
+  {
+    title: "Department & Section Master",
+    href: "/dashboard/admin/masters",
+    icon: Building2,
+    permission: PERMISSIONS.MASTERS,
+  },
+  {
+    title: "Database & Storage",
+    href: "/dashboard/admin/database-storage",
+    icon: Database,
+    permission: PERMISSIONS.DATABASE_STORAGE,
+  },
 ];
 
 /** Sidebar sections with grouped navigation labels. */
@@ -138,19 +152,19 @@ export const mainNavGroups: NavGroup[] = [
   },
   {
     label: "DAK Operations",
-    items: mainNavItems.slice(1, 10),
+    items: mainNavItems.slice(1, 9),
   },
   {
     label: "Tasks",
-    items: [mainNavItems[10]],
+    items: [mainNavItems[9]],
   },
   {
     label: "Reports",
-    items: mainNavItems.slice(11, 14),
+    items: mainNavItems.slice(10, 13),
   },
   {
     label: "Administration",
-    items: mainNavItems.slice(14),
+    items: mainNavItems.slice(13),
   },
 ];
 
@@ -171,8 +185,10 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
     "/dashboard/reports",
     "/dashboard/notifications",
     "/dashboard/admin/users",
+    "/dashboard/admin/masters",
+    "/dashboard/admin/database-storage",
   ],
-  /** Same curated Collector menu, without User Management. */
+  /** Same curated Collector menu, without User Management / Database Storage. */
   adm: [
     "/dashboard",
     "/dashboard/dak/assignments",
@@ -181,6 +197,7 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
     "/dashboard/tasks",
     "/dashboard/reports",
     "/dashboard/notifications",
+    "/dashboard/admin/masters",
   ],
   acp: [
     "/dashboard",
@@ -190,6 +207,8 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
     "/dashboard/reports",
     "/dashboard/notifications",
     "/dashboard/admin/users",
+    "/dashboard/admin/masters",
+    "/dashboard/admin/database-storage",
   ],
 };
 

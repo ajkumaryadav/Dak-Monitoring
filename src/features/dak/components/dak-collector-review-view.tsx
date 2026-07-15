@@ -22,6 +22,7 @@ import { DakComplianceReworkHistory } from "@/features/dak/components/dak-compli
 import { DakCollectorReviewPanel } from "@/features/dak/components/dak-collector-review-panel";
 import { buildComplianceVersionHistory } from "@/features/dak/lib/compliance-rework";
 import { DakPageHeader } from "@/features/dak/components/dak-page-header";
+import { DakMoveToRecycleBinButton } from "@/features/dak/components/dak-move-to-recycle-bin-button";
 import { DakPendingRequestsPanel } from "@/features/dak-requests/components/dak-pending-requests-panel";
 import type { DakRequestRecord } from "@/features/dak-requests/services/dak-requests";
 import type { DakAttachmentWithUrl } from "@/features/dak/actions/upload-attachment";
@@ -50,6 +51,7 @@ interface DakCollectorReviewViewProps {
   atrRecords: DakAtrRecord[];
   dakRequests?: DakRequestRecord[];
   showRequestReview?: boolean;
+  canMoveToRecycleBin?: boolean;
 }
 
 interface DetailRowProps {
@@ -76,6 +78,7 @@ export function DakCollectorReviewView({
   atrRecords,
   dakRequests = [],
   showRequestReview = false,
+  canMoveToRecycleBin = false,
 }: DakCollectorReviewViewProps) {
   const pendingDays = calculatePendingDays({
     receivedDate: dak.received_date,
@@ -108,9 +111,17 @@ export function DakCollectorReviewView({
           <ArrowLeft className="size-4" />
           Back to Pending Approval
         </Link>
-        <Badge variant="secondary" className="w-fit capitalize">
-          {formatPendingDays(pendingDays)}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="w-fit capitalize">
+            {formatPendingDays(pendingDays)}
+          </Badge>
+          {canMoveToRecycleBin ? (
+            <DakMoveToRecycleBinButton
+              dakId={dak.id}
+              dakNumber={dak.dak_number}
+            />
+          ) : null}
+        </div>
       </div>
 
       <DakPageHeader

@@ -261,6 +261,9 @@ async function fetchDakListRows(
     query = query.eq("created_by", scope.createdBy);
   }
 
+  // Soft-deleted DAK stay in Recycle Bin only
+  query = query.is("deleted_at", null);
+
   if (filter === "assignments") {
     query = query.eq("status", "received");
   } else if (filter === "pending") {
@@ -310,6 +313,8 @@ async function fetchDakListRows(
   if (scope.createdBy) {
     fallbackQuery = fallbackQuery.eq("created_by", scope.createdBy);
   }
+
+  fallbackQuery = fallbackQuery.is("deleted_at", null);
 
   if (filter === "assignments") {
     fallbackQuery = fallbackQuery.eq("status", "received");

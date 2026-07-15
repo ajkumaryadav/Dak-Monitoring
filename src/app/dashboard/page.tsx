@@ -10,6 +10,13 @@ import {
 } from "@/features/notifications/services/notify-dak-event";
 import { fetchSlaDashboardData } from "@/features/sla/services/sla-report";
 import { fetchDashboardAnalytics } from "@/features/reports/services/dashboard-analytics";
+import { canAccessDatabaseStorage } from "@/features/system-admin/lib/permissions";
+import { listBackups } from "@/features/system-admin/services/backup";
+import { previewOrphans } from "@/features/system-admin/services/orphan-cleaner";
+import {
+  fetchDatabaseStats,
+  fetchStorageStats,
+} from "@/features/system-admin/services/stats";
 import { getUserStats } from "@/features/users/services/get-users";
 import { getTaskStats } from "@/features/tasks/services/tasks";
 import {
@@ -46,6 +53,7 @@ export default async function DashboardPage() {
     user.role === "adm" ||
     isDepartment ||
     isSection;
+  const showSystemHealth = canAccessDatabaseStorage(user.role);
 
   const taskScope = isSection
     ? { assignedTo: user.id }
@@ -63,6 +71,7 @@ export default async function DashboardPage() {
     immediateEntries,
     userStats,
     taskStats,
+    systemHealthBundle,
   ] = await Promise.all([
     fetchDashboardAnalytics(user),
     isOperator ? Promise.resolve([]) : getRecentActivity(user, 3),
@@ -84,6 +93,26 @@ export default async function DashboardPage() {
       : Promise.resolve([]),
     showUserStats ? getUserStats() : Promise.resolve(null),
     showTaskStats ? getTaskStats(taskScope) : Promise.resolve(null),
+    showSystemHealth
+      ? Promise.all([
+          fetchDatabaseStats(),
+          fetchStorageStats(),
+          listBackups(),
+          user.role === "acp"
+            ? previewOrphans()
+            : Promise.resolve({
+                orphanDbRecords: [],
+                orphanFiles: [],
+                recoverableBytes: 0,
+              }),
+        ]).then(([database, storage, backups, orphans]) => ({
+          database,
+          storage,
+          lastBackup: backups[0] ?? null,
+          orphanFileCount: orphans.orphanFiles.length,
+          orphanRecordCount: orphans.orphanDbRecords.length,
+        }))
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -101,6 +130,7 @@ export default async function DashboardPage() {
       immediateEntries={immediateEntries}
       userStats={userStats}
       taskStats={taskStats}
+      systemHealth={systemHealthBundle}
     />
   );
 }

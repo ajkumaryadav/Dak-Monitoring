@@ -1,9 +1,11 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Loader2, UserCheck, UserX } from "lucide-react";
+import { KeyRound, Loader2, Trash2, UserCheck, UserX } from "lucide-react";
+import { toast } from "sonner";
 
+import { permanentlyDeleteUserAction } from "@/features/users/actions/delete-user";
 import { resetPasswordFormAction } from "@/features/users/actions/reset-password";
 import { toggleUserActiveAction } from "@/features/users/actions/toggle-user-active";
 import { buttonVariants } from "@/components/ui/button";
@@ -13,11 +15,18 @@ import { cn } from "@/lib/utils";
 interface UserActionsPanelProps {
   userId: string;
   isActive: boolean;
+  canPermanentlyDelete?: boolean;
 }
 
-export function UserActionsPanel({ userId, isActive }: UserActionsPanelProps) {
+export function UserActionsPanel({
+  userId,
+  isActive,
+  canPermanentlyDelete = false,
+}: UserActionsPanelProps) {
   const router = useRouter();
   const [isToggling, startToggle] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
+  const [deleteConfirm, setDeleteConfirm] = useState("");
   const [resetState, resetAction, isResetting] = useActionState(
     resetPasswordFormAction,
     {}
@@ -26,6 +35,19 @@ export function UserActionsPanel({ userId, isActive }: UserActionsPanelProps) {
   function handleToggle(nextActive: boolean) {
     startToggle(async () => {
       await toggleUserActiveAction(userId, nextActive);
+      router.refresh();
+    });
+  }
+
+  function handlePermanentDelete() {
+    startDelete(async () => {
+      const result = await permanentlyDeleteUserAction(userId, deleteConfirm);
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success("User permanently deleted");
+      router.push("/dashboard/admin/users");
       router.refresh();
     });
   }
@@ -89,6 +111,45 @@ export function UserActionsPanel({ userId, isActive }: UserActionsPanelProps) {
           </button>
         )}
       </div>
+
+      {canPermanentlyDelete ? (
+        <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+          <p className="text-xs font-semibold text-destructive">
+            ACP only — Permanent Delete
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            Irreversible. Blocked if the user still has active assigned DAK.
+            Type DELETE to confirm.
+          </p>
+          <input
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="DELETE"
+            className="h-9 w-full rounded-lg border px-2.5 text-sm"
+          />
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={handlePermanentDelete}
+            className={cn(
+              buttonVariants({ variant: "destructive", size: "sm" }),
+              "gap-1.5"
+            )}
+          >
+            {isDeleting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Trash2 className="size-4" />
+            )}
+            Permanently Delete User
+          </button>
+        </div>
+      ) : (
+        <p className="text-[11px] text-muted-foreground">
+          Collector may create, edit, reset password, and activate/deactivate
+          users. Permanent delete is ACP-only.
+        </p>
+      )}
     </div>
   );
 }

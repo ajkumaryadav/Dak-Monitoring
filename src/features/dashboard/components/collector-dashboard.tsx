@@ -1,15 +1,21 @@
-import { AlertTriangle, Bell, History, ListTodo, Sparkles } from "lucide-react";
+import { AlertTriangle, Bell, Database, History, ListTodo, Sparkles } from "lucide-react";
 
-import { CollectorAtrDashboardBanner } from "@/features/dak/components/collector-atr-dashboard-banner";
 import { RecentActivityWidget } from "@/features/audit/components/recent-activity-widget";
 import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
 import { CollectorSegmentedDashboard } from "@/features/dashboard/components/collector-segmented-dashboard";
+import { DashboardAlertBanners } from "@/features/dashboard/components/dashboard-alert-banners";
 import { DashboardHero } from "@/features/dashboard/components/dashboard-hero";
 import { DashboardSection } from "@/features/dashboard/components/dashboard-section";
 import { NotificationWidget } from "@/features/notifications/components/notification-widgets";
 import type { NotificationRecord } from "@/features/notifications/services/notifications";
 import { SlaDashboardWidgets } from "@/features/sla/components/sla-dashboard-widgets";
 import type { CollectorDashboardData } from "@/features/reports/services/dashboard-analytics";
+import { SystemHealthWidgets } from "@/features/system-admin/components/system-health-widgets";
+import type { BackupRecord } from "@/features/system-admin/services/backup";
+import type {
+  DatabaseStats,
+  StorageStats,
+} from "@/features/system-admin/services/stats";
 import { UserStatsCards } from "@/features/users/components/user-stats-cards";
 import { CollectorTaskStatCards } from "@/features/dashboard/components/task-stat-cards";
 import type { SlaDakRow } from "@/features/sla/lib/sla-types";
@@ -28,6 +34,13 @@ interface CollectorDashboardProps {
   dueTodayEntries: SlaDakRow[];
   userStats?: UserStatsSummary | null;
   taskStats?: TaskStatsSummary | null;
+  systemHealth?: {
+    database: DatabaseStats;
+    storage: StorageStats;
+    lastBackup: BackupRecord | null;
+    orphanFileCount: number;
+    orphanRecordCount: number;
+  } | null;
 }
 
 /** Segmented district dashboard for Collector, ACP, and ADM. */
@@ -42,6 +55,7 @@ export function CollectorDashboard({
   dueTodayEntries,
   userStats,
   taskStats,
+  systemHealth,
 }: CollectorDashboardProps) {
   const dashboardTitle =
     user.role === "acp"
@@ -52,7 +66,7 @@ export function CollectorDashboard({
 
   return (
     <div className="space-y-6">
-      <CollectorAtrDashboardBanner />
+      <DashboardAlertBanners role={user.role} />
 
       <DashboardHero
         user={user}
@@ -61,6 +75,24 @@ export function CollectorDashboard({
       />
 
       <CollectorSegmentedDashboard analytics={analytics} />
+
+      {systemHealth && (user.role === "collector" || user.role === "acp") ? (
+        <DashboardSection
+          title="Database & Storage"
+          description="Live infrastructure footprint, backups, and storage hygiene"
+          icon={Database}
+          variant="teal"
+        >
+          <SystemHealthWidgets
+            database={systemHealth.database}
+            storage={systemHealth.storage}
+            lastBackup={systemHealth.lastBackup}
+            orphanFileCount={systemHealth.orphanFileCount}
+            orphanRecordCount={systemHealth.orphanRecordCount}
+            showExtended={user.role === "acp"}
+          />
+        </DashboardSection>
+      ) : null}
 
       {taskStats ? (
         <DashboardSection

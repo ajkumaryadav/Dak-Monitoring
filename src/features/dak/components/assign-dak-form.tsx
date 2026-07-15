@@ -36,12 +36,15 @@ interface AssignDakFormProps {
   dakId: string;
   options: AssignFormOptions;
   isReassign?: boolean;
+  /** Drop outer Card chrome when nested inside Available Actions. */
+  embedded?: boolean;
 }
 
 export function AssignDakForm({
   dakId,
   options,
   isReassign = false,
+  embedded = false,
 }: AssignDakFormProps) {
   const [assignmentType, setAssignmentType] = useState<"department" | "section">(
     "department"
@@ -75,20 +78,13 @@ export function AssignDakForm({
       ? options.departments.length > 0
       : options.sections.length > 0;
 
-  return (
-    <Card className="border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background">
-      <CardHeader className="border-b border-border/60">
-        <CardTitle className="text-base">
-          {isReassign ? "Reassign DAK" : "Assign DAK"}
-        </CardTitle>
-        <CardDescription>
-          {isReassign
-            ? "Change department/section and assigned officer"
-            : "Select department or internal section, then choose the responsible officer"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <form action={formAction} className="space-y-4">
+  const title = isReassign ? "Reassign DAK" : "Assign DAK";
+  const description = isReassign
+    ? "Change department/section and assigned officer"
+    : "Select department or internal section, then choose the responsible officer";
+
+  const form = (
+        <form action={formAction} className={cn(embedded ? "space-y-3" : "space-y-4")}>
           <input type="hidden" name="dakId" value={dakId} />
           <input type="hidden" name="assignmentType" value={assignmentType} />
 
@@ -306,7 +302,7 @@ export function AssignDakForm({
           <button
             type="submit"
             disabled={isPending || !canSubmit}
-            className={cn(buttonVariants(), "h-9 w-full sm:w-auto")}
+            className={cn(buttonVariants(), "h-9 w-full")}
           >
             {isPending ? (
               <>
@@ -322,7 +318,27 @@ export function AssignDakForm({
             )}
           </button>
         </form>
-      </CardContent>
+  );
+
+  if (embedded) {
+    return (
+      <div className="space-y-2">
+        <div>
+          <p className="text-sm font-semibold">{title}</p>
+          <p className="text-[11px] text-muted-foreground">{description}</p>
+        </div>
+        {form}
+      </div>
+    );
+  }
+
+  return (
+    <Card className="border-primary/15 bg-gradient-to-br from-primary/[0.03] via-background to-background">
+      <CardHeader className="border-b border-border/60">
+        <CardTitle className="text-base">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-4">{form}</CardContent>
     </Card>
   );
 }

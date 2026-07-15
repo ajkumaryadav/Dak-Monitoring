@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -29,23 +30,34 @@ interface CollectorAtrProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * Viewed ATR IDs live in localStorage — load them only after mount so
+ * server HTML and the first client render stay identical (avoids hydration mismatch).
+ */
 export function CollectorAtrProvider({
   userId,
   pendingDakIds,
   children,
 }: CollectorAtrProviderProps) {
-  const [viewedIds, setViewedIds] = useState<string[]>(() =>
-    getViewedAtrDakIds(userId)
-  );
+  const [viewedIds, setViewedIds] = useState<string[]>([]);
+  const [hydrated, setHydrated] = useState(false);
 
-  const unreadCount = useMemo(
-    () => countUnreadAtrDaks(userId, pendingDakIds),
-    [userId, pendingDakIds, viewedIds]
-  );
+  useEffect(() => {
+    setViewedIds(getViewedAtrDakIds(userId));
+    setHydrated(true);
+  }, [userId]);
+
+  const unreadCount = useMemo(() => {
+    if (!hydrated) {
+      // Match SSR: treat nothing as viewed until localStorage is applied
+      return pendingDakIds.length;
+    }
+    return countUnreadAtrDaks(userId, pendingDakIds);
+  }, [userId, pendingDakIds, viewedIds, hydrated]);
 
   const isViewed = useCallback(
-    (dakId: string) => viewedIds.includes(dakId),
-    [viewedIds]
+    (dakId: string) => (hydrated ? viewedIds.includes(dakId) : false),
+    [viewedIds, hydrated]
   );
 
   const markViewed = useCallback(

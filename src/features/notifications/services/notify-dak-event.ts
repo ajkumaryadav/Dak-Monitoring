@@ -58,21 +58,26 @@ interface NotifyCreatedParams {
   actorName: string;
 }
 
-/** Notify when a new DAK is registered. */
+/** Notify Collector / ADM / ACP when a new DAK is registered by an operator. */
 export async function notifyDakCreated(
   params: NotifyCreatedParams
 ): Promise<void> {
-  const districtIds = await getDistrictWideUserIds();
-  const recipientIds = uniqueUserIds([params.actorUserId, ...districtIds]);
+  // District oversight only — not the registering operator
+  const recipientIds = await getDistrictWideUserIds();
+  if (!recipientIds.length) return;
 
   await sendNotifications(
     recipientIds.map((userId) => ({
       userId,
       type: "dak_created",
-      title: "New DAK Registered",
-      body: `${params.dakNumber} — ${params.subject} registered by ${params.actorName}.`,
+      title: "New DAK Received",
+      body: `${params.dakNumber} — ${params.subject} registered by ${params.actorName}. Awaiting assignment.`,
       dakId: params.dakId,
-      metadata: { subject: params.subject },
+      metadata: {
+        subject: params.subject,
+        registered_by: params.actorName,
+        registered_by_id: params.actorUserId,
+      },
     }))
   );
 }

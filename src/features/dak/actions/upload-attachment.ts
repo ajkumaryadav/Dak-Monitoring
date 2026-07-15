@@ -9,9 +9,8 @@ import {
   validateAttachmentFile,
 } from "@/features/dak/lib/attachment-validation";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const STORAGE_BUCKET = "dak-attachments";
-const SIGNED_URL_TTL_SECONDS = 3600;
+import { createStorageService } from "@/lib/storage/storage-service";
+import { getStorageConfig } from "@/lib/storage/config";
 
 export interface DakAttachmentRecord {
   id: string;
@@ -32,7 +31,7 @@ export type UploadAttachmentResult =
   | { success: true; attachmentId: string; filePath: string }
   | { success: false; message: string };
 
-/** Upload a file to Supabase Storage under the DAK folder. */
+/** Upload a file via the Storage Service Layer (provider-agnostic). */
 export async function uploadDakFile(
   dakId: string,
   file: File
@@ -43,25 +42,25 @@ export async function uploadDakFile(
     return { success: false, message: validation.message };
   }
 
-  const supabase = createAdminClient();
+  const storage = createStorageService();
   const safeName = sanitizeFileName(file.name);
   const extension = getFileExtension(safeName);
   const filePath = `${dakId}/${randomUUID()}${extension}`;
-
   const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-  const { error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .upload(filePath, fileBuffer, {
+  try {
+    await storage.upload({
+      path: filePath,
+      data: fileBuffer,
       contentType: resolveUploadContentType(file),
       upsert: false,
     });
-
-  if (error) {
+  } catch (error) {
     console.error("[uploadDakFile]", error);
     return {
       success: false,
-      message: error.message ?? "Failed to upload attachment.",
+      message:
+        error instanceof Error ? error.message : "Failed to upload attachment.",
     };
   }
 
@@ -76,6 +75,7 @@ export async function saveAttachmentRecord(params: {
   uploadedBy: string;
 }): Promise<UploadAttachmentResult> {
   const supabase = createAdminClient();
+  const bucket = getStorageConfig().defaultBucket;
 
   const { data, error } = await supabase
     .from("attachments")
@@ -83,7 +83,7 @@ export async function saveAttachmentRecord(params: {
       dak_id: params.dakId,
       file_name: sanitizeFileName(params.file.name),
       file_path: params.filePath,
-      storage_bucket: STORAGE_BUCKET,
+      storage_bucket: bucket,
       file_size: params.file.size,
       mime_type: params.file.type || "application/octet-stream",
       uploaded_by: params.uploadedBy,
@@ -93,7 +93,11 @@ export async function saveAttachmentRecord(params: {
 
   if (error || !data) {
     console.error("[saveAttachmentRecord]", error);
-    await supabase.storage.from(STORAGE_BUCKET).remove([params.filePath]);
+    try {
+      await createStorageService().remove([params.filePath]);
+    } catch (cleanupError) {
+      console.error("[saveAttachmentRecord] storage cleanup", cleanupError);
+    }
     return {
       success: false,
       message: error?.message ?? "Failed to save attachment record.",
@@ -131,18 +135,7 @@ export async function uploadDakAttachment(
 export async function createAttachmentSignedUrl(
   filePath: string
 ): Promise<string | null> {
-  const supabase = createAdminClient();
-
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
-
-  if (error) {
-    console.error("[createAttachmentSignedUrl]", error);
-    return null;
-  }
-
-  return data.signedUrl;
+  return createStorageService().getSignedUrl(filePath);
 }
 
 /** Fetch attachments for a DAK with signed download URLs. */
@@ -185,9 +178,10 @@ export async function getDakAttachments(
     });
   }
   const withUrls: DakAttachmentWithUrl[] = [];
+  const storage = createStorageService();
 
   for (const attachment of attachments) {
-    const downloadUrl = await createAttachmentSignedUrl(attachment.file_path);
+    const downloadUrl = await storage.getSignedUrl(attachment.file_path);
 
     if (downloadUrl) {
       withUrls.push({ ...attachment, downloadUrl });

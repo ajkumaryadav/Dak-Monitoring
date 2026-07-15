@@ -18,6 +18,8 @@ export const PERMISSIONS = {
   NOTIFICATIONS: "notifications",
   USERS: "users",
   ACTIVITY: "activity",
+  DATABASE_STORAGE: "database:storage",
+  MASTERS: "masters",
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -49,6 +51,8 @@ export const ROUTE_PERMISSIONS: Record<string, Permission> = {
   "/dashboard/activity": PERMISSIONS.ACTIVITY,
   "/dashboard/notifications": PERMISSIONS.NOTIFICATIONS,
   "/dashboard/admin/users": PERMISSIONS.USERS,
+  "/dashboard/admin/database-storage": PERMISSIONS.DATABASE_STORAGE,
+  "/dashboard/admin/masters": PERMISSIONS.MASTERS,
 };
 
 /** Collector and ACP — district oversight roles (distinct menus and privileges). */
@@ -70,6 +74,8 @@ export const COLLECTOR_ROLE_PERMISSIONS: readonly Permission[] = [
   PERMISSIONS.NOTIFICATIONS,
   PERMISSIONS.USERS,
   PERMISSIONS.ESCALATION,
+  PERMISSIONS.DATABASE_STORAGE,
+  PERMISSIONS.MASTERS,
 ];
 
 /** ACP — monitoring and supervision without DAK registration or task creation. */
@@ -80,6 +86,8 @@ export const ACP_ROLE_PERMISSIONS: readonly Permission[] = [
   PERMISSIONS.REPORTS,
   PERMISSIONS.NOTIFICATIONS,
   PERMISSIONS.USERS,
+  PERMISSIONS.DATABASE_STORAGE,
+  PERMISSIONS.MASTERS,
 ];
 
 export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
@@ -97,6 +105,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     PERMISSIONS.ACTIVITY,
     PERMISSIONS.NOTIFICATIONS,
     PERMISSIONS.ESCALATION,
+    PERMISSIONS.MASTERS,
   ],
   dak_operator: [
     PERMISSIONS.DASHBOARD,

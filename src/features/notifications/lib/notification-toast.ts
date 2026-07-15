@@ -4,6 +4,7 @@ import type { NotificationType } from "@/features/notifications/lib/notification
 import type { NotificationRecord } from "@/features/notifications/services/notifications";
 
 const TOAST_ENABLED_TYPES = new Set<NotificationType>([
+  "dak_created",
   "dak_assigned",
   "dak_reassigned",
   "atr_submitted",
@@ -16,6 +17,7 @@ const TOAST_ENABLED_TYPES = new Set<NotificationType>([
 ]);
 
 const TOAST_TITLES: Partial<Record<NotificationType, string>> = {
+  dak_created: "New DAK Received",
   dak_assigned: "New DAK Assigned",
   dak_reassigned: "DAK Reassigned",
   atr_submitted: "ATR Submitted",
@@ -32,9 +34,24 @@ export function showNotificationToast(notification: NotificationRecord): void {
   if (!TOAST_ENABLED_TYPES.has(notification.type)) return;
 
   const title = TOAST_TITLES[notification.type] ?? notification.title;
+  const isNewDak = notification.type === "dak_created";
 
-  toast(title, {
+  const toastFn = isNewDak ? toast.warning : toast;
+
+  toastFn(title, {
     description: notification.body,
-    duration: 5000,
+    duration: isNewDak ? 12000 : 5000,
+    ...(isNewDak
+      ? {
+          action: {
+            label: "Open",
+            onClick: () => {
+              window.location.href = notification.dakId
+                ? `/dashboard/dak/${notification.dakId}`
+                : "/dashboard/dak/assignments";
+            },
+          },
+        }
+      : {}),
   });
 }
