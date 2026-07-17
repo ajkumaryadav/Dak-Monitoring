@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import {
   ArrowDown,
   ArrowUp,
   Building2,
   Loader2,
+  Pencil,
   Plus,
   Search,
 } from "lucide-react";
@@ -45,6 +46,8 @@ export function MastersConsole({
   sections,
 }: MastersConsoleProps) {
   const router = useRouter();
+  const deptFormRef = useRef<HTMLFormElement>(null);
+  const sectionFormRef = useRef<HTMLFormElement>(null);
   const [tab, setTab] = useState<MasterTab>("departments");
   const [search, setSearch] = useState("");
   const [pending, startTransition] = useTransition();
@@ -112,6 +115,12 @@ export function MastersConsole({
     });
   }
 
+  const scrollToForm = useCallback((ref: React.RefObject<HTMLFormElement | null>) => {
+    setTimeout(() => {
+      ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }, []);
+
   function moveDepartment(id: string, direction: -1 | 1) {
     const ids = departments.map((d) => d.id);
     const index = ids.indexOf(id);
@@ -161,7 +170,11 @@ export function MastersConsole({
       {tab === "departments" ? (
         <div className="grid gap-5 xl:grid-cols-[340px_1fr]">
           <form
-            className="space-y-3 rounded-2xl border bg-card p-4 shadow-sm"
+            ref={deptFormRef}
+            className={cn(
+              "space-y-3 rounded-2xl border bg-card p-4 shadow-sm transition-colors",
+              deptForm.id && "ring-2 ring-primary/40"
+            )}
             onSubmit={(e) => {
               e.preventDefault();
               const payload = {
@@ -319,18 +332,21 @@ export function MastersConsole({
                         <button
                           type="button"
                           className={cn(
-                            buttonVariants({ variant: "outline", size: "sm" })
+                            buttonVariants({ variant: "outline", size: "sm" }),
+                            "gap-1"
                           )}
-                          onClick={() =>
+                          onClick={() => {
                             setDeptForm({
                               id: row.id,
                               name: row.name,
                               shortName: row.shortName ?? "",
                               description: row.description ?? "",
                               isActive: row.isActive,
-                            })
-                          }
+                            });
+                            scrollToForm(deptFormRef);
+                          }}
                         >
+                          <Pencil className="size-3" />
                           Edit
                         </button>
                         <button
@@ -385,7 +401,11 @@ export function MastersConsole({
       ) : (
         <div className="grid gap-5 xl:grid-cols-[340px_1fr]">
           <form
-            className="space-y-3 rounded-2xl border bg-card p-4 shadow-sm"
+            ref={sectionFormRef}
+            className={cn(
+              "space-y-3 rounded-2xl border bg-card p-4 shadow-sm transition-colors",
+              sectionForm.id && "ring-2 ring-primary/40"
+            )}
             onSubmit={(e) => {
               e.preventDefault();
               const payload = {
@@ -536,18 +556,21 @@ export function MastersConsole({
                         <button
                           type="button"
                           className={cn(
-                            buttonVariants({ variant: "outline", size: "sm" })
+                            buttonVariants({ variant: "outline", size: "sm" }),
+                            "gap-1"
                           )}
-                          onClick={() =>
+                          onClick={() => {
                             setSectionForm({
                               id: row.id,
                               unitName: row.unitName,
                               departmentId: row.departmentId ?? "",
                               description: row.description ?? "",
                               isActive: row.isActive,
-                            })
-                          }
+                            });
+                            scrollToForm(sectionFormRef);
+                          }}
                         >
+                          <Pencil className="size-3" />
                           Edit
                         </button>
                         <button

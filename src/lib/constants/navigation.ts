@@ -185,10 +185,8 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
     "/dashboard/reports",
     "/dashboard/notifications",
     "/dashboard/admin/users",
-    "/dashboard/admin/masters",
     "/dashboard/admin/database-storage",
   ],
-  /** Same curated Collector menu, without User Management / Database Storage. */
   adm: [
     "/dashboard",
     "/dashboard/dak/assignments",
@@ -197,7 +195,6 @@ const ROLE_NAV_HREFS: Partial<Record<UserRole, readonly string[]>> = {
     "/dashboard/tasks",
     "/dashboard/reports",
     "/dashboard/notifications",
-    "/dashboard/admin/masters",
   ],
   acp: [
     "/dashboard",

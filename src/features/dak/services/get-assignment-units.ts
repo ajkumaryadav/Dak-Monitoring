@@ -1,5 +1,4 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { INTERNAL_SECTIONS } from "@/lib/constants/departments";
 
 export interface AssignmentUnitOption {
   id: string;
@@ -7,32 +6,12 @@ export interface AssignmentUnitOption {
   unit_type: "department" | "section";
 }
 
-/** Ensure every INTERNAL_SECTIONS entry exists (safe to call repeatedly). */
-async function ensureInternalSectionsSeeded() {
-  const supabase = createAdminClient();
-
-  const rows = INTERNAL_SECTIONS.map((unit_name) => ({
-    unit_name,
-    unit_type: "section" as const,
-    is_active: true,
-  }));
-
-  await supabase.from("assignment_units").upsert(rows, {
-    onConflict: "unit_name",
-    ignoreDuplicates: true,
-  });
-}
-
-/** Load internal Collectorate sections alphabetically. */
+/** Load active assignment units from the database (master-managed). */
 export async function getAssignmentUnits(
   unitType: "section" | "department" = "section"
 ): Promise<AssignmentUnitOption[]> {
   try {
     const supabase = createAdminClient();
-
-    if (unitType === "section") {
-      await ensureInternalSectionsSeeded();
-    }
 
     const { data, error } = await supabase
       .from("assignment_units")
