@@ -304,6 +304,14 @@ export async function assignDak(
       assignmentType: parsed.data.assignmentType,
       targetLabel,
       assignedToUserId: parsed.data.assignedUserId,
+      departmentId:
+        parsed.data.assignmentType === "department"
+          ? parsed.data.departmentId
+          : null,
+      sectionId:
+        parsed.data.assignmentType === "section"
+          ? parsed.data.assignmentUnitId
+          : null,
       actorUserId: user.id,
       actorName: user.name,
     });

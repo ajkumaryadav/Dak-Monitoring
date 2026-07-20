@@ -1,6 +1,7 @@
 import { BarChart3, TrendingUp } from "lucide-react";
 
 import type { PortalWorkflowStatusRow } from "@/features/auth/services/portal-workflow-stats";
+import { cn } from "@/lib/utils";
 
 const chartWidth = 320;
 const chartHeight = 128;
@@ -13,22 +14,35 @@ const maxBarHeight = 82;
 interface AuthWorkflowStatusPanelProps {
   statusData: PortalWorkflowStatusRow[];
   unavailable?: boolean;
+  /** Stretch to fill leftover column height on desktop (avoids blank mid-gaps). */
+  fillHeight?: boolean;
 }
 
 /** Live workflow status chart for the login portal. */
 export function AuthWorkflowStatusPanel({
   statusData,
   unavailable = false,
+  fillHeight = false,
 }: AuthWorkflowStatusPanelProps) {
   const total = statusData.reduce((sum, row) => sum + row.value, 0);
   const max = Math.max(...statusData.map((row) => row.value), 1);
   const hasData = total > 0;
 
   return (
-    <div className="auth-step-rise overflow-hidden rounded-2xl border border-border/60 bg-card/90 shadow-lg backdrop-blur-sm">
-      <div className="auth-tricolor-bar h-1 w-full" aria-hidden />
+    <div
+      className={cn(
+        "auth-step-rise overflow-hidden rounded-2xl border border-border/60 bg-card/90 shadow-lg backdrop-blur-sm",
+        fillHeight && "flex h-full min-h-0 flex-col"
+      )}
+    >
+      <div className="auth-tricolor-bar h-1 w-full shrink-0" aria-hidden />
 
-      <div className="relative p-3.5 sm:p-4">
+      <div
+        className={cn(
+          "relative p-3.5 sm:p-4",
+          fillHeight && "flex min-h-0 flex-1 flex-col"
+        )}
+      >
         <div className="auth-visual-orb pointer-events-none absolute -right-4 -top-4 size-20 rounded-full bg-primary/8 blur-2xl" />
 
         <div className="relative flex flex-wrap items-start justify-between gap-2">
@@ -67,8 +81,13 @@ export function AuthWorkflowStatusPanel({
             are added to the system.
           </p>
         ) : (
-          <>
-            <div className="relative mt-4 overflow-hidden rounded-xl bg-muted/50 p-1 ring-1 ring-border/40">
+          <div
+            className={cn(
+              "mt-4",
+              fillHeight && "flex min-h-0 flex-1 flex-col"
+            )}
+          >
+            <div className="relative overflow-hidden rounded-xl bg-muted/50 p-1 ring-1 ring-border/40">
               <div className="flex h-7 overflow-hidden rounded-lg shadow-inner">
                 {statusData.map((row, i) => (
                   <div
@@ -85,10 +104,15 @@ export function AuthWorkflowStatusPanel({
               </div>
             </div>
 
-            <div className="relative mt-4">
+            <div
+              className={cn(
+                "relative mt-4",
+                fillHeight && "flex min-h-0 flex-1 flex-col justify-center"
+              )}
+            >
               <svg
                 viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                className="w-full"
+                className={cn("w-full", fillHeight && "max-h-none flex-1")}
                 role="img"
                 aria-label="Live DAK workflow status bar chart"
               >
@@ -201,7 +225,12 @@ export function AuthWorkflowStatusPanel({
               </svg>
             </div>
 
-            <ul className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <ul
+              className={cn(
+                "mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3",
+                fillHeight && "mt-auto"
+              )}
+            >
               {statusData.map((row) => (
                 <li
                   key={row.label}
@@ -220,7 +249,7 @@ export function AuthWorkflowStatusPanel({
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -5,6 +5,7 @@ import { DashboardSidebar } from "@/components/layout/dashboard-sidebar";
 import { TopNavbar } from "@/components/layout/top-navbar";
 import { CollectorAtrLoginToast } from "@/features/dak/components/collector-atr-login-toast";
 import { CollectorAtrProvider } from "@/features/dak/components/collector-atr-provider";
+import { DakAssignedLoginToast } from "@/features/notifications/components/dak-assigned-login-toast";
 import { NewDakReceivedToast } from "@/features/notifications/components/new-dak-received-toast";
 import { NotificationRealtimeProvider } from "@/features/notifications/components/notification-realtime-provider";
 import type { NotificationRecord } from "@/features/notifications/services/notifications";
@@ -31,6 +32,8 @@ export function AdminShell({
     user.role === "collector" ||
     user.role === "adm" ||
     user.role === "acp";
+  const showAssignedToast =
+    user.role === "department_user" || user.role === "section_user";
   /** Keep ATR context available for sidebar badge consumers on district roles. */
   const wrapAtrProvider =
     user.role === "collector" ||
@@ -51,6 +54,9 @@ export function AdminShell({
             <div className="mx-auto w-full max-w-7xl p-4 md:p-6 lg:p-8">
               {showCollectorAtr && <CollectorAtrLoginToast />}
               {showNewDakToast && <NewDakReceivedToast role={user.role} />}
+              {showAssignedToast && (
+                <DakAssignedLoginToast role={user.role} />
+              )}
               {children}
             </div>
           </main>

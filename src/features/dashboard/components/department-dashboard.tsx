@@ -2,6 +2,7 @@ import { AlertTriangle, Bell, History, ListTodo } from "lucide-react";
 
 import { RecentActivityWidget } from "@/features/audit/components/recent-activity-widget";
 import type { DakHistoryEntry } from "@/features/audit/services/dak-history";
+import { DashboardAlertBanners } from "@/features/dashboard/components/dashboard-alert-banners";
 import { DashboardHero } from "@/features/dashboard/components/dashboard-hero";
 import { DashboardChartsPanel } from "@/features/dashboard/components/dashboard-charts-panel";
 import { DashboardSection } from "@/features/dashboard/components/dashboard-section";
@@ -63,6 +64,8 @@ export function DepartmentDashboard({
             : `Monitoring ${analytics.departmentName} correspondence and actions.`
         }
       />
+
+      <DashboardAlertBanners role={user.role} />
 
       {isSection ? (
         <SectionStatCards data={analytics} />

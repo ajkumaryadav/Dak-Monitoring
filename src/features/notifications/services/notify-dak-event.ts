@@ -89,8 +89,49 @@ interface NotifyAssignmentParams {
   assignmentType: "department" | "section";
   targetLabel: string;
   assignedToUserId: string | null;
+  /** Department UUID when assignmentType is department. */
+  departmentId?: string | null;
+  /** Section (assignment_unit) UUID when assignmentType is section. */
+  sectionId?: string | null;
   actorUserId: string;
   actorName: string;
+}
+
+/** Active users belonging to a department or internal section. */
+async function getUnitUserIds(params: {
+  assignmentType: "department" | "section";
+  departmentId?: string | null;
+  sectionId?: string | null;
+}): Promise<string[]> {
+  const supabase = createAdminClient();
+
+  if (params.assignmentType === "department" && params.departmentId) {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id")
+      .eq("is_active", true)
+      .eq("department_id", params.departmentId);
+    if (error) {
+      console.error("[getUnitUserIds:department]", error.message);
+      return [];
+    }
+    return (data ?? []).map((u) => u.id as string);
+  }
+
+  if (params.assignmentType === "section" && params.sectionId) {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id")
+      .eq("is_active", true)
+      .eq("section_id", params.sectionId);
+    if (error) {
+      console.error("[getUnitUserIds:section]", error.message);
+      return [];
+    }
+    return (data ?? []).map((u) => u.id as string);
+  }
+
+  return [];
 }
 
 /** Notify relevant users when a DAK is assigned or reassigned. */
@@ -101,12 +142,23 @@ export async function notifyDakAssignment(
   const title = params.isReassign ? "DAK Reassigned" : "DAK Assigned";
   const body = `${params.dakNumber} ${params.isReassign ? "reassigned" : "assigned"} to ${params.targetLabel} by ${params.actorName}.`;
 
-  const districtIds = await getDistrictWideUserIds();
+  const [districtIds, unitIds] = await Promise.all([
+    getDistrictWideUserIds(),
+    getUnitUserIds({
+      assignmentType: params.assignmentType,
+      departmentId: params.departmentId,
+      sectionId: params.sectionId,
+    }),
+  ]);
+
   const recipientIds = uniqueUserIds([
     params.actorUserId,
     params.assignedToUserId,
     ...districtIds,
+    ...unitIds,
   ]);
+
+  if (!recipientIds.length) return;
 
   await sendNotifications(
     recipientIds.map((userId) => ({
@@ -119,6 +171,8 @@ export async function notifyDakAssignment(
         assignment_type: params.assignmentType,
         target_label: params.targetLabel,
         is_reassign: params.isReassign,
+        department_id: params.departmentId ?? null,
+        section_id: params.sectionId ?? null,
       },
     }))
   );

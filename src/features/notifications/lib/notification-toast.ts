@@ -35,12 +35,15 @@ export function showNotificationToast(notification: NotificationRecord): void {
 
   const title = TOAST_TITLES[notification.type] ?? notification.title;
   const isNewDak = notification.type === "dak_created";
+  const isAssigned =
+    notification.type === "dak_assigned" ||
+    notification.type === "dak_reassigned";
 
-  const toastFn = isNewDak ? toast.warning : toast;
+  const toastFn = isNewDak || isAssigned ? toast.warning : toast;
 
   toastFn(title, {
     description: notification.body,
-    duration: isNewDak ? 12000 : 5000,
+    duration: isNewDak || isAssigned ? 12000 : 5000,
     ...(isNewDak
       ? {
           action: {
@@ -52,6 +55,17 @@ export function showNotificationToast(notification: NotificationRecord): void {
             },
           },
         }
-      : {}),
+      : isAssigned
+        ? {
+            action: {
+              label: "Open",
+              onClick: () => {
+                window.location.href = notification.dakId
+                  ? `/dashboard/dak/${notification.dakId}`
+                  : "/dashboard/dak/assigned";
+              },
+            },
+          }
+        : {}),
   });
 }
