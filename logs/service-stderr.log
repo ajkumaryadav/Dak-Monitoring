@@ -1,0 +1,6 @@
+[fetchStorageStats] provider Error: [SupabaseStorage] list failed: fetch failed
+    at g (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\[root-of-the-server]__1zc6j7d._.js:1:3382)
+    at async j.list (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\[root-of-the-server]__1zc6j7d._.js:1:3657)
+    at async j.getUsage (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\[root-of-the-server]__1zc6j7d._.js:1:3988)
+    at async t (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\[root-of-the-server]__0iqysbk._.js:1:131542)
+    at async aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\src_094qgbx._.js:1:42084)
