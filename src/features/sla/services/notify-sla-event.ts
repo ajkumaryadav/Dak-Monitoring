@@ -1,38 +1,35 @@
 import {
+  CreateNotificationInput,
   createNotifications,
-  hasRecentNotification,
-  type CreateNotificationInput,
 } from "@/features/notifications/services/notifications";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/db/admin";
 
-const DISTRICT_WIDE_ROLES = ["collector", "acp", "adm"] as const;
+function formatSlaDate(val: unknown): string {
+  if (!val) return "";
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  return String(val).slice(0, 10);
+}
+
+const DISTRICT_WIDE_ROLE_SLUGS = ["collector", "adm", "acp"];
 
 async function getDistrictWideUserIds(): Promise<string[]> {
   const supabase = createAdminClient();
 
-  const { data: users, error } = await supabase
+  const { data: roles } = await supabase
+    .from("roles")
+    .select("id")
+    .in("slug", DISTRICT_WIDE_ROLE_SLUGS);
+
+  const roleIds = (roles ?? []).map((r: { id: string }) => r.id);
+  if (!roleIds.length) return [];
+
+  const { data: users } = await supabase
     .from("users")
-    .select("id, roles(slug)")
+    .select("id")
+    .in("role_id", roleIds)
     .eq("is_active", true);
 
-  if (error) {
-    console.error("[getDistrictWideUserIds]", error.message);
-    return [];
-  }
-
-  return (users ?? [])
-    .filter((user) => {
-      const roleRecord = user.roles;
-      const role = Array.isArray(roleRecord) ? roleRecord[0] : roleRecord;
-      const slug = role?.slug as string | undefined;
-      return (
-        slug &&
-        DISTRICT_WIDE_ROLES.includes(
-          slug as (typeof DISTRICT_WIDE_ROLES)[number]
-        )
-      );
-    })
-    .map((user) => user.id as string);
+  return (users ?? []).map((u: { id: string }) => u.id);
 }
 
 async function getDepartmentUserIds(
@@ -41,36 +38,51 @@ async function getDepartmentUserIds(
   if (!departmentId) return [];
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase
+
+  const { data: users } = await supabase
     .from("users")
-    .select("id, roles(slug)")
-    .eq("is_active", true)
-    .eq("department_id", departmentId);
+    .select("id")
+    .eq("department_id", departmentId)
+    .eq("is_active", true);
 
-  if (error) {
-    console.error("[getDepartmentUserIds]", error.message);
-    return [];
-  }
-
-  return (data ?? [])
-    .filter((user) => {
-      const roleRecord = user.roles;
-      const role = Array.isArray(roleRecord) ? roleRecord[0] : roleRecord;
-      return role?.slug === "department_user";
-    })
-    .map((user) => user.id as string);
+  return (users ?? []).map((u: { id: string }) => u.id);
 }
 
 function uniqueUserIds(ids: (string | null | undefined)[]): string[] {
-  return [...new Set(ids.filter(Boolean) as string[])];
+  return [...new Set(ids.filter(Boolean))] as string[];
 }
 
-async function sendNotifications(inputs: CreateNotificationInput[]): Promise<void> {
+async function hasRecentNotification(
+  userId: string,
+  dakId: string,
+  type: string,
+  withinHours = 24
+): Promise<boolean> {
+  const supabase = createAdminClient();
+  const since = new Date(
+    Date.now() - withinHours * 3600 * 1000
+  ).toISOString();
+
+  const { data } = await supabase
+    .from("notifications")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("dak_id", dakId)
+    .eq("type", type)
+    .gte("created_at", since)
+    .limit(1);
+
+  return (data?.length ?? 0) > 0;
+}
+
+async function sendNotifications(
+  inputs: CreateNotificationInput[]
+): Promise<void> {
   if (!inputs.length) return;
   try {
     await createNotifications(inputs);
-  } catch (error) {
-    console.error("[notify-sla-event]", error);
+  } catch (err) {
+    console.error("[notify-sla-event] Failed to send SLA notifications:", err);
   }
 }
 
@@ -78,7 +90,7 @@ interface NotifyDueTomorrowParams {
   dakId: string;
   dakNumber: string;
   subject: string;
-  slaDueDate: string | null;
+  slaDueDate: string | Date | null;
   assignedToUserId: string | null;
   departmentId: string | null;
 }
@@ -104,11 +116,13 @@ export async function notifySlaDueTomorrow(
     );
     if (alreadySent) continue;
 
+    const formattedDate = formatSlaDate(params.slaDueDate);
+
     inputs.push({
       userId,
       type: "sla_due_tomorrow",
       title: "SLA Due Tomorrow",
-      body: `${params.dakNumber} — ${params.subject} is due tomorrow (${params.slaDueDate?.slice(0, 10)}).`,
+      body: `${params.dakNumber} — ${params.subject} is due tomorrow (${formattedDate}).`,
       dakId: params.dakId,
       metadata: { sla_due_date: params.slaDueDate },
     });
@@ -121,7 +135,7 @@ interface NotifySlaExpiredParams {
   dakId: string;
   dakNumber: string;
   subject: string;
-  slaDueDate: string | null;
+  slaDueDate: string | Date | null;
   assignedToUserId: string | null;
   departmentId: string | null;
 }
@@ -149,11 +163,13 @@ export async function notifySlaExpired(
     );
     if (alreadySent) continue;
 
+    const formattedDate = formatSlaDate(params.slaDueDate);
+
     inputs.push({
       userId,
       type: "dak_overdue",
       title: "Overdue DAK Alert",
-      body: `${params.dakNumber} is past SLA due date (${params.slaDueDate?.slice(0, 10)}). ${params.subject}`,
+      body: `${params.dakNumber} is past SLA due date (${formattedDate}). ${params.subject}`,
       dakId: params.dakId,
       metadata: { sla_due_date: params.slaDueDate },
     });
@@ -167,71 +183,38 @@ interface NotifyEscalatedParams {
   dakNumber: string;
   subject: string;
   escalationLevel: number;
-  escalationLabel: string;
   assignedToUserId: string | null;
-  targetUserIds: string[];
+  departmentId: string | null;
 }
 
-/** Notify when a DAK is escalated to the next tier. */
+/** Notify when a DAK is escalated to higher authorities. */
 export async function notifySlaEscalated(
   params: NotifyEscalatedParams
 ): Promise<void> {
   const districtIds = await getDistrictWideUserIds();
+  const deptIds = await getDepartmentUserIds(params.departmentId);
   const recipientIds = uniqueUserIds([
     params.assignedToUserId,
-    ...params.targetUserIds,
+    ...deptIds,
     ...districtIds,
   ]);
 
   const inputs: CreateNotificationInput[] = [];
+  const levelText =
+    params.escalationLevel === 1
+      ? "ADM (Level 1)"
+      : "District Collector (Level 2)";
 
   for (const userId of recipientIds) {
-    const alreadySent = await hasRecentNotification(
-      userId,
-      params.dakId,
-      "dak_escalated",
-      24
-    );
-    if (alreadySent) continue;
-
     inputs.push({
       userId,
       type: "dak_escalated",
-      title: "DAK Escalated",
-      body: `${params.dakNumber} escalated to ${params.escalationLabel}. ${params.subject}`,
+      title: `DAK Escalated to ${levelText}`,
+      body: `${params.dakNumber} has been automatically escalated to ${levelText} due to SLA breach. ${params.subject}`,
       dakId: params.dakId,
-      metadata: {
-        escalation_level: params.escalationLevel,
-        escalation_label: params.escalationLabel,
-      },
+      metadata: { escalation_level: params.escalationLevel },
     });
   }
 
   await sendNotifications(inputs);
-}
-
-/** Sync due-tomorrow alerts for all active DAK. */
-export async function syncDueTomorrowNotifications(): Promise<void> {
-  const { getDueSoonDaks } = await import(
-    "@/features/sla/services/sla-escalation"
-  );
-  const { getEffectiveSlaDate } = await import(
-    "@/features/sla/lib/sla-display"
-  );
-
-  const entries = await getDueSoonDaks();
-
-  for (const entry of entries) {
-    await notifySlaDueTomorrow({
-      dakId: entry.id,
-      dakNumber: entry.dak_number,
-      subject: entry.subject,
-      slaDueDate: getEffectiveSlaDate({
-        slaDueDate: entry.sla_due_date,
-        dueDate: entry.due_date,
-      }),
-      assignedToUserId: entry.assigned_to,
-      departmentId: entry.department_id,
-    });
-  }
 }

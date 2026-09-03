@@ -2,7 +2,7 @@ import Link from "next/link";
 import { AlertTriangle, Bell, Flame, Zap } from "lucide-react";
 
 import { NotificationList } from "@/features/notifications/components/notification-list";
-import type { NotificationRecord } from "@/features/notifications/services/notifications";
+import type { NotificationRecord } from "@/features/notifications/lib/notification-models";
 import type { PriorityDakRow } from "@/features/notifications/services/notify-dak-event";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

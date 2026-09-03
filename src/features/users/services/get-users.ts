@@ -50,7 +50,7 @@ const USER_SELECT = `
   created_by,
   roles(slug, name),
   departments(name),
-  assignment_units:section_id(unit_name)
+  assignment_units:assignment_units(unit_name)
 `;
 
 function mapUserRow(row: Record<string, unknown>): UserListRecord {

@@ -1,18 +1,18 @@
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getDepartmentName, getSourceName } from "@/features/dak/lib/dak-display";
+import { createAdminClient } from "@/lib/db/admin";
 import { formatProcessStatusLabel } from "@/features/dak/lib/compliance-workflow";
 import { normalizeDakStatus } from "@/features/dak/lib/workflow";
-import type { DakListEntry } from "@/features/dak/services/get-dak-stats";
 import { getFilteredDakList } from "@/features/dak/services/get-dak-stats";
-import type { DakStatus } from "@/types";
+import {
+  type AtrComplianceEntry,
+  ATR_COMPLIANCE_STATUSES,
+  enrichAtrComplianceDisplay,
+} from "@/features/dak/lib/atr-compliance-models";
 
-const ATR_COMPLIANCE_STATUSES: DakStatus[] = ["atr_submitted", "pending_approval"];
-
-export interface AtrComplianceEntry extends DakListEntry {
-  submittedBy: string | null;
-  submittedAt: string | null;
-  statusLabel: string;
-}
+export {
+  type AtrComplianceEntry,
+  ATR_COMPLIANCE_STATUSES,
+  enrichAtrComplianceDisplay,
+};
 
 interface LatestSubmissionRow {
   dak_id: string;
@@ -73,12 +73,3 @@ export async function getAtrCompliancePendingDakIds(): Promise<string[]> {
   return entries.map((entry) => entry.id);
 }
 
-export function enrichAtrComplianceDisplay(entry: AtrComplianceEntry) {
-  return {
-    origin: getSourceName(entry.dak_sources),
-    department: getDepartmentName(entry.departments),
-    statusLabel: entry.statusLabel,
-  };
-}
-
-export { ATR_COMPLIANCE_STATUSES };

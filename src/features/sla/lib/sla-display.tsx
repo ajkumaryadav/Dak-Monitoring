@@ -4,14 +4,25 @@ import type { SlaHealthStatus } from "@/features/sla/lib/sla-types";
 import { cn } from "@/lib/utils";
 
 export interface SlaDateInput {
-  slaDueDate?: string | null;
-  dueDate?: string | null;
+  slaDueDate?: string | Date | null;
+  dueDate?: string | Date | null;
   escalationLevel?: number;
+}
+
+function toIsoDateString(val: unknown): string | null {
+  if (!val) return null;
+  if (val instanceof Date) {
+    return val.toISOString().slice(0, 10);
+  }
+  if (typeof val === "string") {
+    return val.slice(0, 10);
+  }
+  return String(val).slice(0, 10);
 }
 
 /** Resolve effective SLA date — prefers sla_due_date, falls back to due_date. */
 export function getEffectiveSlaDate(entry: SlaDateInput): string | null {
-  return entry.slaDueDate?.slice(0, 10) ?? entry.dueDate?.slice(0, 10) ?? null;
+  return toIsoDateString(entry.slaDueDate) ?? toIsoDateString(entry.dueDate) ?? null;
 }
 
 /** Compute SLA health for badge coloring. */
@@ -69,7 +80,8 @@ export function SlaStatusBadge({ entry, className }: SlaStatusBadgeProps) {
 }
 
 function addDaysToDateString(dateStr: string, days: number): string {
-  const [year, month, day] = dateStr.slice(0, 10).split("-").map(Number);
+  const cleanStr = toIsoDateString(dateStr) || new Date().toISOString().slice(0, 10);
+  const [year, month, day] = cleanStr.split("-").map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);

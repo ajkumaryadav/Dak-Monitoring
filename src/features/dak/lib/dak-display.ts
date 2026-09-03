@@ -34,27 +34,33 @@ const legacyStatusStyles: Record<string, string> = {
   escalated: statusStyles.pending,
 };
 
-export function formatDakDate(value: string | null | undefined) {
+export function formatDakDate(value: string | Date | null | undefined): string {
   if (!value) {
     return "—";
   }
 
   try {
-    return format(parseISO(value), "dd MMM yyyy");
+    if (value instanceof Date) {
+      return format(value, "dd MMM yyyy");
+    }
+    return format(parseISO(String(value)), "dd MMM yyyy");
   } catch {
-    return value;
+    return String(value);
   }
 }
 
-export function formatDakDateTime(value: string | null | undefined) {
+export function formatDakDateTime(value: string | Date | null | undefined): string {
   if (!value) {
     return "—";
   }
 
   try {
-    return format(parseISO(value), "dd MMM yyyy, h:mm a");
+    if (value instanceof Date) {
+      return format(value, "dd MMM yyyy, h:mm a");
+    }
+    return format(parseISO(String(value)), "dd MMM yyyy, h:mm a");
   } catch {
-    return value;
+    return String(value);
   }
 }
 

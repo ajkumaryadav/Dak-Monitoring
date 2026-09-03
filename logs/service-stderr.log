@@ -4,3 +4,320 @@
     at async j.getUsage (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\[root-of-the-server]__1zc6j7d._.js:1:3988)
     at async t (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\[root-of-the-server]__0iqysbk._.js:1:131542)
     at async aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\src_094qgbx._.js:1:42084)
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: Cannot find module 'D:\aj\Dak-Monitoring\.next\server\middleware-manifest.json'
+Require stack:
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\next.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\server\lib\start-server.js
+- D:\aj\Dak-Monitoring\node_modules\next\dist\cli\next-start.js
+    at ignore-listed frames {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\next.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\server\\lib\\start-server.js',
+    'D:\\aj\\Dak-Monitoring\\node_modules\\next\\dist\\cli\\next-start.js'
+  ]
+}
+Error handling upgrade request Error: Invariant: did not expect response writer to be written to for upgrade request
+    at ignore-listed frames
+⨯ Error: ENOENT: no such file or directory, open 'D:\aj\Dak-Monitoring\.next\required-server-files.json'
+    at ignore-listed frames {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\aj\\Dak-Monitoring\\.next\\required-server-files.json'
+}
+⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open 'D:\aj\Dak-Monitoring\.next\server\pages\500.html'
+    at ignore-listed frames
+⨯ Error: ENOENT: no such file or directory, open 'D:\aj\Dak-Monitoring\.next\required-server-files.json'
+    at ignore-listed frames {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\aj\\Dak-Monitoring\\.next\\required-server-files.json'
+}
+⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open 'D:\aj\Dak-Monitoring\.next\server\pages\500.html'
+    at ignore-listed frames
+⨯ Error: ENOENT: no such file or directory, open 'D:\aj\Dak-Monitoring\.next\required-server-files.json'
+    at ignore-listed frames {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\aj\\Dak-Monitoring\\.next\\required-server-files.json'
+}
+⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open 'D:\aj\Dak-Monitoring\.next\server\pages\500.html'
+    at ignore-listed frames

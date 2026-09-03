@@ -1,41 +1,34 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getSupabaseEnv } from "@/lib/supabase/env";
+import { AUTH_COOKIE_NAME, verifyOfflineToken } from "@/lib/auth/offline-token";
 import { isOperatorBlockedRoute } from "@/lib/auth/permissions";
-import { readRoleSlugFromProfile } from "@/lib/auth/role-slug";
+import { mapRoleSlug } from "@/lib/auth/role-slug";
 
 const PROTECTED_PREFIXES = ["/dashboard"];
 
-export async function middleware(request: NextRequest) {
-  const { url, anonKey, isConfigured } = getSupabaseEnv();
+function getRedirectUrl(request: NextRequest, targetPath: string): URL {
+  const host =
+    request.headers.get("x-forwarded-host") ||
+    request.headers.get("host");
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (request.url.startsWith("https") ? "https" : "http");
 
-  if (!isConfigured) {
-    return NextResponse.next({ request });
+  if (host && !host.startsWith("0.0.0.0")) {
+    return new URL(targetPath, `${proto}://${host}`);
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  const url = request.nextUrl.clone();
+  url.pathname = targetPath;
+  if (url.hostname === "0.0.0.0") {
+    url.hostname = "localhost";
+  }
+  return url;
+}
 
-  const supabase = createServerClient(url, anonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          supabaseResponse.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function middleware(request: NextRequest) {
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  const user = token ? verifyOfflineToken(token) : null;
 
   const { pathname } = request.nextUrl;
   const isProtected = PROTECTED_PREFIXES.some(
@@ -43,41 +36,29 @@ export async function middleware(request: NextRequest) {
   );
 
   if (!user && isProtected) {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/login";
+    const loginUrl = getRedirectUrl(request, "/login");
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
   if (user && isProtected && isOperatorBlockedRoute("dak_operator", pathname)) {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("roles(slug)")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const role = readRoleSlugFromProfile(
-      profile?.roles as { slug?: string } | { slug?: string }[] | null
-    );
-
+    const role = mapRoleSlug(user.user_metadata?.role);
     if (isOperatorBlockedRoute(role, pathname)) {
-      const deniedUrl = request.nextUrl.clone();
-      deniedUrl.pathname = "/unauthorized";
+      const deniedUrl = getRedirectUrl(request, "/unauthorized");
       return NextResponse.redirect(deniedUrl);
     }
   }
 
   if (user && (pathname === "/login" || pathname === "/")) {
     if (request.nextUrl.searchParams.get("signed_out") === "1") {
-      return supabaseResponse;
+      return NextResponse.next({ request });
     }
 
-    const dashboardUrl = request.nextUrl.clone();
-    dashboardUrl.pathname = "/dashboard";
+    const dashboardUrl = getRedirectUrl(request, "/dashboard");
     return NextResponse.redirect(dashboardUrl);
   }
 
-  return supabaseResponse;
+  return NextResponse.next({ request });
 }
 
 export const config = {

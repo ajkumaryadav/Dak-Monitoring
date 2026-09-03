@@ -5,8 +5,10 @@ import { Bell, Loader2 } from "lucide-react";
 
 import { useNotifications } from "@/features/notifications/components/notification-realtime-provider";
 import { NotificationList } from "@/features/notifications/components/notification-list";
-import { canViewAllNotifications } from "@/features/notifications/services/notifications";
-import type { NotificationRecord } from "@/features/notifications/services/notifications";
+import {
+  canViewAllNotifications,
+  type NotificationRecord,
+} from "@/features/notifications/lib/notification-models";
 import { Button } from "@/components/ui/button";
 import type { SessionUser } from "@/types";
 

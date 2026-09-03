@@ -1,35 +1,24 @@
 import type { NotificationType } from "@/features/notifications/lib/notification-types";
 import { filterNotificationsForRole } from "@/features/notifications/lib/operator-notifications";
 import { hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/db/admin";
 import type { SessionUser } from "@/types";
 
-export interface NotificationRecord {
-  id: string;
-  userId: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  dakId: string | null;
-  metadata: Record<string, unknown>;
-  readAt: string | null;
-  createdAt: string;
-  dakNumber?: string;
-}
+import {
+  mapNotificationRow,
+  canViewAllNotifications,
+  type NotificationRecord,
+  type CreateNotificationInput,
+  type GetNotificationsOptions,
+} from "@/features/notifications/lib/notification-models";
 
-export interface CreateNotificationInput {
-  userId: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  dakId?: string;
-  metadata?: Record<string, unknown>;
-}
-
-export interface GetNotificationsOptions {
-  limit?: number;
-  unreadOnly?: boolean;
-}
+export {
+  mapNotificationRow,
+  canViewAllNotifications,
+  type NotificationRecord,
+  type CreateNotificationInput,
+  type GetNotificationsOptions,
+};
 
 const NOTIFICATION_SELECT = `
   id,
@@ -62,7 +51,7 @@ function logNotificationsTableMissing(context: string): void {
   if (notificationsTableMissingLogged) return;
   notificationsTableMissingLogged = true;
   console.warn(
-    `[${context}] notifications table is not available. Run supabase/migrations/000011_notifications.sql in the Supabase SQL Editor.`
+    `[${context}] notifications table is not available.`
   );
 }
 
@@ -77,27 +66,7 @@ function logNotificationError(
   console.error(`[${context}]`, error.message ?? error);
 }
 
-/** Map a notifications table row to app record (server + realtime). */
-export function mapNotificationRow(row: Record<string, unknown>): NotificationRecord {
-  const content =
-    (row.body as string | null | undefined) ??
-    (row.message as string | null | undefined) ??
-    "";
-
-  return {
-    id: row.id as string,
-    userId: row.user_id as string,
-    type: row.type as NotificationType,
-    title: row.title as string,
-    body: content,
-    dakId: (row.dak_id as string | null) ?? null,
-    metadata: (row.metadata as Record<string, unknown>) ?? {},
-    readAt: (row.read_at as string | null) ?? null,
-    createdAt: row.created_at as string,
-  };
-}
-
-/** Map app payload to DB row — supports legacy `message` column. */
+/** Map app payload to DB row — supports legacy \`message\` column. */
 function toNotificationInsertRow(input: CreateNotificationInput) {
   return {
     user_id: input.userId,
@@ -141,13 +110,6 @@ async function attachDakNumbers(
       ? { ...record, dakNumber: dakNumbers.get(record.dakId) }
       : record
   );
-}
-
-import { COLLECTOR_DASHBOARD_ROLES } from "@/lib/auth/permissions";
-
-/** Collector, ACP, and ADM see district-wide notifications. */
-export function canViewAllNotifications(user: SessionUser): boolean {
-  return COLLECTOR_DASHBOARD_ROLES.includes(user.role);
 }
 
 /** Insert a notification row (realtime-ready via postgres_changes on notifications). */

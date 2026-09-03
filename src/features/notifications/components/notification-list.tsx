@@ -24,7 +24,7 @@ import {
   NOTIFICATION_TYPE_LABELS,
   type NotificationType,
 } from "@/features/notifications/lib/notification-types";
-import type { NotificationRecord } from "@/features/notifications/services/notifications";
+import type { NotificationRecord } from "@/features/notifications/lib/notification-models";
 import { formatDakDateTime } from "@/features/dak/lib/dak-display";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

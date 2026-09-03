@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { syncUserProfile } from "@/features/auth/actions/sync-user";
 import { createActivityLog } from "@/features/activity/services/activity-log";
 import { loginSchema } from "@/features/auth/schemas/login-schema";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/db/client";
 
 export type LoginFormState = {
   errors?: {
@@ -40,19 +40,27 @@ export async function loginAction(
     return { message: error.message };
   }
 
-  await syncUserProfile();
+  try {
+    await syncUserProfile();
+  } catch (syncErr: any) {
+    console.warn("[Login] syncUserProfile non-fatal warning:", syncErr?.message);
+  }
 
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
+  try {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
 
-  if (authUser) {
-    await createActivityLog({
-      userId: authUser.id,
-      action: "Login",
-      module: "auth",
-      description: `Signed in as ${parsed.data.email}`,
-    });
+    if (authUser) {
+      await createActivityLog({
+        userId: authUser.id,
+        action: "Login",
+        module: "auth",
+        description: `Signed in as ${parsed.data.email}`,
+      });
+    }
+  } catch (logErr: any) {
+    console.warn("[Login] createActivityLog non-fatal warning:", logErr?.message);
   }
 
   redirect("/dashboard");

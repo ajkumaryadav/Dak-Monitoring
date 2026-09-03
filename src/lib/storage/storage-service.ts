@@ -1,6 +1,5 @@
 import { getStorageConfig } from "@/lib/storage/config";
 import { LocalStorageProvider } from "@/lib/storage/providers/local-storage-provider";
-import { SupabaseStorageProvider } from "@/lib/storage/providers/supabase-storage-provider";
 import type {
   StorageDownloadResult,
   StorageListOptions,
@@ -21,18 +20,15 @@ export function getStorageProvider(): StorageProvider {
     case "local":
       cachedProvider = new LocalStorageProvider(config.localRoot);
       break;
-    case "supabase":
-      cachedProvider = new SupabaseStorageProvider();
-      break;
     case "minio":
     case "s3":
     case "azure":
     case "gcs":
       throw new Error(
-        `Storage provider "${config.provider}" is not enabled yet. Use supabase or local.`
+        `Storage provider "${config.provider}" is not enabled yet. Use local storage.`
       );
     default:
-      cachedProvider = new SupabaseStorageProvider();
+      cachedProvider = new LocalStorageProvider(config.localRoot);
   }
 
   return cachedProvider;

@@ -21,8 +21,8 @@ import {
   getStatusStyle,
   priorityStyles,
 } from "@/features/dak/lib/dak-display";
-import type { AtrComplianceEntry } from "@/features/dak/services/get-atr-compliance-received";
-import { enrichAtrComplianceDisplay } from "@/features/dak/services/get-atr-compliance-received";
+import type { AtrComplianceEntry } from "@/features/dak/lib/atr-compliance-models";
+import { enrichAtrComplianceDisplay } from "@/features/dak/lib/atr-compliance-models";
 import { cn } from "@/lib/utils";
 
 interface AtrComplianceTableProps {

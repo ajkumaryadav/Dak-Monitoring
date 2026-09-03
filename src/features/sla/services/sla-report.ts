@@ -15,7 +15,7 @@ import {
 } from "@/features/sla/services/sla-escalation";
 import { PENDING_DB_STATUSES } from "@/features/reports/services/dashboard-analytics";
 import { isDepartmentDashboardRole } from "@/lib/auth/permissions";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/db/admin";
 import type { SessionUser } from "@/types";
 import type { PriorityLevel } from "@/types";
 
@@ -49,6 +49,12 @@ function daysBetween(from: string, to: string): number {
   const start = new Date(`${from.slice(0, 10)}T00:00:00Z`).getTime();
   const end = new Date(`${to.slice(0, 10)}T00:00:00Z`).getTime();
   return Math.round((end - start) / (1000 * 60 * 60 * 24));
+}
+
+function toIsoDate(val: unknown): string | null {
+  if (!val) return null;
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  return String(val).slice(0, 10);
 }
 
 /** SLA compliance report — active DAK with compliance status. */
@@ -165,16 +171,17 @@ export async function fetchSlaOverdueReport(
   const overdue = await checkOverdueDaks(departmentScope);
   const today = getDistrictDateString();
 
-  return overdue.map((entry) => ({
-    ...entry,
-    department_name: "—",
-    officer_name: "—",
-    sla_days_allowed: getDefaultSlaDays(entry.priority),
-    is_compliant: false,
-    days_remaining: entry.sla_due_date
-      ? daysBetween(today, entry.sla_due_date.slice(0, 10))
-      : null,
-  }));
+  return overdue.map((entry) => {
+    const isoDate = toIsoDate(entry.sla_due_date);
+    return {
+      ...entry,
+      department_name: "—",
+      officer_name: "—",
+      sla_days_allowed: getDefaultSlaDays(entry.priority),
+      is_compliant: false,
+      days_remaining: isoDate ? daysBetween(today, isoDate) : null,
+    };
+  });
 }
 
 export async function fetchSlaDashboardData(user: SessionUser) {

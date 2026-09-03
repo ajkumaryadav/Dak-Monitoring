@@ -18,15 +18,24 @@ export default async function DashboardLayout({
 }>) {
   const user = await requirePermission(PERMISSIONS.DASHBOARD);
 
-  await syncUserProfile();
-  await runSlaMonitor();
+  try {
+    await syncUserProfile();
+  } catch (err) {
+    console.warn("[DashboardLayout] syncUserProfile warning:", err);
+  }
+
+  try {
+    await runSlaMonitor();
+  } catch (err) {
+    console.warn("[DashboardLayout] runSlaMonitor warning:", err);
+  }
 
   const isCollectorQueueRole =
     user.role === "collector" || user.role === "adm";
 
   const [notifications, unreadCount, atrPendingDakIds] = await Promise.all([
-    getUserNotifications(user, { limit: 100 }),
-    getUnreadNotificationCount(user),
+    getUserNotifications(user, { limit: 100 }).catch(() => []),
+    getUnreadNotificationCount(user).catch(() => 0),
     isCollectorQueueRole
       ? getAtrCompliancePendingDakIds().catch((error) => {
           console.error("[dashboard layout] ATR compliance queue:", error);
@@ -49,4 +58,3 @@ export default async function DashboardLayout({
     </>
   );
 }
-

@@ -3,7 +3,7 @@ import {
   type DakHistoryEventType,
 } from "@/features/audit/lib/history-events";
 import { isDepartmentDashboardRole, isOperatorDashboardRole, isSectionDashboardRole } from "@/lib/auth/permissions";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/db/admin";
 import type { SessionUser } from "@/types";
 
 export interface DakHistoryEntry {

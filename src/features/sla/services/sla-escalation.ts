@@ -9,7 +9,7 @@ import { getEffectiveSlaDate } from "@/features/sla/lib/sla-display";
 import type { SlaDakRow } from "@/features/sla/lib/sla-types";
 import { notifySlaEscalated, notifySlaExpired } from "@/features/sla/services/notify-sla-event";
 import { PENDING_DB_STATUSES } from "@/features/reports/services/dashboard-analytics";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@/lib/db/admin";
 import type { PriorityLevel } from "@/types";
 
 const SLA_SELECT =
@@ -157,40 +157,6 @@ export async function getEscalatedDaks(
   );
 }
 
-async function getUsersForEscalationLevel(
-  level: number,
-  departmentId: string | null
-): Promise<string[]> {
-  const roles = ESCALATION_NOTIFY_ROLES[level];
-  if (!roles?.length) return [];
-
-  const supabase = createAdminClient();
-  const { data: users, error } = await supabase
-    .from("users")
-    .select("id, department_id, roles(slug)")
-    .eq("is_active", true);
-
-  if (error) {
-    console.error("[getUsersForEscalationLevel]", error.message);
-    return [];
-  }
-
-  return (users ?? [])
-    .filter((user) => {
-      const roleRecord = user.roles;
-      const role = Array.isArray(roleRecord) ? roleRecord[0] : roleRecord;
-      const slug = role?.slug as string | undefined;
-      if (!slug || !roles.includes(slug)) return false;
-
-      if (level === 1 && departmentId) {
-        return user.department_id === departmentId;
-      }
-
-      return true;
-    })
-    .map((user) => user.id as string);
-}
-
 export interface EscalateDakResult {
   success: boolean;
   message?: string;
@@ -269,11 +235,6 @@ export async function escalateDak(
     });
   }
 
-  const recipientIds = await getUsersForEscalationLevel(
-    newLevel,
-    entry.department_id
-  );
-
   await notifySlaExpired({
     dakId: entry.id,
     dakNumber: entry.dak_number,
@@ -291,9 +252,8 @@ export async function escalateDak(
     dakNumber: entry.dak_number,
     subject: entry.subject,
     escalationLevel: newLevel,
-    escalationLabel: getEscalationLevelLabel(newLevel),
     assignedToUserId: entry.assigned_to,
-    targetUserIds: recipientIds,
+    departmentId: entry.department_id,
   });
 
   return { success: true, newLevel };
@@ -317,7 +277,7 @@ export async function escalateOverdueDaks(): Promise<number> {
   return escalated;
 }
 
-async function canEscalateDakToday(dakId: string): Promise<boolean> {
+export async function canEscalateDakToday(dakId: string): Promise<boolean> {
   const supabase = createAdminClient();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
@@ -335,4 +295,28 @@ async function canEscalateDakToday(dakId: string): Promise<boolean> {
   }
 
   return !data?.length;
+}
+
+/** Retrieve candidate DAK items due soon, overdue, and eligible for escalation. */
+export async function getSlaEscalationCandidates(): Promise<{
+  dueTomorrow: SlaDakRow[];
+  overdue: SlaDakRow[];
+  toEscalate: SlaDakRow[];
+}> {
+  const [dueTomorrow, overdue] = await Promise.all([
+    getDueSoonDaks(),
+    checkOverdueDaks(),
+  ]);
+
+  const toEscalate: SlaDakRow[] = [];
+  for (const entry of overdue) {
+    if (entry.escalation_level < MAX_ESCALATION_LEVEL) {
+      const canEscalate = await canEscalateDakToday(entry.id);
+      if (canEscalate) {
+        toEscalate.push(entry);
+      }
+    }
+  }
+
+  return { dueTomorrow, overdue, toEscalate };
 }

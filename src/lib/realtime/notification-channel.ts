@@ -1,16 +1,4 @@
-import type {
-  AuthChangeEvent,
-  RealtimeChannel,
-  RealtimePostgresInsertPayload,
-  Session,
-} from "@supabase/supabase-js";
-
-import { NOTIFICATIONS_REALTIME_CHANNEL } from "@/features/notifications/lib/notification-types";
-import {
-  mapNotificationRow,
-  type NotificationRecord,
-} from "@/features/notifications/services/notifications";
-import { createClient } from "@/lib/supabase/client";
+import type { NotificationRecord } from "@/features/notifications/lib/notification-models";
 
 export interface NotificationChannelOptions {
   userId: string;
@@ -20,106 +8,54 @@ export interface NotificationChannelOptions {
 }
 
 export interface NotificationChannelHandle {
-  channel: RealtimeChannel | null;
   unsubscribe: () => void;
 }
 
-let channelErrorLogged = false;
-
 /**
- * Subscribe to live notification INSERT events via Supabase Realtime.
- * Waits for an authenticated browser session before subscribing.
+ * Polls for live notification updates periodically in the background
+ * without external websocket or cloud dependencies.
  */
 export function subscribeToNotificationInserts(
   options: NotificationChannelOptions
 ): NotificationChannelHandle {
-  const supabase = createClient();
-  const scope = options.viewAll ? "district" : "own";
-  const channelName = `${NOTIFICATIONS_REALTIME_CHANNEL}:${options.userId}:${scope}`;
-
-  let activeChannel: RealtimeChannel | null = null;
+  let timer: NodeJS.Timeout | null = null;
   let disposed = false;
+  let lastCheckedTime = new Date().toISOString();
 
-  const changeConfig: {
-    event: "INSERT";
-    schema: "public";
-    table: "notifications";
-    filter?: string;
-  } = {
-    event: "INSERT",
-    schema: "public",
-    table: "notifications",
-  };
-
-  if (!options.viewAll) {
-    changeConfig.filter = `user_id=eq.${options.userId}`;
-  }
-
-  const attachChannel = () => {
-    if (disposed || activeChannel) return;
-
-    activeChannel = supabase
-      .channel(channelName)
-      .on("postgres_changes", changeConfig, (payload: RealtimePostgresInsertPayload<{ [key: string]: unknown }>) => {
-        const row = payload.new as Record<string, unknown> | null;
-        if (!row?.id) return;
-
-        options.onInsert(mapNotificationRow(row));
-      })
-      .subscribe((status: string, err?: Error) => {
-        if (status === "SUBSCRIBED") {
-          channelErrorLogged = false;
-          return;
-        }
-
-        if (status === "CHANNEL_ERROR" && !channelErrorLogged) {
-          channelErrorLogged = true;
-          console.warn(
-            "[subscribeToNotificationInserts] Realtime channel unavailable — live notification toasts disabled. " +
-              "Run supabase/migrations/000023_notifications_realtime.sql (or 000037_notifications_realtime_repair.sql) in the Supabase SQL Editor.",
-            err?.message ?? ""
-          );
-        }
-      });
-  };
-
-  const start = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (disposed || !session) return;
-    attachChannel();
-  };
-
-  void start();
-
-  const {
-    data: { subscription: authSubscription },
-  } = supabase.auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
+  const poll = async () => {
     if (disposed) return;
 
-    if (session) {
-      attachChannel();
-      return;
+    try {
+      const res = await fetch(
+        `/api/notifications/poll?userId=${encodeURIComponent(options.userId)}&since=${encodeURIComponent(lastCheckedTime)}&viewAll=${options.viewAll ? "1" : "0"}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.notifications && Array.isArray(data.notifications)) {
+          for (const notification of data.notifications) {
+            options.onInsert(notification);
+          }
+        }
+        if (data.timestamp) {
+          lastCheckedTime = data.timestamp;
+        }
+      }
+    } catch {
+      // Ignore background network polling errors
     }
+  };
 
-    if (activeChannel) {
-      void supabase.removeChannel(activeChannel);
-      activeChannel = null;
-    }
-  });
+  // Poll every 15 seconds
+  timer = setInterval(() => {
+    void poll();
+  }, 15000);
 
   return {
-    get channel() {
-      return activeChannel;
-    },
     unsubscribe: () => {
       disposed = true;
-      authSubscription.unsubscribe();
-      if (activeChannel) {
-        void supabase.removeChannel(activeChannel);
-        activeChannel = null;
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
       }
     },
   };

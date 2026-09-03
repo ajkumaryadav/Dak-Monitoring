@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 import { getRecentActivity } from "@/features/audit/services/dak-history";
 import {
@@ -32,7 +33,7 @@ export default async function DashboardPage() {
   const user = await getSessionUser();
 
   if (!user) {
-    return null;
+    redirect("/login");
   }
 
   const isOperator = isOperatorDashboardRole(user.role);

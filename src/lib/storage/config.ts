@@ -1,7 +1,6 @@
 /** Storage provider configuration — never hard-code paths in business logic. */
 
 export type StorageProviderKind =
-  | "supabase"
   | "local"
   | "minio"
   | "s3"
@@ -27,7 +26,7 @@ function env(name: string, fallback: string): string {
 export function getStorageConfig(): StorageConfig {
   const provider = env(
     "STORAGE_PROVIDER",
-    "supabase"
+    "local"
   ) as StorageProviderKind;
 
   return {

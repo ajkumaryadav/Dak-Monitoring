@@ -20,7 +20,7 @@ import { showNotificationToast } from "@/features/notifications/lib/notification
 import {
   canViewAllNotifications,
   type NotificationRecord,
-} from "@/features/notifications/services/notifications";
+} from "@/features/notifications/lib/notification-models";
 import { subscribeToNotificationInserts } from "@/lib/realtime/notification-channel";
 import type { SessionUser } from "@/types";
 

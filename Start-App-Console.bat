@@ -8,7 +8,7 @@ cd /d "%APP_DIR%"
 echo ====================================================
 echo  Starting Dak-Monitoring in Interactive Console Mode
 echo  Directory: %APP_DIR%
-echo  URL:       http://localhost:3050 (or http://10.70.233.176:3050)
+echo  URL:       http://localhost:3050 (or http://10.70.12.73:3050)
 echo ====================================================
 echo.
 

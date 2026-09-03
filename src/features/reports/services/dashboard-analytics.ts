@@ -32,6 +32,16 @@ const PENDING_DB_STATUSES = [
   "escalated",
 ];
 
+function toIsoDate(val: unknown): string | null {
+  if (!val) return null;
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  return String(val).slice(0, 10);
+}
+
+function toIsoDateString(val: unknown): string {
+  return toIsoDate(val) ?? "";
+}
+
 export interface DashboardStatSummary {
   total: number;
   pending: number;
@@ -545,10 +555,11 @@ function buildScopedStats(
       pendingActions += 1;
     }
     if (isCompletedDbStatus(status)) completed += 1;
+    const dueIso = toIsoDate(entry.due_date);
     if (
       includeOverdue &&
-      entry.due_date &&
-      entry.due_date < today &&
+      dueIso &&
+      dueIso < today &&
       !isCompletedDbStatus(status)
     ) {
       overdue += 1;
@@ -574,7 +585,7 @@ async function fetchOperatorDashboardAnalytics(
   const monthPrefix = today.slice(0, 7);
 
   for (const entry of entries) {
-    const createdDate = entry.created_at.slice(0, 10);
+    const createdDate = toIsoDateString(entry.created_at);
     if (createdDate === today) todayEntries += 1;
     if (createdDate.startsWith(monthPrefix)) monthEntries += 1;
   }
@@ -664,7 +675,7 @@ async function fetchCollectorDashboardAnalytics(): Promise<CollectorDashboardDat
 
   for (const entry of entries) {
     const status = entry.status;
-    const due = entry.due_date?.slice(0, 10);
+    const due = toIsoDate(entry.due_date);
     const isDone = isCompletedDbStatus(status);
 
     if (isPendingDbStatus(status)) {

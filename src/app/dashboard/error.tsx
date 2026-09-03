@@ -38,7 +38,7 @@ export default function DashboardError({
       </CardHeader>
       <CardContent className="flex gap-2">
         <Button onClick={reset}>Try again</Button>
-        <Button variant="outline" render={<Link href="/login" />}>
+        <Button variant="outline" nativeButton={false} render={<Link href="/login" />}>
           Back to login
         </Button>
       </CardContent>
