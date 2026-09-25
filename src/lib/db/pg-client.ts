@@ -1,34 +1,50 @@
-﻿import postgres from "postgres";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import postgres from "postgres";
 
 declare global {
   // eslint-disable-next-line no-var
   var __pgSql: postgres.Sql | undefined;
 }
 
-function getDatabaseUrl(): string {
-  let url =
-    process.env.DATABASE_URL?.trim() ||
-    "postgresql://postgres:12345@127.0.0.1:5433/dak_monitoring";
+function loadEnvFiles() {
+  if (typeof process === "undefined" || !process.cwd) return;
+  // If process.env.DATABASE_URL is already provided (e.g. by Next.js or system environment), keep it
+  if (process.env.DATABASE_URL) return;
 
-  try {
-    const parsed = new URL(url);
-    if (
-      parsed.hostname === "10.70.233.176" ||
-      parsed.hostname === "10.70.12.73" ||
-      parsed.hostname === "localhost"
-    ) {
-      parsed.hostname = "127.0.0.1";
-    }
-    // Standardize local port to 5433 if port was default 5432
-    if (parsed.port === "5432" && !process.env.FORCE_PORT_5432) {
-      parsed.port = "5433";
-    }
-    url = parsed.toString();
-  } catch {
-    // Ignore invalid url format and return as is
+  const isProd = process.env.NODE_ENV === "production";
+  // Priority: .env.local (in dev), .env.production (in prod), .env
+  const files = isProd ? [".env.production", ".env"] : [".env.local", ".env.development", ".env.production", ".env"];
+  for (const envFile of files) {
+    try {
+      const envPath = resolve(process.cwd(), envFile);
+      if (existsSync(envPath)) {
+        const raw = readFileSync(envPath, "utf8");
+        for (const line of raw.split(/\r?\n/)) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith("#")) {
+            const eqIdx = trimmed.indexOf("=");
+            if (eqIdx > 0) {
+              const key = trimmed.slice(0, eqIdx).trim();
+              const val = trimmed.slice(eqIdx + 1).trim().replace(/^["'](.*)["']$/, "$1");
+              if (!process.env[key]) {
+                process.env[key] = val;
+              }
+            }
+          }
+        }
+      }
+    } catch {}
   }
+}
 
-  return url;
+function getDatabaseUrl(): string {
+  loadEnvFiles();
+  const envUrl = process.env.DATABASE_URL?.trim();
+  if (envUrl) {
+    return envUrl;
+  }
+  return "postgresql://postgres:12345@127.0.0.1:5432/dak_monitoring";
 }
 
 export function getPgClient(): postgres.Sql {
@@ -47,9 +63,7 @@ export function getPgClient(): postgres.Sql {
     },
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    global.__pgSql = client;
-  }
+  global.__pgSql = client;
 
   return client;
 }

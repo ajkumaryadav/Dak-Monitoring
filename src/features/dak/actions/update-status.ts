@@ -164,14 +164,12 @@ export async function updateDakStatus(
     revalidateDakPaths(parsed.data.dakId);
 
     return { success: true };
-  } catch (error) {
-    console.error("[updateDakStatus]", error);
+  } catch (error: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("updateDakStatus", error);
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred while updating status.",
+      message: formatSafeErrorMessage(error, "An unexpected error occurred while updating status."),
     };
   }
 }

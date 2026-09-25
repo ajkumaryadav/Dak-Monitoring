@@ -32,10 +32,11 @@ export type TransferDakResult =
 export async function transferDak(
   input: z.infer<typeof transferSchema>
 ): Promise<TransferDakResult> {
-  const user = await getSessionUser();
-  if (!user) {
-    return { success: false, message: "Unauthorized." };
-  }
+  try {
+    const user = await getSessionUser();
+    if (!user) {
+      return { success: false, message: "Unauthorized." };
+    }
 
   const parsed = transferSchema.safeParse(input);
   if (!parsed.success) {
@@ -149,22 +150,33 @@ export async function transferDak(
     actorName: user.name,
   });
 
-  revalidatePath(`/dashboard/dak/${parsed.data.dakId}`);
-  revalidatePath("/dashboard/dak/pending");
-  revalidatePath("/dashboard/dak/assigned");
-  return { success: true };
+    revalidatePath(`/dashboard/dak/${parsed.data.dakId}`);
+    revalidatePath("/dashboard/dak/pending");
+    revalidatePath("/dashboard/dak/assigned");
+    return { success: true };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("transferDak", err);
+    return { success: false, message: formatSafeErrorMessage(err, "Failed to perform transfer action.") };
+  }
 }
 
 export async function transferDakFormAction(
   _prev: { message?: string },
   formData: FormData
 ) {
-  const toDept = formData.get("toDepartmentId");
-  const result = await transferDak({
-    dakId: formData.get("dakId") as string,
-    action: formData.get("action") as TransferAction,
-    toDepartmentId: toDept ? (toDept as string) : undefined,
-    remarks: formData.get("remarks") as string,
-  });
-  return result.success ? {} : { message: result.message };
+  try {
+    const toDept = formData.get("toDepartmentId");
+    const result = await transferDak({
+      dakId: formData.get("dakId") as string,
+      action: formData.get("action") as TransferAction,
+      toDepartmentId: toDept ? (toDept as string) : undefined,
+      remarks: formData.get("remarks") as string,
+    });
+    return result.success ? {} : { message: result.message };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("transferDakFormAction", err);
+    return { message: formatSafeErrorMessage(err, "Failed to submit transfer.") };
+  }
 }

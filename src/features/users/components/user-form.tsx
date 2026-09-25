@@ -87,7 +87,7 @@ export function UserForm({ mode, options, user }: UserFormProps) {
   const isSuccess = state.success === true;
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} autoComplete="off" className="space-y-6">
       {mode === "edit" && user && (
         <input type="hidden" name="userId" value={user.id} />
       )}
@@ -108,7 +108,7 @@ export function UserForm({ mode, options, user }: UserFormProps) {
 
       <div className="grid gap-5 md:grid-cols-2">
         <div className="grid gap-2">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">Full Name</Label>
           <input
             id="name"
             name="name"
@@ -118,18 +118,19 @@ export function UserForm({ mode, options, user }: UserFormProps) {
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Official Email</Label>
           <input
             id="email"
             name="email"
             type="email"
             required
+            autoComplete="off"
             defaultValue={user?.email ?? ""}
             className={inputClassName}
           />
         </div>
         <div className="grid gap-2">
-          <Label htmlFor="mobile">Mobile</Label>
+          <Label htmlFor="mobile">Mobile Number</Label>
           <input
             id="mobile"
             name="mobile"
@@ -163,6 +164,7 @@ export function UserForm({ mode, options, user }: UserFormProps) {
               id="password"
               name="password"
               type="password"
+              autoComplete="off"
               required
               minLength={8}
               className={inputClassName}

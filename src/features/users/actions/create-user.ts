@@ -14,6 +14,7 @@ import { notifyUserCreated } from "@/features/users/services/notify-user-event";
 import { canManageUsers } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
 
 export type CreateUserResult =
   | { success: true; userId: string }
@@ -67,7 +68,7 @@ export async function createUser(
     if (authError || !authUser.user) {
       return {
         success: false,
-        message: authError?.message ?? "Failed to create auth user.",
+        message: formatSafeErrorMessage(authError, "Failed to create user account."),
       };
     }
 
@@ -92,7 +93,7 @@ export async function createUser(
       await admin.auth.admin.deleteUser(authUser.user.id);
       return {
         success: false,
-        message: profileError.message ?? "Failed to save user profile.",
+        message: formatSafeErrorMessage(profileError, "Failed to save user profile."),
       };
     }
 
@@ -117,11 +118,11 @@ export async function createUser(
 
     revalidateUserPaths(authUser.user.id);
     return { success: true, userId: authUser.user.id };
-  } catch (error) {
-    console.error("[createUser]", error);
+  } catch (error: unknown) {
+    logSafeError("createUser", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Unexpected error creating user.",
+      message: formatSafeErrorMessage(error, "Unexpected error creating user."),
     };
   }
 }
@@ -130,24 +131,32 @@ export async function createUserFormAction(
   _prev: CreateUserFormState,
   formData: FormData
 ): Promise<CreateUserFormState> {
-  const result = await createUser({
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-    mobile: (formData.get("mobile") as string) ?? "",
-    designation: formData.get("designation") as string,
-    employeeCode: (formData.get("employeeCode") as string) ?? "",
-    password: formData.get("password") as string,
-    role: formData.get("role") as CreateUserInput["role"],
-    departmentId: (formData.get("departmentId") as string) ?? "",
-    sectionId: (formData.get("sectionId") as string) ?? "",
-    isActive:
-      formData.get("isActive") === "on" ||
-      formData.get("isActive") === "true",
-  });
+  try {
+    const result = await createUser({
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      mobile: (formData.get("mobile") as string) ?? "",
+      designation: formData.get("designation") as string,
+      employeeCode: (formData.get("employeeCode") as string) ?? "",
+      password: formData.get("password") as string,
+      role: formData.get("role") as CreateUserInput["role"],
+      departmentId: (formData.get("departmentId") as string) ?? "",
+      sectionId: (formData.get("sectionId") as string) ?? "",
+      isActive:
+        formData.get("isActive") === "on" ||
+        formData.get("isActive") === "true",
+    });
 
-  if (!result.success) {
-    return { success: false, message: result.message };
+    if (!result.success) {
+      return { success: false, message: result.message };
+    }
+
+    redirect("/dashboard/admin/users?created=1");
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err && typeof (err as any).digest === "string" && (err as any).digest.startsWith("NEXT_REDIRECT")) {
+      throw err;
+    }
+    logSafeError("createUserFormAction", err);
+    return { success: false, message: formatSafeErrorMessage(err, "Failed to create user.") };
   }
-
-  redirect("/dashboard/admin/users?created=1");
 }

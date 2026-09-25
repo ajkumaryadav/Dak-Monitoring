@@ -8,6 +8,7 @@ import {
 import { fetchReportRowsForExport } from "@/features/reports/services/report-export-data";
 import type { ReportExportKind } from "@/lib/auth/report-permissions";
 import { getSessionUser } from "@/lib/session";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
 
 export type ReportRowsResult =
   | { success: true; rows: PendingReportRow[] }
@@ -17,13 +18,18 @@ export type ReportRowsResult =
 export async function getPendingReport(
   filters: PendingReportFilters = {}
 ): Promise<PendingReportRow[]> {
-  const user = await getSessionUser();
+  try {
+    const user = await getSessionUser();
 
-  if (!user) {
+    if (!user) {
+      return [];
+    }
+
+    return await fetchPendingReport(user, filters);
+  } catch (err: unknown) {
+    logSafeError("getPendingReport", err);
     return [];
   }
-
-  return fetchPendingReport(user, filters);
 }
 
 /** Server action — fetch report rows for any report kind (used by client filter refresh). */
@@ -51,15 +57,12 @@ export async function getReportRows(
     );
 
     return { success: true, rows };
-  } catch (error) {
-    console.error("[getReportRows]", error);
+  } catch (error: unknown) {
+    logSafeError("getReportRows", error);
     return {
       success: false,
       rows: [],
-      message:
-        error instanceof Error
-          ? error.message
-          : "Failed to load report data.",
+      message: formatSafeErrorMessage(error, "Failed to load report data."),
     };
   }
 }

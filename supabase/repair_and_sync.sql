@@ -29,6 +29,13 @@ ALTER TABLE IF EXISTS public.dak_atr ADD COLUMN IF NOT EXISTS created_at timesta
 ALTER TABLE IF EXISTS public.dak_atr ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now();
 
 -- 4. DAK Entries Column Synchronization
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS is_deleted boolean NOT NULL DEFAULT false;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS is_archived boolean NOT NULL DEFAULT false;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS deleted_by uuid REFERENCES public.users (id) ON DELETE SET NULL;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archived_by uuid REFERENCES public.users (id) ON DELETE SET NULL;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archive_period_years integer;
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS applicant_mobile text;
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS applicant_reference text;
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS assignment_unit_id uuid REFERENCES public.assignment_units (id) ON DELETE SET NULL;
@@ -36,10 +43,14 @@ ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS assignment_typ
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS source_id uuid REFERENCES public.dak_sources (id) ON DELETE SET NULL;
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS sla_due_date timestamptz;
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS escalation_level integer NOT NULL DEFAULT 0;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS is_escalated boolean NOT NULL DEFAULT false;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS intake_type text DEFAULT 'physical';
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposal_date timestamptz;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposal_remarks text;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposal_authority text;
+ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS final_decision text;
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposed_date timestamptz;
 ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS closed_date timestamptz;
-ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
-ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archived_at timestamptz;
 
 -- 5. Users Column Synchronization
 ALTER TABLE IF EXISTS public.users ADD COLUMN IF NOT EXISTS mobile_number text;

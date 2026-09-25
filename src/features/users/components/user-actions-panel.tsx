@@ -61,13 +61,14 @@ export function UserActionsPanel({
         </p>
       </div>
 
-      <form action={resetAction} className="space-y-3 rounded-lg border bg-background p-4">
+      <form action={resetAction} autoComplete="off" className="space-y-3 rounded-lg border bg-background p-4">
         <input type="hidden" name="userId" value={userId} />
         <Label htmlFor="password">Reset Password</Label>
         <input
           id="password"
           name="password"
           type="password"
+          autoComplete="off"
           minLength={8}
           required
           placeholder="New password (min 8 chars)"

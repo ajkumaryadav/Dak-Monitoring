@@ -40,10 +40,11 @@ function canApproveDakClosureRole(role: string): boolean {
 export async function approveDakClosure(
   input: z.infer<typeof approvalSchema>
 ): Promise<ClosureApprovalResult> {
-  const user = await getSessionUser();
-  if (!user || !canApproveDakClosureRole(user.role)) {
-    return { success: false, message: "Unauthorized." };
-  }
+  try {
+    const user = await getSessionUser();
+    if (!user || !canApproveDakClosureRole(user.role)) {
+      return { success: false, message: "Unauthorized." };
+    }
 
   const parsed = approvalSchema.safeParse(input);
   if (!parsed.success) {
@@ -126,8 +127,13 @@ export async function approveDakClosure(
     actorName: user.name,
   });
 
-  revalidateDak(parsed.data.dakId);
-  return { success: true };
+    revalidateDak(parsed.data.dakId);
+    return { success: true };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("approveDakClosure", err);
+    return { success: false, message: formatSafeErrorMessage(err, "Failed to approve closure.") };
+  }
 }
 
 const returnSchema = z.object({
@@ -139,69 +145,75 @@ const returnSchema = z.object({
 export async function returnDakForRework(
   input: z.infer<typeof returnSchema>
 ): Promise<ClosureApprovalResult> {
-  const user = await getSessionUser();
-  if (!user || !canApproveDakClosureRole(user.role)) {
-    return { success: false, message: "Unauthorized." };
-  }
+  try {
+    const user = await getSessionUser();
+    if (!user || !canApproveDakClosureRole(user.role)) {
+      return { success: false, message: "Unauthorized." };
+    }
 
-  const parsed = returnSchema.safeParse(input);
-  if (!parsed.success) {
-    return {
-      success: false,
-      message: parsed.error.issues[0]?.message ?? "Invalid request.",
-    };
-  }
+    const parsed = returnSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: parsed.error.issues[0]?.message ?? "Invalid request.",
+      };
+    }
 
-  const supabase = createAdminClient();
-  const { data: dak, error } = await supabase
-    .from("dak_entries")
-    .select("id, status, dak_number, assigned_to")
-    .eq("id", parsed.data.dakId)
-    .maybeSingle();
+    const supabase = createAdminClient();
+    const { data: dak, error } = await supabase
+      .from("dak_entries")
+      .select("id, status, dak_number, assigned_to")
+      .eq("id", parsed.data.dakId)
+      .maybeSingle();
 
-  if (error || !dak) {
-    return { success: false, message: "DAK not found." };
-  }
+    if (error || !dak) {
+      return { success: false, message: "DAK not found." };
+    }
 
-  if (!canApproveClosure(dak.status as string)) {
-    return { success: false, message: "This DAK is not in the approval queue." };
-  }
+    if (!canApproveClosure(dak.status as string)) {
+      return { success: false, message: "This DAK is not in the approval queue." };
+    }
 
-  const { error: updateError } = await supabase
-    .from("dak_entries")
-    .update({
-      status: "in_progress",
-      updated_by: user.id,
-    })
-    .eq("id", parsed.data.dakId);
+    const { error: updateError } = await supabase
+      .from("dak_entries")
+      .update({
+        status: "in_progress",
+        updated_by: user.id,
+      })
+      .eq("id", parsed.data.dakId);
 
-  if (updateError) {
-    return { success: false, message: updateError.message };
-  }
+    if (updateError) {
+      return { success: false, message: updateError.message };
+    }
 
-  await logWorkflowAction({
-    dakId: parsed.data.dakId,
-    userId: user.id,
-    eventType: "status_changed",
-    timelineActionType: "status_changed",
+    await logWorkflowAction({
+      dakId: parsed.data.dakId,
+      userId: user.id,
+      eventType: "status_changed",
+      timelineActionType: "status_changed",
       action: "Returned for Rework",
       remarks: parsed.data.remarks,
       fromStatus: dak.status as string,
       toStatus: "in_progress",
       metadata: { returned_for_rework: true },
-  });
+    });
 
-  await notifyReturnedForRework({
-    dakId: parsed.data.dakId,
-    dakNumber: dak.dak_number as string,
-    assignedToUserId: (dak.assigned_to as string | null) ?? null,
-    actorUserId: user.id,
-    actorName: user.name,
-    reason: parsed.data.remarks,
-  });
+    await notifyReturnedForRework({
+      dakId: parsed.data.dakId,
+      dakNumber: dak.dak_number as string,
+      assignedToUserId: (dak.assigned_to as string | null) ?? null,
+      actorUserId: user.id,
+      actorName: user.name,
+      reason: parsed.data.remarks,
+    });
 
-  revalidateDak(parsed.data.dakId);
-  return { success: true };
+    revalidateDak(parsed.data.dakId);
+    return { success: true };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("returnDakForRework", err);
+    return { success: false, message: formatSafeErrorMessage(err, "Failed to return DAK for rework.") };
+  }
 }
 
 export type ClosureFormState = { message?: string };
@@ -210,26 +222,44 @@ export async function approveClosureFormAction(
   _prev: ClosureFormState,
   formData: FormData
 ): Promise<ClosureFormState> {
-  const result = await approveDakClosure({
-    dakId: formData.get("dakId") as string,
-    remarks: (formData.get("remarks") as string) ?? "",
-  });
-  if (result.success) {
-    redirect("/dashboard/dak/pending-approval");
+  try {
+    const result = await approveDakClosure({
+      dakId: formData.get("dakId") as string,
+      remarks: (formData.get("remarks") as string) ?? "",
+    });
+    if (result.success) {
+      redirect("/dashboard/dak/pending-approval");
+    }
+    return { message: result.message };
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err && typeof (err as any).digest === "string" && (err as any).digest.startsWith("NEXT_REDIRECT")) {
+      throw err;
+    }
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("approveClosureFormAction", err);
+    return { message: formatSafeErrorMessage(err, "Failed to approve closure.") };
   }
-  return { message: result.message };
 }
 
 export async function returnForReworkFormAction(
   _prev: ClosureFormState,
   formData: FormData
 ): Promise<ClosureFormState> {
-  const result = await returnDakForRework({
-    dakId: formData.get("dakId") as string,
-    remarks: formData.get("remarks") as string,
-  });
-  if (result.success) {
-    redirect("/dashboard/dak/pending-approval");
+  try {
+    const result = await returnDakForRework({
+      dakId: formData.get("dakId") as string,
+      remarks: formData.get("remarks") as string,
+    });
+    if (result.success) {
+      redirect("/dashboard/dak/pending-approval");
+    }
+    return { message: result.message };
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err && typeof (err as any).digest === "string" && (err as any).digest.startsWith("NEXT_REDIRECT")) {
+      throw err;
+    }
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("returnForReworkFormAction", err);
+    return { message: formatSafeErrorMessage(err, "Failed to return for rework.") };
   }
-  return { message: result.message };
 }

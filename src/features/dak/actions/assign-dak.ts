@@ -340,14 +340,12 @@ export async function assignDak(
     revalidateDakPaths(parsed.data.dakId);
 
     return { success: true };
-  } catch (error) {
-    console.error("[assignDak]", error);
+  } catch (error: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("assignDak", error);
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred while assigning.",
+      message: formatSafeErrorMessage(error, "An unexpected error occurred while assigning."),
     };
   }
 }

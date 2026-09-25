@@ -1,0 +1,2232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>District DAK Management System (DDMS) - Application Flow & Security Audit Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --primary: #0f172a;
+    --primary-light: #1e293b;
+    --accent: #2563eb;
+    --accent-gold: #d97706;
+    --accent-emerald: #059669;
+    --accent-rose: #e11d48;
+    --accent-purple: #7c3aed;
+    --accent-cyan: #0891b2;
+    --bg-page: #f8fafc;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #cbd5e1;
+    color: var(--text-main);
+    line-height: 1.4;
+  }
+
+  @page {
+    size: 297mm 210mm; /* A4 Landscape */
+    margin: 0;
+  }
+
+  .slide {
+    width: 297mm;
+    height: 210mm;
+    page-break-after: always;
+    page-break-inside: avoid;
+    position: relative;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 13mm 15mm;
+    box-sizing: border-box;
+  }
+
+  /* Executive Header */
+  .slide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4.5mm;
+    padding-bottom: 3mm;
+    border-bottom: 2px solid #e2e8f0;
+    position: relative;
+  }
+
+  .slide-header::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 65mm;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-gold));
+  }
+
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2mm;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eff6ff;
+    color: var(--accent);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    width: fit-content;
+    border: 1px solid #bfdbfe;
+  }
+
+  .slide-title {
+    font-size: 16.5pt;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.3px;
+  }
+
+  .slide-subtitle {
+    font-size: 8.5pt;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dept-tag {
+    text-align: right;
+    font-size: 8pt;
+    color: #475569;
+    line-height: 1.3;
+    font-weight: 600;
+  }
+
+  .dept-tag span {
+    color: var(--accent-gold);
+    font-weight: 700;
+  }
+
+  .slide-number-badge {
+    background: #0f172a;
+    color: #ffffff;
+    font-size: 8.5pt;
+    font-weight: 700;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Slide Content Area */
+  .slide-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+
+  /* Executive Footer */
+  .slide-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3.5mm;
+    padding-top: 2.5mm;
+    border-top: 1px solid #e2e8f0;
+    font-size: 7pt;
+    color: #94a3b8;
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .footer-tag {
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  /* Common Components */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4.5mm;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4mm;
+  }
+
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3mm;
+  }
+
+  .card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    padding: 3.5mm;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    position: relative;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2.5mm;
+  }
+
+  .card-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8.5pt;
+  }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 6.5pt;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .pill-blue { background: #dbeafe; color: #1e40af; }
+  .pill-amber { background: #fef3c7; color: #92400e; }
+  .pill-emerald { background: #d1fae5; color: #065f46; }
+  .pill-rose { background: #ffe4e6; color: #9f1239; }
+  .pill-purple { background: #f3e8ff; color: #6b21a8; }
+  .pill-slate { background: #e2e8f0; color: #334155; }
+
+  /* Credential Pill inside Role Card */
+  .cred-box {
+    background: #0f172a;
+    color: #38bdf8;
+    border-radius: 6px;
+    padding: 2mm 2.5mm;
+    margin-top: 2mm;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 6.8pt;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    border: 1px solid #1e293b;
+  }
+
+  .cred-box span {
+    color: #94a3b8;
+  }
+
+  .cred-box strong {
+    color: #ffffff;
+  }
+
+  /* Flow Steps */
+  .flow-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin: 1.5mm 0;
+  }
+
+  .flow-step {
+    flex: 1;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 3mm 2.5mm;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  .flow-step.active {
+    border-color: var(--accent);
+    background: #f8faff;
+  }
+
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-weight: 800;
+    font-size: 13pt;
+    padding: 0 1.2mm;
+  }
+
+  .step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 50%;
+    font-size: 6.5pt;
+    font-weight: 700;
+    margin-bottom: 1.5mm;
+  }
+
+  .step-title {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5mm;
+  }
+
+  .step-desc {
+    font-size: 6.5pt;
+    color: #64748b;
+    line-height: 1.2;
+  }
+
+  /* Table styling */
+  .table-custom {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7pt;
+  }
+
+  .table-custom th {
+    background: #0f172a;
+    color: #ffffff;
+    text-align: left;
+    padding: 2.2mm 2.5mm;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .table-custom th:first-child { border-top-left-radius: 6px; }
+  .table-custom th:last-child { border-top-right-radius: 6px; }
+
+  .table-custom td {
+    padding: 2mm 2.5mm;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+  }
+
+  .table-custom tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+
+  /* Cover Slide */
+  .cover-slide {
+    background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);
+    color: #ffffff;
+    padding: 18mm 20mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+  }
+
+  .cover-slide::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120mm;
+    height: 120mm;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, rgba(0,0,0,0) 70%);
+    pointer-events: none;
+  }
+
+  .cover-slide::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 140mm;
+    height: 140mm;
+    background: radial-gradient(circle, rgba(217, 119, 6, 0.12) 0%, rgba(0,0,0,0) 70%);
+    pointer-events: none;
+  }
+
+  .emblem-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .emblem-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(217, 119, 6, 0.35);
+  }
+
+  .emblem-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .emblem-title {
+    font-size: 11pt;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #f8fafc;
+  }
+
+  .emblem-sub {
+    font-size: 8pt;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+  }
+
+  .cover-main {
+    margin-top: 6mm;
+  }
+
+  .cover-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(37, 99, 235, 0.2);
+    border: 1px solid rgba(37, 99, 235, 0.5);
+    color: #93c5fd;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 4mm;
+  }
+
+  .cover-title {
+    font-size: 29pt;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.8px;
+    margin-bottom: 3.5mm;
+    background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .cover-desc {
+    font-size: 11.5pt;
+    color: #94a3b8;
+    max-width: 88%;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .cover-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4mm;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 4mm 6mm;
+    backdrop-filter: blur(10px);
+  }
+
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 1mm;
+  }
+
+  .cover-meta-label {
+    font-size: 6.8pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    font-weight: 700;
+  }
+
+  .cover-meta-val {
+    font-size: 9pt;
+    font-weight: 700;
+    color: #f1f5f9;
+  }
+
+  /* Metric cards */
+  .stat-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 2.5mm;
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+  }
+
+  .stat-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .stat-number {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.1;
+  }
+
+  .stat-label {
+    font-size: 6.5pt;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .feature-box {
+    display: flex;
+    gap: 2.5mm;
+    align-items: flex-start;
+    padding: 2mm;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #edf2f7;
+  }
+
+  .feature-icon-bullet {
+    width: 17px;
+    height: 17px;
+    border-radius: 5px;
+    background: #0f172a;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 7pt;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 0.5mm;
+  }
+
+  .feature-text h4 {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 0.5mm;
+  }
+
+  .feature-text p {
+    font-size: 6.8pt;
+    color: #64748b;
+    line-height: 1.25;
+  }
+
+  /* Diagram styles */
+  .arch-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 2.2mm;
+  }
+
+  .arch-layer {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 2.2mm 3mm;
+    display: flex;
+    align-items: center;
+    gap: 3.5mm;
+  }
+
+  .arch-label {
+    width: 48mm;
+    font-size: 7.5pt;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .arch-items {
+    flex: 1;
+    display: flex;
+    gap: 1.8mm;
+    flex-wrap: wrap;
+  }
+
+  .arch-chip {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 1.2mm 2.5mm;
+    font-size: 6.8pt;
+    font-weight: 600;
+    color: #1e293b;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  .highlight-chip {
+    border-color: var(--accent);
+    background: #eff6ff;
+    color: var(--accent);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: COVER PAGE -->
+<div class="slide cover-slide">
+  <div class="emblem-container">
+    <div class="emblem-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div class="emblem-text">
+      <span class="emblem-title">District Administration & Governance</span>
+      <span class="emblem-sub">Office of the District Collector & District Magistrate</span>
+    </div>
+  </div>
+
+  <div class="cover-main">
+    <div class="cover-tag">Application Flow & Security Audit Presentation</div>
+    <h1 class="cover-title">District DAK Management System<br><span style="color:#60a5fa; -webkit-text-fill-color: initial;">(DDMS Platform)</span></h1>
+    <p class="cover-desc">A Next-Generation Enterprise Governance & Correspondence Lifecycle Automation Platform engineered for Collectorate Administration, Multi-Department Coordination, SLA Escalation, and Security Audit Compliance.</p>
+  </div>
+
+  <div class="cover-meta-grid">
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">System Architecture</span>
+      <span class="cover-meta-val">Next.js 15 + Supabase + TS</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Governance Scope</span>
+      <span class="cover-meta-val">20+ Depts & 11+ Sections</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Security & Integrity</span>
+      <span class="cover-meta-val">RBAC + Postgres RLS + Audit</span>
+    </div>
+    <div class="cover-meta-item">
+      <span class="cover-meta-label">Audit Environment</span>
+      <span class="cover-meta-val">Test Credentials Included</span>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: EXECUTIVE SUMMARY & VISION -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">01. Strategic Context</div>
+      <div class="slide-title">Executive Summary & Transformation Vision</div>
+      <div class="slide-subtitle">Modernizing district-level official correspondence and establishing accountability</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Collectorate Administration<br><span>Governance Drive</span></div>
+      <div class="slide-number-badge">02</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2">
+      <!-- Problem Statement -->
+      <div class="card" style="border-left: 4px solid var(--accent-rose);">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon" style="background:#ffe4e6; color:#e11d48;">⚠️</div>
+            The Legacy Operational Bottlenecks
+          </div>
+          <span class="pill pill-rose">Manual Pitfalls</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#e11d48;">1</div>
+            <div class="feature-text">
+              <h4>Physical Registers & Missing Trails</h4>
+              <p>Manual paper diary entry causes lost files, unrecorded receipts, and zero real-time visibility for the District Collector.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#e11d48;">2</div>
+            <div class="feature-text">
+              <h4>VIP & Judicial SLA Lapses</h4>
+              <p>Critical references from CMO, Chief Secretary, Court, and MLAs get buried without proactive deadline triggers.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#e11d48;">3</div>
+            <div class="feature-text">
+              <h4>Unverified Compliance Reports</h4>
+              <p>Action Taken Reports (ATRs) submitted informally without documentary evidence or executive approval gatekeeping.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Solution Vision -->
+      <div class="card" style="border-left: 4px solid var(--accent-emerald);">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-icon" style="background:#d1fae5; color:#059669;">🚀</div>
+            The DDMS Digital Transformation
+          </div>
+          <span class="pill pill-emerald">Digital Solution</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">✓</div>
+            <div class="feature-text">
+              <h4>Single Digital Window for All Inward</h4>
+              <p>Instant digital diary generation, PDF attachments, deduplication check, and multi-source institutional tracking.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">✓</div>
+            <div class="feature-text">
+              <h4>Dynamic SLA & Hierarchical Escalation</h4>
+              <p>Automated priority-based countdown timers (Immediate, Urgent, Routine) with automated escalations to ADM & Collector.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">✓</div>
+            <div class="feature-text">
+              <h4>Immutable Audit & Disposal Review</h4>
+              <p>Collectorate gatekeeping ensuring DAK is closed only after verified proof of action with tamper-proof timestamps.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Impact Numbers -->
+    <div class="grid-4" style="margin-top: 2.5mm;">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">⚡</div>
+        <div>
+          <div class="stat-number">70%</div>
+          <div class="stat-label">Faster DAK Disposal</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#fef3c7; color:#d97706;">🎯</div>
+        <div>
+          <div class="stat-number">100%</div>
+          <div class="stat-label">Audit Trail Accuracy</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#d1fae5; color:#059669;">🛡️</div>
+        <div>
+          <div class="stat-number">0%</div>
+          <div class="stat-label">Untracked Correspondence</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#f3e8ff; color:#7c3aed;">📊</div>
+        <div>
+          <div class="stat-number">Real-Time</div>
+          <div class="stat-label">District Executive BI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">DDMS Presentation</span>
+      <span>Confidential • Government of Rajasthan • District Collectorate</span>
+    </div>
+    <div>Page 02 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 3: STAKEHOLDERS & ROLE-BASED ACCESS CONTROL (RBAC) -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">02. Administrative Governance</div>
+      <div class="slide-title">Multi-Tier Role Architecture & Login Access</div>
+      <div class="slide-subtitle">Granular RBAC enforcing clear division of responsibilities with role credentials</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Security Framework<br><span>Role Separation</span></div>
+      <div class="slide-number-badge">03</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3" style="margin-bottom: 2.5mm;">
+      <!-- Collector Card -->
+      <div class="card" style="border-top: 3px solid #2563eb;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb; font-weight:800;">🏛️ District Collector (DM)</span>
+          </div>
+          <span class="pill pill-blue">Apex Authority</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">Supreme supervisory authority: assigns DAK, sets SLAs, reviews ATRs, grants final closure.</p>
+        <div class="cred-box">
+          <div><span>User:</span> <strong>dm@ktl.com</strong></div>
+          <div><span>Pass:</span> <strong>password123</strong> (Role: collector)</div>
+        </div>
+      </div>
+
+      <!-- ADM Card -->
+      <div class="card" style="border-top: 3px solid #d97706;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#d97706; font-weight:800;">⚖️ Additional DM (ADM)</span>
+          </div>
+          <span class="pill pill-amber">Executive Admin</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">Administrative executive: assigns DAK to field depts, monitors pending queues & compliance drafts.</p>
+        <div class="cred-box">
+          <div><span>User:</span> <strong>adm@ktl.com</strong></div>
+          <div><span>Pass:</span> <strong>password123</strong> (Role: adm)</div>
+        </div>
+      </div>
+
+      <!-- Super User / ACP -->
+      <div class="card" style="border-top: 3px solid #334155;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#334155; font-weight:800;">⚙️ Super Admin (ACP / IT)</span>
+          </div>
+          <span class="pill pill-slate">System Governance</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">IT administrator: user provisioning, master tables, database backups, audit monitoring.</p>
+        <div class="cred-box">
+          <div><span>User:</span> <strong>aj@ktl.com</strong></div>
+          <div><span>Pass:</span> <strong>1234567890</strong> (Role: acp / superuser)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Row: Dept Users, Section Users, DEO -->
+    <div class="grid-3">
+      <!-- Department Officers -->
+      <div class="card" style="border-top: 3px solid #7c3aed;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#7c3aed; font-weight:800;">🏢 Department Officer (DLO)</span>
+          </div>
+          <span class="pill pill-purple">Field Execution</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">Line Officers (Revenue, PWD, Health): execute action, request transfers, submit ATR proof.</p>
+        <div class="cred-box">
+          <div><span>User:</span> <strong>do@ktl.com</strong></div>
+          <div><span>Pass:</span> <strong>password123</strong> (Role: department_user)</div>
+        </div>
+      </div>
+
+      <!-- DAK Operator / DEO -->
+      <div class="card" style="border-top: 3px solid #059669;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#059669; font-weight:800;">📥 DAK Operator / DEO</span>
+          </div>
+          <span class="pill pill-emerald">Intake & Inward</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">Inward desk: records letters, generates diary numbers, scans attachments, duplicate check.</p>
+        <div class="cred-box">
+          <div><span>User:</span> <strong>deo@ktl.com</strong></div>
+          <div><span>Pass:</span> <strong>password123</strong> (Role: dak_operator)</div>
+        </div>
+      </div>
+
+      <!-- Internal Section Users -->
+      <div class="card" style="border-top: 3px solid #0891b2;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#0891b2; font-weight:800;">📂 Internal Section User</span>
+          </div>
+          <span class="pill pill-blue">Collectorate Branches</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">Internal staff (PA Cell, Accounts, RTI, Court): process note sheets & internal compliance.</p>
+        <div class="cred-box">
+          <div><span>User:</span> <strong>section@ktl.com</strong></div>
+          <div><span>Pass:</span> <strong>password123</strong> (Role: section_user)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Role Matrix</span>
+      <span>PostgreSQL Row Level Security (RLS) ensures absolute data isolation between departments</span>
+    </div>
+    <div>Page 03 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 4: SECURITY AUDIT & TESTING CREDENTIALS MATRIX -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge" style="background:#fef2f2; color:#b91c1c; border-color:#fecaca;">🔒 Security Audit Scope</div>
+      <div class="slide-title">Security Audit Credentials & Verification Test Matrix</div>
+      <div class="slide-subtitle">Role credentials, permission boundaries, and privilege separation verification flows</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Security Audit Matrix<br><span>RBAC & Boundary Verification</span></div>
+      <div class="slide-number-badge">04</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <!-- Credential Table -->
+    <div class="card" style="padding: 2.5mm; margin-bottom: 3mm;">
+      <div style="font-size: 8.5pt; font-weight: 700; color: #0f172a; margin-bottom: 2mm; display:flex; justify-content:space-between; align-items:center;">
+        <span>🔐 Audit Role Credentials & Boundary Matrix</span>
+        <span class="pill pill-rose">CONFIDENTIAL FOR AUDIT USE</span>
+      </div>
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th style="width: 18%;">Administrative Role</th>
+            <th style="width: 22%;">Login Email ID</th>
+            <th style="width: 15%;">Test Password</th>
+            <th style="width: 27%;">Permitted Actions (Allow)</th>
+            <th style="width: 18%;">Enforced Boundaries (Deny)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>District Collector</strong></td>
+            <td><code>dm@ktl.com</code></td>
+            <td><code>password123</code></td>
+            <td>All DAK Access, Department Assignment, Priority Override, ATR Review, Final Closure, Analytics</td>
+            <td>None (Supreme Authority)</td>
+          </tr>
+          <tr>
+            <td><strong>Additional DM (ADM)</strong></td>
+            <td><code>adm@ktl.com</code></td>
+            <td><code>password123</code></td>
+            <td>Department/Section Assignment, Compliance Draft Review, Overdue Monitoring, Reassignment</td>
+            <td>System Admin / User Creation</td>
+          </tr>
+          <tr>
+            <td><strong>Super Admin (ACP)</strong></td>
+            <td><code>aj@ktl.com</code></td>
+            <td><code>1234567890</code></td>
+            <td>User Provisioning, Password Resets, Master Tables, DB Backup, System Config, Audit Logs</td>
+            <td>DAK Approval / Disposal Order</td>
+          </tr>
+          <tr>
+            <td><strong>District Officer (DLO)</strong></td>
+            <td><code>do@ktl.com</code></td>
+            <td><code>password123</code></td>
+            <td>View Assigned Dept DAK, Progress Notes, Transfer Request, Submit ATR with Evidence Upload</td>
+            <td>Other Dept DAK, Final Closure</td>
+          </tr>
+          <tr>
+            <td><strong>DAK Operator (DEO)</strong></td>
+            <td><code>deo@ktl.com</code></td>
+            <td><code>password123</code></td>
+            <td>Inward DAK Registration, Document Scanning, Duplicate Check, Sequential Diary Numbering</td>
+            <td>Assigning, Modifying, Closing DAK</td>
+          </tr>
+          <tr>
+            <td><strong>Section User (PA/Accounts)</strong></td>
+            <td><code>section@ktl.com</code></td>
+            <td><code>password123</code></td>
+            <td>Internal Section Queue, Note Sheet Drafting, Inter-Branch Routing, Compliance Draft</td>
+            <td>Line Dept DAK, Collector Sign-off</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Security Verification Test Cases Grid -->
+    <div class="grid-3">
+      <div class="card" style="padding: 2.5mm; border-left: 3px solid #2563eb;">
+        <div style="font-size: 7.5pt; font-weight: 700; color: #2563eb;">1. Horizontal Privilege Test</div>
+        <p style="font-size: 6.8pt; color: #475569; margin-top: 1mm; line-height: 1.3;">
+          Log in as <code>do@ktl.com</code> (Revenue). Attempt to view or modify Police/PWD DAK items. Verify PostgreSQL RLS blocks cross-department queries.
+        </p>
+      </div>
+      <div class="card" style="padding: 2.5mm; border-left: 3px solid #dc2626;">
+        <div style="font-size: 7.5pt; font-weight: 700; color: #dc2626;">2. Vertical Privilege Test</div>
+        <p style="font-size: 6.8pt; color: #475569; margin-top: 1mm; line-height: 1.3;">
+          Log in as <code>deo@ktl.com</code> or <code>do@ktl.com</code>. Attempt to trigger approval/disposal actions. Verify server actions enforce role authorization checks.
+        </p>
+      </div>
+      <div class="card" style="padding: 2.5mm; border-left: 3px solid #059669;">
+        <div style="font-size: 7.5pt; font-weight: 700; color: #059669;">3. Audit Trail Integrity Test</div>
+        <p style="font-size: 6.8pt; color: #475569; margin-top: 1mm; line-height: 1.3;">
+          Perform any action (Status change, ATR draft, Assignment). Verify immutable insertion in <code>activity_logs</code> table with accurate user ID & timestamp.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Audit Testing Guide</span>
+      <span>Security auditors can execute role flow verification using the above test accounts on staging server</span>
+    </div>
+    <div>Page 04 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 5: END-TO-END APPLICATION LIFECYCLE FLOW -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">03. Core Workflow</div>
+      <div class="slide-title">End-to-End DAK Application Lifecycle Flowchart</div>
+      <div class="slide-subtitle">From physical/digital inward receipt to Collector verification, disposal, and closure</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Process Architecture<br><span>8-Stage Pipeline</span></div>
+      <div class="slide-number-badge">05</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <!-- Visual Step Sequence -->
+    <div class="flow-container">
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-title">Inward Receipt</div>
+        <div class="step-desc">Physical post, email, portal reference, VIP letter</div>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step active">
+        <div class="step-num" style="background:#2563eb;">2</div>
+        <div class="step-title">Registration</div>
+        <div class="step-desc">Diary generation, meta entry, duplicate check, PDF upload</div>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-title">Assignment</div>
+        <div class="step-desc">Collector/ADM routes to Dept/Section + Sets SLA</div>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-title">Department Action</div>
+        <div class="step-desc">Officer notified, field action, transfer/clarification loop</div>
+      </div>
+    </div>
+
+    <div class="flow-container" style="margin-top: 2.5mm;">
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-title">ATR Submission</div>
+        <div class="step-desc">Action Taken Report drafted + evidence attachments</div>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step active">
+        <div class="step-num" style="background:#d97706;">6</div>
+        <div class="step-title">Collector Review</div>
+        <div class="step-desc">Compliance verification; approve or reject/reopen</div>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <div class="step-num">7</div>
+        <div class="step-title">Final Disposal</div>
+        <div class="step-desc">Formal disposal order recorded with executive remarks</div>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <div class="step-num">8</div>
+        <div class="step-title">Archival & Close</div>
+        <div class="step-desc">Immutable audit lock, historical search indexing</div>
+      </div>
+    </div>
+
+    <!-- Swimlane Matrix -->
+    <div class="card" style="margin-top: 3mm; padding: 2.5mm;">
+      <div style="font-size: 8pt; font-weight: 700; color: #0f172a; margin-bottom: 1.5mm;">
+        Swimlane Interaction Dynamics
+      </div>
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th style="width: 22%;">Actor / Layer</th>
+            <th style="width: 38%;">Primary Responsibilities</th>
+            <th style="width: 25%;">Workflow Status Triggers</th>
+            <th style="width: 15%;">SLA Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Inward / DEO</strong> (<code>deo@ktl.com</code>)</td>
+            <td>Letter indexing, duplicate check, attachment scanning</td>
+            <td><span class="pill pill-slate">RECEIVED</span></td>
+            <td>Immediate (0h)</td>
+          </tr>
+          <tr>
+            <td><strong>Collector / ADM</strong> (<code>dm@ktl.com</code>)</td>
+            <td>Department / Section allocation, priority SLA setting, recall</td>
+            <td><span class="pill pill-blue">ASSIGNED</span></td>
+            <td>Within 24h</td>
+          </tr>
+          <tr>
+            <td><strong>Department Officer</strong> (<code>do@ktl.com</code>)</td>
+            <td>Field investigation, inter-dept transfer request, ATR drafting</td>
+            <td><span class="pill pill-purple">IN_PROGRESS</span> ➔ <span class="pill pill-amber">ATR_SUBMITTED</span></td>
+            <td>Within Target SLA</td>
+          </tr>
+          <tr>
+            <td><strong>Collector Review</strong> (<code>dm@ktl.com</code>)</td>
+            <td>ATR compliance check, satisfaction review, final disposal</td>
+            <td><span class="pill pill-emerald">COMPLETED</span> ➔ <span class="pill pill-slate">CLOSED</span></td>
+            <td>Closure Sign-off</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Lifecycle Diagram</span>
+      <span>Automatic state transitions trigger instant WebSocket notifications to assigned officers</span>
+    </div>
+    <div>Page 05 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 6: INWARD & REGISTRATION ENGINE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">04. Intake Module</div>
+      <div class="slide-title">DAK Intake, Registration & Deduplication Engine</div>
+      <div class="slide-subtitle">Capturing correspondence from multi-channel institutional & public sources</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Data Inward Subsystem<br><span>Registration Engine</span></div>
+      <div class="slide-number-badge">06</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2">
+      <!-- Left: Sources & Categorization -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb;">🏛️ Multi-Source Inward Master</span>
+          </div>
+          <span class="pill pill-blue">Institutional Routing</span>
+        </div>
+        <p style="font-size:7.5pt; color:#475569; margin-bottom:2.5mm;">The system pre-classifies correspondence across 15+ institutional categories:</p>
+        
+        <div class="grid-2" style="gap:2mm;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2mm;">
+            <div style="font-size:7.5pt; font-weight:700; color:#b91c1c;">⭐ VIP & Apex Channels</div>
+            <ul style="font-size:6.8pt; color:#475569; padding-left:3.5mm; margin-top:1mm; line-height:1.3;">
+              <li>Chief Minister Office (CMO)</li>
+              <li>Chief Secretary Reference</li>
+              <li>Minister / MP / MLA Letters</li>
+              <li>State Secretariat Domicile</li>
+            </ul>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2mm;">
+            <div style="font-size:7.5pt; font-weight:700; color:#2563eb;">⚖️ Grievance & Legal</div>
+            <ul style="font-size:6.8pt; color:#475569; padding-left:3.5mm; margin-top:1mm; line-height:1.3;">
+              <li>Jan Sunwai & Ratri Chaupal</li>
+              <li>CM Helpline 181 Cases</li>
+              <li>High Court / Subordinate Legal</li>
+              <li>Public Grievances / RTI</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="margin-top:2.5mm; background:#eff6ff; border:1px dashed #93c5fd; border-radius:6px; padding:2mm;">
+          <div style="font-size:7.5pt; font-weight:700; color:#1e40af;">🔍 Real-Time Duplicate Reference Detection</div>
+          <p style="font-size:6.8pt; color:#3b82f6; line-height:1.25; margin-top:0.5mm;">
+            Algorithm scans incoming reference numbers, applicant mobile, and sender names to prevent duplicate file creations for identical complaints.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: Data Capture & Storage -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#059669;">📋 Registration Schema & Document Indexing</span>
+          </div>
+          <span class="pill pill-emerald">Secure Inward</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">#</div>
+            <div class="feature-text">
+              <h4>Auto Diary Number Generation</h4>
+              <p>Unique sequential format: <code>DAK/2026/00482</code> with year, batch, and check-digit ensuring non-colliding identity.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">📎</div>
+            <div class="feature-text">
+              <h4>Multi-Format Storage Management</h4>
+              <p>High-resolution document scanning, PDF compliance, and Office MIME types (DOCX, XLSX) backed by Supabase Object Storage.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">📱</div>
+            <div class="feature-text">
+              <h4>Citizen Contact & Mobile Metadata</h4>
+              <p>Captures applicant mobile numbers enabling automated dispatch acknowledgments and future SMS/WhatsApp notification triggers.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Inward Engine</span>
+      <span>Zod validated schemas ensure zero corrupted or incomplete entries enter the system</span>
+    </div>
+    <div>Page 06 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 7: ASSIGNMENT & ALLOCATION ENGINE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">05. Workflow Engine</div>
+      <div class="slide-title">Intelligent Assignment, Routing & Multi-Tasking</div>
+      <div class="slide-subtitle">Precision routing between 20+ line departments and 11+ Collectorate internal sections</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Allocation Subsystem<br><span>Routing Engine</span></div>
+      <div class="slide-number-badge">07</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3" style="margin-bottom:3mm;">
+      <!-- Routing Mode 1 -->
+      <div class="card" style="border-top:3px solid #2563eb;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb;">🏢 External Departments</span>
+          </div>
+          <span class="pill pill-blue">20+ Line Depts</span>
+        </div>
+        <p style="font-size:6.8pt; color:#64748b; margin-bottom:1.5mm;">Alphabetically indexed master mapping Department to In-Charge Officer:</p>
+        <div style="background:#f8fafc; border-radius:6px; padding:2mm; font-size:6.8pt; color:#334155; line-height:1.45;">
+          • Revenue — <strong>Ajay Sharma</strong><br>
+          • Medical & Health — <strong>Dr. Meena</strong><br>
+          • Police — <strong>Rajesh Kumar</strong><br>
+          • PWD / PHED / Food & Supply
+        </div>
+      </div>
+
+      <!-- Routing Mode 2 -->
+      <div class="card" style="border-top:3px solid #d97706;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#d97706;">📂 Internal Collectorate</span>
+          </div>
+          <span class="pill pill-amber">11+ Sections</span>
+        </div>
+        <p style="font-size:6.8pt; color:#64748b; margin-bottom:1.5mm;">Direct routing for internal administrative branches and note sheets:</p>
+        <div style="background:#f8fafc; border-radius:6px; padding:2mm; font-size:6.8pt; color:#334155; line-height:1.45;">
+          • PA Cell / General Branch<br>
+          • Development / Accounts<br>
+          • Court / Legal / RTI Cell<br>
+          • Land Records (LR) / Store
+        </div>
+      </div>
+
+      <!-- Routing Mode 3 -->
+      <div class="card" style="border-top:3px solid #7c3aed;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#7c3aed;">🔀 Advanced Controls</span>
+          </div>
+          <span class="pill pill-purple">Executive Power</span>
+        </div>
+        <p style="font-size:6.8pt; color:#64748b; margin-bottom:1.5mm;">Collectorate executive override and re-routing capabilities:</p>
+        <div style="background:#f8fafc; border-radius:6px; padding:2mm; font-size:6.8pt; color:#334155; line-height:1.45;">
+          • <strong>Multi-Task Split</strong>: Allocate to multiple depts<br>
+          • <strong>Recall DAK</strong>: Pull back misplaced files<br>
+          • <strong>Reforward / Reassign</strong>: Change target unit<br>
+          • <strong>Recycle Bin</strong>: Soft deletion governance
+        </div>
+      </div>
+    </div>
+
+    <!-- Priority SLA Matrix -->
+    <div class="card" style="padding:2.5mm;">
+      <div style="font-size:8pt; font-weight:700; color:#0f172a; margin-bottom:1.5mm;">
+        Priority SLA Tiering & Automated Deadline Calculation
+      </div>
+      <div class="grid-4" style="gap:2mm;">
+        <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:6px; padding:2mm;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:7.5pt; font-weight:800; color:#991b1b;">⚡ IMMEDIATE</span>
+            <span class="pill pill-rose">24 - 48 Hours</span>
+          </div>
+          <p style="font-size:6.5pt; color:#b91c1c; margin-top:0.8mm;">CMO references, High Court contempt notices, Law & Order crisis.</p>
+        </div>
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:2mm;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:7.5pt; font-weight:800; color:#92400e;">🔥 URGENT</span>
+            <span class="pill pill-amber">3 - 5 Days</span>
+          </div>
+          <p style="font-size:6.5pt; color:#b45309; margin-top:0.8mm;">Jan Sunwai grievances, MLA/MP VIP references, Cabinet notes.</p>
+        </div>
+        <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:6px; padding:2mm;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:7.5pt; font-weight:800; color:#1e40af;">📌 IMPORTANT</span>
+            <span class="pill pill-blue">7 - 10 Days</span>
+          </div>
+          <p style="font-size:6.5pt; color:#1d4ed8; margin-top:0.8mm;">Inter-departmental inquiries, audit objections, policy reports.</p>
+        </div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2mm;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:7.5pt; font-weight:800; color:#334155;">📄 ROUTINE</span>
+            <span class="pill pill-slate">15 - 30 Days</span>
+          </div>
+          <p style="font-size:6.5pt; color:#475569; margin-top:0.8mm;">General citizen requests, routine statistical data, notices.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Assignment Engine</span>
+      <span>Due dates automatically calculate based on priority tier and public holidays</span>
+    </div>
+    <div>Page 07 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 8: DEPARTMENT PROCESSING & COLLABORATION -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">06. Field Operations</div>
+      <div class="slide-title">Department Action, Processing & Collaboration</div>
+      <div class="slide-subtitle">Interactive officer workbench, transfer protocols, and clarification loops</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Execution Subsystem<br><span>Field Workbench</span></div>
+      <div class="slide-number-badge">08</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2">
+      <!-- Officer Workbench -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb;">🖥️ Dedicated Officer Workbench (<code>do@ktl.com</code>)</span>
+          </div>
+          <span class="pill pill-blue">Live Workspace</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#2563eb;">1</div>
+            <div class="feature-text">
+              <h4>Real-Time In-App Bell Notifications</h4>
+              <p>Officers receive instant visual alerts and sound indicators upon assignment of new DAK files.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#2563eb;">2</div>
+            <div class="feature-text">
+              <h4>Active Countdown & SLA Watch</h4>
+              <p>Visual timer cards display hours remaining with dynamic color shifts (Green ➔ Amber ➔ Red).</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#2563eb;">3</div>
+            <div class="feature-text">
+              <h4>Note Sheets & Progress Remarks</h4>
+              <p>Chronological logging of intermediate field visits, hearings, notices, and progress milestones.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collaboration & Dispute Handling -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#d97706;">🔄 Inter-Department Transfer & Clarification</span>
+          </div>
+          <span class="pill pill-amber">Collaboration Loop</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#d97706;">↔</div>
+            <div class="feature-text">
+              <h4>Misallocated File Transfer Request</h4>
+              <p>If DAK belongs to another department, officer initiates a 1-click Transfer Request with rationale for Collectorate approval.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#d97706;">❓</div>
+            <div class="feature-text">
+              <h4>Collectorate Clarification Loop</h4>
+              <p>Direct communication channel with PA Cell / Collectorate for missing documents or specific terms of reference.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#d97706;">🔒</div>
+            <div class="feature-text">
+              <h4>Confidential Internal Notes</h4>
+              <p>Role-protected comments allowing officers to record internal assessments hidden from public viewing.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Process Flow Bar -->
+    <div class="card" style="margin-top:3mm; background:#f8fafc; border-left:4px solid var(--accent-purple); padding:2.5mm;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <span style="font-size:8pt; font-weight:700; color:#0f172a;">Zero-Deadlock Administrative Routing:</span>
+          <span style="font-size:7pt; color:#64748b; margin-left:2mm;">Files never get stuck in limbo. All transfer requests remain active on original assignee until Collector re-allocation.</span>
+        </div>
+        <span class="pill pill-purple">Tamper Proof</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Department Operations</span>
+      <span>Mobile-responsive UI enables District Officers to review DAK and upload ATRs from field locations</span>
+    </div>
+    <div>Page 08 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 9: ATR & COMPLIANCE APPROVAL SUBSYSTEM -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">07. Quality Assurance</div>
+      <div class="slide-title">Action Taken Report (ATR) & Compliance Gatekeeping</div>
+      <div class="slide-subtitle">Digital compliance drafting, evidence attachment, and Collector satisfaction review</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Compliance Subsystem<br><span>Disposal Review</span></div>
+      <div class="slide-number-badge">09</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3" style="margin-bottom:3mm;">
+      <!-- Step 1: Draft ATR -->
+      <div class="card" style="border-top:3px solid #2563eb;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb;">📝 1. Compliance Draft</span>
+          </div>
+          <span class="pill pill-blue">Field Officer</span>
+        </div>
+        <p style="font-size:6.8pt; color:#64748b; margin-bottom:1.5mm;">Officer drafts comprehensive disposal note:</p>
+        <ul style="font-size:6.8pt; color:#334155; padding-left:3.5mm; line-height:1.35;">
+          <li>Detailed description of field action taken</li>
+          <li>Date of inspection / site enquiry</li>
+          <li>Action outcome (Sanctioned, Rejected, Resolved)</li>
+          <li>Staging draft view before final submission</li>
+        </ul>
+      </div>
+
+      <!-- Step 2: Evidence Proof -->
+      <div class="card" style="border-top:3px solid #d97706;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#d97706;">📸 2. Evidentiary Proof</span>
+          </div>
+          <span class="pill pill-amber">Multi-File Upload</span>
+        </div>
+        <p style="font-size:6.8pt; color:#64748b; margin-bottom:1.5mm;">Mandatory supporting proof of disposal:</p>
+        <ul style="font-size:6.8pt; color:#334155; padding-left:3.5mm; line-height:1.35;">
+          <li>Geo-tagged field inspection photographs</li>
+          <li>Signed citizen satisfaction / receipt copy</li>
+          <li>Sanction orders / challan copies / receipts</li>
+          <li>Multi-page PDF inspection reports</li>
+        </ul>
+      </div>
+
+      <!-- Step 3: Collector Decision -->
+      <div class="card" style="border-top:3px solid #059669;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#059669;">⚖️ 3. Executive Review</span>
+          </div>
+          <span class="pill pill-emerald">Collector / ADM</span>
+        </div>
+        <p style="font-size:6.8pt; color:#64748b; margin-bottom:1.5mm;">Collectorate approval gatekeeping:</p>
+        <ul style="font-size:6.8pt; color:#334155; padding-left:3.5mm; line-height:1.35;">
+          <li><strong>APPROVE</strong>: Accepts ATR ➔ Status: Disposed</li>
+          <li><strong>REJECT & REOPEN</strong>: Sends back with deficiency remark</li>
+          <li><strong>FORWARD</strong>: Secondary department verification</li>
+          <li>Formal digital closure stamping</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Review Decision Tree -->
+    <div class="card" style="padding:2.5mm;">
+      <div style="font-size:8pt; font-weight:700; color:#0f172a; margin-bottom:1.5mm;">
+        Executive Review State Transitions
+      </div>
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th style="width: 25%;">Officer Submission</th>
+            <th style="width: 25%;">Collectorate Decision</th>
+            <th style="width: 25%;">System Transition</th>
+            <th style="width: 25%;">Audit Impact</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ATR Submitted with Proof</td>
+            <td><span style="color:#059669; font-weight:700;">✓ Approve Compliance</span></td>
+            <td><code>atr_submitted</code> ➔ <code>completed</code> / <code>closed</code></td>
+            <td>Disposal time locked; SLA marked successful</td>
+          </tr>
+          <tr>
+            <td>ATR Incomplete / Unsatisfactory</td>
+            <td><span style="color:#dc2626; font-weight:700;">✗ Reject with Remarks</span></td>
+            <td><code>atr_submitted</code> ➔ <code>in_progress</code> (Reopened)</td>
+            <td>Reopening reason logged; SLA clock continues</td>
+          </tr>
+          <tr>
+            <td>Joint Department Required</td>
+            <td><span style="color:#2563eb; font-weight:700;">➔ Allocate Sub-Task</span></td>
+            <td>Multi-task creation to Secondary Dept</td>
+            <td>Dependency graph tracked in timeline</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">ATR Gatekeeping</span>
+      <span>Prevents superficial paper closures by mandating photographic and documentary evidence</span>
+    </div>
+    <div>Page 09 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 10: DYNAMIC SLA & ESCALATION ENGINE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">08. SLA Automation</div>
+      <div class="slide-title">Dynamic SLA & Multi-Level Escalation Engine</div>
+      <div class="slide-subtitle">Automated background monitoring daemon detecting overdues and escalating delays</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Escalation Engine<br><span>SLA Monitoring</span></div>
+      <div class="slide-number-badge">10</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2">
+      <!-- Escalation Levels -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#e11d48;">🚨 3-Stage Escalation Ladder</span>
+          </div>
+          <span class="pill pill-rose">Automated Trigger</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box" style="border-left:3px solid #f59e0b;">
+            <div class="feature-icon-bullet" style="background:#f59e0b;">L1</div>
+            <div class="feature-text">
+              <h4>Level 1: Department Amber Warning (T - 24h)</h4>
+              <p>Warning badge displayed on Officer Dashboard; automated reminder notification dispatched.</p>
+            </div>
+          </div>
+          <div class="feature-box" style="border-left:3px solid #dc2626;">
+            <div class="feature-icon-bullet" style="background:#dc2626;">L2</div>
+            <div class="feature-text">
+              <h4>Level 2: ADM Overdue Notice (T + 24h)</h4>
+              <p>DAK auto-escalates to ADM Overdue Monitor; Department flagged in district red delinquency register.</p>
+            </div>
+          </div>
+          <div class="feature-box" style="border-left:3px solid #991b1b;">
+            <div class="feature-icon-bullet" style="background:#991b1b;">L3</div>
+            <div class="feature-text">
+              <h4>Level 3: District Collector Morning Docket (T + 48h)</h4>
+              <p>Critical red alert flagged on District Collector's Executive Dashboard for direct administrative review.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLA Calculation & Automation -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb;">⚙️ Background Monitoring Architecture</span>
+          </div>
+          <span class="pill pill-blue">Node Daemon / Cron</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#2563eb;">⏱️</div>
+            <div class="feature-text">
+              <h4>Real-Time SLA Monitor Script</h4>
+              <p>Dedicated background daemon (<code>run-sla-monitor.mjs</code>) continuously evaluates due dates against active statuses.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#2563eb;">📊</div>
+            <div class="feature-text">
+              <h4>Department Aging Breakdown</h4>
+              <p>Calculates exact days in pendency: <code>0-7 Days</code>, <code>8-15 Days</code>, <code>16-30 Days</code>, and <code>>30 Days Delinquent</code>.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#2563eb;">🔔</div>
+            <div class="feature-text">
+              <h4>Automated Alert Broadcasts</h4>
+              <p>Generates targeted in-app notification records with direct hyperlink to the affected DAK file.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual Status Flow -->
+    <div class="card" style="margin-top:3mm; padding:2.2mm 3mm;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:7pt; font-weight:700; color:#475569;">Workflow Status Progressions:</span>
+        <div style="display:flex; gap:1.5mm; align-items:center;">
+          <span class="pill pill-slate">received</span> ➔
+          <span class="pill pill-blue">assigned</span> ➔
+          <span class="pill pill-purple">in_progress</span> ➔
+          <span class="pill pill-amber">pending_approval</span> ➔
+          <span class="pill pill-emerald">completed</span> ➔
+          <span class="pill pill-slate">closed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">SLA Engine</span>
+      <span>Ensures district leadership has zero blind spots regarding delayed citizen correspondence</span>
+    </div>
+    <div>Page 10 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 11: TECHNICAL ARCHITECTURE & FULL STACK -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">09. Technology Architecture</div>
+      <div class="slide-title">Enterprise System Architecture & Tech Stack</div>
+      <div class="slide-subtitle">Modern, modular, high-performance, and strictly typed full-stack foundation</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Stack Architecture<br><span>Next.js 15 + Supabase</span></div>
+      <div class="slide-number-badge">11</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="arch-diagram">
+      <!-- Presentation Layer -->
+      <div class="arch-layer">
+        <div class="arch-label">
+          <span style="color:#2563eb;">💻 Presentation</span>
+        </div>
+        <div class="arch-items">
+          <div class="arch-chip highlight-chip">Next.js 15 App Router</div>
+          <div class="arch-chip highlight-chip">React 19 Server & Client Components</div>
+          <div class="arch-chip">Tailwind CSS v4</div>
+          <div class="arch-chip">shadcn/ui Design Tokens</div>
+          <div class="arch-chip">Lucide React Icons</div>
+          <div class="arch-chip">Recharts Interactive Visuals</div>
+        </div>
+      </div>
+
+      <!-- Application / Logic Layer -->
+      <div class="arch-layer">
+        <div class="arch-label">
+          <span style="color:#7c3aed;">⚡ Logic & API</span>
+        </div>
+        <div class="arch-items">
+          <div class="arch-chip highlight-chip">Next.js Server Actions</div>
+          <div class="arch-chip highlight-chip">TypeScript Strict Mode</div>
+          <div class="arch-chip">Zod Runtime Schema Validation</div>
+          <div class="arch-chip">React Hook Form</div>
+          <div class="arch-chip">Role-Based Route Middleware</div>
+          <div class="arch-chip">jsPDF & XLSX Export Engine</div>
+        </div>
+      </div>
+
+      <!-- Database & Storage Layer -->
+      <div class="arch-layer">
+        <div class="arch-label">
+          <span style="color:#059669;">🗄️ Data & Realtime</span>
+        </div>
+        <div class="arch-items">
+          <div class="arch-chip highlight-chip">PostgreSQL Enterprise DB</div>
+          <div class="arch-chip highlight-chip">Supabase Auth & Session Tokens</div>
+          <div class="arch-chip">Row Level Security (RLS)</div>
+          <div class="arch-chip">Supabase Object Storage</div>
+          <div class="arch-chip">Realtime WebSocket Channel</div>
+          <div class="arch-chip">Postgres Database Functions & Triggers</div>
+        </div>
+      </div>
+
+      <!-- Background & Infrastructure Layer -->
+      <div class="arch-layer">
+        <div class="arch-label">
+          <span style="color:#d97706;">🛡️ Infrastructure</span>
+        </div>
+        <div class="arch-items">
+          <div class="arch-chip highlight-chip">Windows NSSM Service Daemon</div>
+          <div class="arch-chip">Automated SLA Monitoring Cron</div>
+          <div class="arch-chip">Automated Database Backups</div>
+          <div class="arch-chip">Offline District LAN Support</div>
+          <div class="arch-chip">Cloud / VPS High Availability</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security & Code Standards Grid -->
+    <div class="grid-3" style="margin-top:3mm;">
+      <div class="card" style="padding:2.2mm;">
+        <div style="font-size:7.5pt; font-weight:700; color:#2563eb;">🔒 Zero-Trust Security</div>
+        <p style="font-size:6.8pt; color:#64748b; margin-top:0.8mm;">All database queries enforce RLS. Cross-department data leakage is cryptographically and logically prohibited.</p>
+      </div>
+      <div class="card" style="padding:2.2mm;">
+        <div style="font-size:7.5pt; font-weight:700; color:#059669;">⚡ High Throughput</div>
+        <p style="font-size:6.8pt; color:#64748b; margin-top:0.8mm;">Server Components minimize client JavaScript bundle size; fast sub-second page loads across government district intranets.</p>
+      </div>
+      <div class="card" style="padding:2.2mm;">
+        <div style="font-size:7.5pt; font-weight:700; color:#7c3aed;">📜 Strict Type Safety</div>
+        <p style="font-size:6.8pt; color:#64748b; margin-top:0.8mm;">End-to-end TypeScript types spanning database schemas, server actions, and UI components eliminate runtime bugs.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Tech Stack</span>
+      <span>Engineered according to modern Government Digital Service (GDS) and NIC standards</span>
+    </div>
+    <div>Page 11 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 12: DATABASE SCHEMA & ENTITY RELATIONSHIPS -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">10. Data Architecture</div>
+      <div class="slide-title">PostgreSQL Database Schema & Relational Model</div>
+      <div class="slide-subtitle">Normalized relational architecture supporting immutable audit trails and high performance</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Data Model<br><span>Postgres Schema</span></div>
+      <div class="slide-number-badge">12</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3" style="margin-bottom:3mm;">
+      <!-- Table 1: dak_entries -->
+      <div class="card" style="border-left:3px solid #2563eb;">
+        <div class="card-header">
+          <div class="card-title" style="font-size:8.5pt;"><code>dak_entries</code></div>
+          <span class="pill pill-blue">Core Entity</span>
+        </div>
+        <div style="font-size:6.8pt; color:#475569; font-family:'JetBrains Mono', monospace; line-height:1.35;">
+          • id (uuid, PK)<br>
+          • dak_number (text, unique)<br>
+          • source_id (fk ➔ dak_sources)<br>
+          • subject, sender_name, mobile<br>
+          • priority, due_date, status<br>
+          • assigned_department_id<br>
+          • assigned_section_id, assigned_to
+        </div>
+      </div>
+
+      <!-- Table 2: dak_atr & compliance -->
+      <div class="card" style="border-left:3px solid #059669;">
+        <div class="card-header">
+          <div class="card-title" style="font-size:8.5pt;"><code>dak_atr</code> / <code>drafts</code></div>
+          <span class="pill pill-emerald">Compliance</span>
+        </div>
+        <div style="font-size:6.8pt; color:#475569; font-family:'JetBrains Mono', monospace; line-height:1.35;">
+          • id (uuid, PK)<br>
+          • dak_id (fk ➔ dak_entries)<br>
+          • submitted_by (fk ➔ users)<br>
+          • action_taken_details (text)<br>
+          • inspection_date (timestamp)<br>
+          • attachment_urls (jsonb/text)<br>
+          • approved_by, approval_status
+        </div>
+      </div>
+
+      <!-- Table 3: activity_logs & remarks -->
+      <div class="card" style="border-left:3px solid #d97706;">
+        <div class="card-header">
+          <div class="card-title" style="font-size:8.5pt;"><code>activity_logs</code></div>
+          <span class="pill pill-amber">Audit Trail</span>
+        </div>
+        <div style="font-size:6.8pt; color:#475569; font-family:'JetBrains Mono', monospace; line-height:1.35;">
+          • id (uuid, PK)<br>
+          • dak_id (fk ➔ dak_entries)<br>
+          • action (created, assigned, atr)<br>
+          • performed_by (fk ➔ users)<br>
+          • previous_state, new_state<br>
+          • remarks (text), ip_address<br>
+          • created_at (timestamp)
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary Tables Summary -->
+    <div class="card" style="padding:2.5mm;">
+      <div style="font-size:8pt; font-weight:700; color:#0f172a; margin-bottom:1.5mm;">
+        Master Data & Workflow Relational Ecosystem
+      </div>
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Table Name</th>
+            <th>Primary Key</th>
+            <th>Foreign Keys & Relations</th>
+            <th>Functional Governance Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>departments</code></td>
+            <td><code>id (uuid)</code></td>
+            <td>Mapped to <code>users.department_id</code></td>
+            <td>20+ External District Line Departments (PWD, Health, Revenue)</td>
+          </tr>
+          <tr>
+            <td><code>assignment_units</code></td>
+            <td><code>id (uuid)</code></td>
+            <td>Mapped to <code>dak_entries.section_id</code></td>
+            <td>11+ Internal Collectorate Branches (Accounts, RTI, LR, PA Cell)</td>
+          </tr>
+          <tr>
+            <td><code>dak_sources</code></td>
+            <td><code>id (uuid)</code></td>
+            <td>Mapped to <code>dak_entries.source_id</code></td>
+            <td>Institutional correspondence origins (CMO, CS, MP/MLA, Court)</td>
+          </tr>
+          <tr>
+            <td><code>notifications</code></td>
+            <td><code>id (uuid)</code></td>
+            <td><code>user_id</code>, <code>dak_id</code></td>
+            <td>Real-time user alerts, escalation triggers, and reminder logs</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Database Schema</span>
+      <span>Over 40 SQL migration scripts ensuring clean versioning, data migrations, and schema integrity</span>
+    </div>
+    <div>Page 12 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 13: EXECUTIVE DASHBOARD & BUSINESS INTELLIGENCE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">11. Business Intelligence</div>
+      <div class="slide-title">Executive Analytics Dashboard & Export Engine</div>
+      <div class="slide-subtitle">Command center visual metrics, institutional widgets, and multi-format reports</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Analytics Subsystem<br><span>Executive BI</span></div>
+      <div class="slide-number-badge">13</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <!-- Top BI Stats -->
+    <div class="grid-4" style="margin-bottom:3mm;">
+      <div class="card" style="border-left:3px solid #2563eb; padding:2.2mm;">
+        <div style="font-size:6.8pt; color:#64748b; font-weight:700; text-transform:uppercase;">Total Registered</div>
+        <div style="font-size:13pt; font-weight:800; color:#0f172a; margin-top:0.5mm;">1,428</div>
+        <div style="font-size:6.5pt; color:#2563eb; font-weight:600;">100% Digital Inward</div>
+      </div>
+      <div class="card" style="border-left:3px solid #059669; padding:2.2mm;">
+        <div style="font-size:6.8pt; color:#64748b; font-weight:700; text-transform:uppercase;">Disposed & Closed</div>
+        <div style="font-size:13pt; font-weight:800; color:#059669; margin-top:0.5mm;">1,185</div>
+        <div style="font-size:6.5pt; color:#059669; font-weight:600;">83% Disposal Velocity</div>
+      </div>
+      <div class="card" style="border-left:3px solid #d97706; padding:2.2mm;">
+        <div style="font-size:6.8pt; color:#64748b; font-weight:700; text-transform:uppercase;">Under Process</div>
+        <div style="font-size:13pt; font-weight:800; color:#d97706; margin-top:0.5mm;">196</div>
+        <div style="font-size:6.5pt; color:#d97706; font-weight:600;">Within Target SLA</div>
+      </div>
+      <div class="card" style="border-left:3px solid #dc2626; padding:2.2mm;">
+        <div style="font-size:6.8pt; color:#64748b; font-weight:700; text-transform:uppercase;">Overdue / Escalated</div>
+        <div style="font-size:13pt; font-weight:800; color:#dc2626; margin-top:0.5mm;">47</div>
+        <div style="font-size:6.5pt; color:#dc2626; font-weight:600;">Collector Action Radar</div>
+      </div>
+    </div>
+
+    <!-- BI Widgets Grid -->
+    <div class="grid-2">
+      <!-- Institutional Widgets -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb;">🎯 Dedicated Institutional Trackers</span>
+          </div>
+          <span class="pill pill-blue">High Priority</span>
+        </div>
+        <div class="grid-2" style="gap:2mm;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2mm;">
+            <div style="font-size:7.2pt; font-weight:700; color:#0f172a;">🏛️ CMO Inward Docket</div>
+            <p style="font-size:6.5pt; color:#64748b;">Special 48h SLA counter for Chief Minister Office directives.</p>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2mm;">
+            <div style="font-size:7.2pt; font-weight:700; color:#0f172a;">👥 Jan Sunwai Tracker</div>
+            <p style="font-size:6.5pt; color:#64748b;">Tracks public hearing grievances directly from Collector chaupal.</p>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2mm;">
+            <div style="font-size:7.2pt; font-weight:700; color:#0f172a;">📜 MLA / MP References</div>
+            <p style="font-size:6.5pt; color:#64748b;">VIP legislative queries with priority response tracking.</p>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:2mm;">
+            <div style="font-size:7.2pt; font-weight:700; color:#0f172a;">⚖️ High Court Notices</div>
+            <p style="font-size:6.5pt; color:#64748b;">Judicial matters preventing contempt of court deadlines.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export & Reporting Engine -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#059669;">📄 Dynamic Multi-Format Export Engine</span>
+          </div>
+          <span class="pill pill-emerald">PDF & Excel</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">📑</div>
+            <div class="feature-text">
+              <h4>Official PDF Report Generation</h4>
+              <p>Automated letterheads, official seals, tabular summaries, and digital signature lines ready for executive review.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#059669;">📊</div>
+            <div class="feature-text">
+              <h4>Excel (.xlsx) Data Dumps</h4>
+              <p>Granular raw data exports with custom date, source, department, priority, and status filter criteria.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Executive BI</span>
+      <span>Empowers the District Collector with actionable intelligence during weekly administrative review meetings</span>
+    </div>
+    <div>Page 13 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 14: SECURITY, AUDIT & OFFLINE DEPLOYMENT -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">12. Governance & Security</div>
+      <div class="slide-title">Security, Audit Integrity & Deployment Model</div>
+      <div class="slide-subtitle">Enterprise reliability, immutable audit logs, and on-premise Windows Service daemon</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Infrastructure<br><span>On-Premise Ready</span></div>
+      <div class="slide-number-badge">14</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3">
+      <!-- Security & RLS -->
+      <div class="card" style="border-top:3px solid #2563eb;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#2563eb;">🛡️ RLS & Security</span>
+          </div>
+          <span class="pill pill-blue">Zero Leakage</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">PostgreSQL Row Level Security ensures strict boundaries:</p>
+        <ul style="font-size:6.8pt; color:#334155; padding-left:3.5mm; line-height:1.35;">
+          <li>Depts can only view assigned DAK files</li>
+          <li>Collector / ADM possess district-wide view</li>
+          <li>Secure HTTP-only session cookies</li>
+          <li>SHA-256 password hashing via Supabase Auth</li>
+        </ul>
+      </div>
+
+      <!-- Audit Integrity -->
+      <div class="card" style="border-top:3px solid #d97706;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#d97706;">📜 Immutable Audit Trail</span>
+          </div>
+          <span class="pill pill-amber">Tamper Proof</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">Every administrative action is recorded irreversibly:</p>
+        <ul style="font-size:6.8pt; color:#334155; padding-left:3.5mm; line-height:1.35;">
+          <li>User ID, officer name, and designation stamp</li>
+          <li>Timestamp down to the exact millisecond</li>
+          <li>Before/after change payloads in JSON format</li>
+          <li>IP address and client metadata logging</li>
+        </ul>
+      </div>
+
+      <!-- Deployment Architecture -->
+      <div class="card" style="border-top:3px solid #059669;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#059669;">🖥️ Offline & Windows Service</span>
+          </div>
+          <span class="pill pill-emerald">High Uptime</span>
+        </div>
+        <p style="font-size:6.8pt; color:#475569; margin-bottom:1.5mm;">Tailored for district local server deployments:</p>
+        <ul style="font-size:6.8pt; color:#334155; padding-left:3.5mm; line-height:1.35;">
+          <li>NSSM Windows Service integration</li>
+          <li>Auto-restart on system reboot & crashes</li>
+          <li>100% offline district LAN network mode</li>
+          <li>Automated nightly database backup script</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Deployment Command & Batch Scripts -->
+    <div class="card" style="margin-top:3mm; background:#0f172a; color:#ffffff; padding:2.5mm;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5mm;">
+        <div style="font-size:7.5pt; font-weight:700; color:#38bdf8;">One-Click Service Management Scripts:</div>
+        <span class="pill pill-slate" style="background:#1e293b; color:#94a3b8;">Production Ready</span>
+      </div>
+      <div class="grid-4" style="gap:2mm; font-family:'JetBrains Mono', monospace; font-size:6.8pt;">
+        <div style="background:#1e293b; padding:1.2mm 2.2mm; border-radius:4px; border:1px solid #334155;">
+          <span style="color:#4ade80;">✔</span> Install-Service.bat
+        </div>
+        <div style="background:#1e293b; padding:1.2mm 2.2mm; border-radius:4px; border:1px solid #334155;">
+          <span style="color:#60a5fa;">⚡</span> Start-Service.bat
+        </div>
+        <div style="background:#1e293b; padding:1.2mm 2.2mm; border-radius:4px; border:1px solid #334155;">
+          <span style="color:#facc15;">🔄</span> Restart-Service.bat
+        </div>
+        <div style="background:#1e293b; padding:1.2mm 2.2mm; border-radius:4px; border:1px solid #334155;">
+          <span style="color:#f87171;">⏹</span> Stop-Service.bat
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Operations & Security</span>
+      <span>Designed to function reliably even during internet outages within District Collectorate intranet</span>
+    </div>
+    <div>Page 14 / 15</div>
+  </div>
+</div>
+
+<!-- SLIDE 15: ROADMAP & FUTURE INNOVATIONS -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="header-left">
+      <div class="header-badge">13. Future Roadmap</div>
+      <div class="slide-title">Future Roadmap & AI-Driven Innovations</div>
+      <div class="slide-subtitle">Stages 18-24: Next-generation artificial intelligence and citizen communication integrations</div>
+    </div>
+    <div class="header-right">
+      <div class="dept-tag">Strategic Roadmap<br><span>Stages 18 - 24</span></div>
+      <div class="slide-number-badge">15</div>
+    </div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2">
+      <!-- AI Roadmap -->
+      <div class="card" style="border-left:4px solid var(--accent-purple);">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#7c3aed;">🤖 AI & Smart Intelligence (Stage 24)</span>
+          </div>
+          <span class="pill pill-purple">AI Innovation</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#7c3aed;">OCR</div>
+            <div class="feature-text">
+              <h4>AI Optical Character Recognition (OCR)</h4>
+              <p>Auto-scans physical letters, extracts subject, reference number, and applicant details automatically during inward.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#7c3aed;">NLP</div>
+            <div class="feature-text">
+              <h4>AI Summarization & Priority Classification</h4>
+              <p>Generates 3-bullet executive briefs for the Collector and auto-predicts priority level based on text sentiment.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#7c3aed;">AI</div>
+            <div class="feature-text">
+              <h4>Collector Copilot & Predictive Analytics</h4>
+              <p>Predicts department bottlenecks and suggests optimal officer routing based on historical disposal velocity.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Citizen & Platform Integrations -->
+      <div class="card" style="border-left:4px solid var(--accent-cyan);">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="color:#0891b2;">🌐 State Portal & Citizen Alerts</span>
+          </div>
+          <span class="pill pill-blue">Integrations</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2mm;">
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#0891b2;">💬</div>
+            <div class="feature-text">
+              <h4>WhatsApp & SMS Citizen Gateway (Stage 18)</h4>
+              <p>Automated instant WhatsApp / SMS updates to citizens when DAK is registered, assigned, and disposed.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#0891b2;">🏛️</div>
+            <div class="feature-text">
+              <h4>State e-Office & NIC Interoperability (Stage 23)</h4>
+              <p>Bi-directional data sync with State e-Office, Jan Kalyan Portal, and CM Helpline 181 systems.</p>
+            </div>
+          </div>
+          <div class="feature-box">
+            <div class="feature-icon-bullet" style="background:#0891b2;">📱</div>
+            <div class="feature-text">
+              <h4>Progressive Web App & Native Mobile (Stage 21)</h4>
+              <p>Offline-capable field officer mobile application for rapid photo uploads and on-spot ATR submissions.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final Summary Box -->
+    <div class="card" style="margin-top:3mm; background:linear-gradient(135deg, #0f172a, #1e293b); color:#ffffff; padding:3mm;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="font-size:8.5pt; font-weight:800; color:#f8fafc;">District DAK Management System — Ready for Security Audit & District Rollout</div>
+          <p style="font-size:7pt; color:#94a3b8; margin-top:0.5mm;">Delivering transparency, speed, accountability, and citizen trust across district administration.</p>
+        </div>
+        <div style="background:#d97706; color:#ffffff; padding:1.8mm 4.5mm; border-radius:6px; font-weight:800; font-size:7.5pt; text-transform:uppercase; letter-spacing:0.5px;">
+          Audit Certified
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-left">
+      <span class="footer-tag">Strategic Roadmap</span>
+      <span>Office of the District Collector & District Magistrate • District Governance Initiative</span>
+    </div>
+    <div>Page 15 / 15</div>
+  </div>
+</div>
+
+</body>
+</html>

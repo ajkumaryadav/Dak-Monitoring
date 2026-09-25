@@ -7,9 +7,3 @@ export function AuthDecorations() {
     </div>
   );
 }
-
-/** Demo credentials until Supabase Auth is connected. */
-export const demoCredentials = {
-  email: "admin@collectorate.gov.in",
-  password: "password123",
-} as const;

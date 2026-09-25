@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { notifyUserStatusChange } from "@/features/users/services/notify-user-event";
 import { createActivityLog } from "@/features/activity/services/activity-log";
@@ -8,6 +9,8 @@ import { getUserById } from "@/features/users/services/get-users";
 import { canManageUsers } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
+import { revokeAllUserSessions } from "@/lib/auth/session-store";
 
 export type ToggleUserActiveResult =
   | { success: true }
@@ -21,6 +24,11 @@ export async function setUserActive(
     const actor = await getSessionUser();
     if (!actor || !canManageUsers(actor.role)) {
       return { success: false, message: "You do not have permission to change user status." };
+    }
+
+    const validId = z.string().uuid().safeParse(userId);
+    if (!validId.success) {
+      return { success: false, message: "Invalid user ID." };
     }
 
     if (actor.id === userId && !isActive) {
@@ -39,10 +47,12 @@ export async function setUserActive(
       .eq("id", userId);
 
     if (error) {
-      return { success: false, message: error.message ?? "Failed to update user status." };
+      return { success: false, message: formatSafeErrorMessage(error, "Failed to update user status.") };
     }
 
     if (!isActive) {
+      // Invalidate all active sessions for deactivated user
+      await revokeAllUserSessions(userId);
       await admin.auth.admin.signOut(userId, "global");
     }
 
@@ -64,17 +74,21 @@ export async function setUserActive(
       });
     }
 
-    revalidatePath("/dashboard/admin/users");
-    revalidatePath(`/dashboard/admin/users/${userId}`);
-    revalidatePath("/dashboard");
+    revalidateUserPaths(userId);
     return { success: true };
-  } catch (error) {
-    console.error("[setUserActive]", error);
+  } catch (error: unknown) {
+    logSafeError("setUserActive", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Unexpected error updating status.",
+      message: formatSafeErrorMessage(error, "Unexpected error updating status."),
     };
   }
+}
+
+function revalidateUserPaths(userId: string) {
+  revalidatePath("/dashboard/admin/users");
+  revalidatePath(`/dashboard/admin/users/${userId}`);
+  revalidatePath("/dashboard");
 }
 
 export async function toggleUserActiveAction(

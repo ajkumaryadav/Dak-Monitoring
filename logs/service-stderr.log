@@ -321,3 +321,204 @@ Error handling upgrade request Error: Invariant: did not expect response writer 
 }
 ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open 'D:\aj\Dak-Monitoring\.next\server\pages\500.html'
     at ignore-listed frames
+[PgQueryBuilder users] j: missing FROM-clause entry for table "m"
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2280)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '82',
+  file: 'parse_relation.c',
+  line: '3761',
+  routine: 'errorMissingRTE'
+}
+[PgQueryBuilder users] j: missing FROM-clause entry for table "m"
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2280)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'ERROR',
+  severity: 'ERROR',
+  code: '42P01',
+  position: '82',
+  file: 'parse_relation.c',
+  line: '3761',
+  routine: 'errorMissingRTE'
+}
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[notify-sla-event] Failed to send SLA notifications: Error: sorry, too many clients already
+    at k (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:12:995)
+    at async n (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:9758)
+    at async p (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:10611)
+    at async j (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:18489)
+    at async n (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:19069)
+[PgQueryBuilder roles] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[notify-sla-event] Failed to send SLA notifications: Error: sorry, too many clients already
+    at k (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:12:995)
+    at async n (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:9758)
+    at async p (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:10611)
+    at async j (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:18489)
+    at async n (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_18tiiup._.js:34:19069)
+[PgQueryBuilder dak_entries] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[checkOverdueDaks] sorry, too many clients already
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[getUserNotifications] sorry, too many clients already
+[PgQueryBuilder notifications] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[getUserNotifications] sorry, too many clients already
+[PgQueryBuilder dak_entries] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[getDakList] join query failed: sorry, too many clients already
+[PgQueryBuilder dak_entries] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[getDakList] fallback failed: sorry, too many clients already
+[PgQueryBuilder activity_logs] l: sorry, too many clients already
+    at en (D:\aj\Dak-Monitoring\.next\server\chunks\src_lib_db_pg-client_ts_1_iffgi._.js:4:2292)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\src_lib_db_pg-client_ts_1_iffgi._.js:4:3216)
+    at Socket.eG (D:\aj\Dak-Monitoring\.next\server\chunks\src_lib_db_pg-client_ts_1_iffgi._.js:4:3220)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\src_lib_db_pg-client_ts_1_iffgi._.js:1:648)
+    at new o (D:\aj\Dak-Monitoring\.next\server\chunks\src_lib_db_pg-client_ts_1_iffgi._.js:1:690)
+    at n (D:\aj\Dak-Monitoring\.next\server\chunks\src_lib_db_pg-client_ts_1_iffgi._.js:21:8226)
+    at u.executeInsert (D:\aj\Dak-Monitoring\.next\server\chunks\_1c_cucc._.js:10:76) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[createActivityLog] sorry, too many clients already
+[PgQueryBuilder dak_entries] j: sorry, too many clients already
+    at ac (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:2293)
+    at <unknown> (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3217)
+    at Socket.aS (D:\aj\Dak-Monitoring\.next\server\chunks\ssr\_0rsssgv._.js:4:3221) {
+  severity_local: 'FATAL',
+  severity: 'FATAL',
+  code: '53300',
+  file: 'proc.c',
+  line: '457',
+  routine: 'InitProcess'
+}
+[fetchPortalPublicStats] sorry, too many clients already

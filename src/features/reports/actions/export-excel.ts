@@ -16,6 +16,7 @@ import {
 import { createActivityLog } from "@/features/activity/services/activity-log";
 import { getSessionUser } from "@/lib/session";
 import type { DakStatus, PriorityLevel } from "@/types";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
 
 const exportExcelSchema = z.object({
   reportKind: z.enum([
@@ -26,16 +27,16 @@ const exportExcelSchema = z.object({
     "section",
   ]),
   filters: z.object({
-    departmentId: z.string().optional(),
-    sourceId: z.string().optional(),
-    assignmentUnitId: z.string().optional(),
-    priority: z.string().optional(),
-    status: z.string().optional(),
-    dateFrom: z.string().optional(),
-    dateTo: z.string().optional(),
+    departmentId: z.string().max(100).optional(),
+    sourceId: z.string().max(100).optional(),
+    assignmentUnitId: z.string().max(100).optional(),
+    priority: z.string().max(50).optional(),
+    status: z.string().max(50).optional(),
+    dateFrom: z.string().max(35).optional(),
+    dateTo: z.string().max(35).optional(),
     overdueOnly: z.boolean().optional(),
   }),
-  sourceName: z.string().optional(),
+  sourceName: z.string().max(100).optional(),
 });
 
 export type ExportExcelInput = z.infer<typeof exportExcelSchema>;
@@ -129,14 +130,11 @@ export async function exportExcelReport(
       mimeType: file.mimeType,
       rowCount: rows.length,
     };
-  } catch (error) {
-    console.error("[exportExcelReport]", error);
+  } catch (error: unknown) {
+    logSafeError("exportExcelReport", error);
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Export failed due to an unexpected error.",
+      message: formatSafeErrorMessage(error, "Export failed due to an unexpected error."),
     };
   }
 }

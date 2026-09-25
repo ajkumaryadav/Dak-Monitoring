@@ -44,19 +44,25 @@ export async function syncUserProfile(): Promise<void> {
     let roleId = existingProfile?.role_id;
 
     if (!roleId) {
-      const { data: defaultRole } = await admin
+      const targetSlug =
+        (user.user_metadata?.role as string) ||
+        (user.email?.toLowerCase().includes("collector") || user.email?.toLowerCase().includes("admin")
+          ? "collector"
+          : DEFAULT_ROLE_SLUG);
+
+      const { data: matchedRole } = await admin
         .from("roles")
         .select("id")
-        .eq("slug", DEFAULT_ROLE_SLUG)
+        .eq("slug", targetSlug)
         .maybeSingle();
 
-      roleId = defaultRole?.id;
+      roleId = matchedRole?.id;
     }
 
     const displayName =
       (user.user_metadata?.name as string | undefined) ??
-      user.email.split("@")[0] ??
-      "User";
+      (user.email?.toLowerCase().includes("collector") ? "District Collector" : user.email.split("@")[0]) ??
+      "Official User";
 
     if (existingProfile) {
       await admin

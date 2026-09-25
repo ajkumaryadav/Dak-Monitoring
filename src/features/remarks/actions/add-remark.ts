@@ -13,6 +13,7 @@ import { notifyRemarkAdded } from "@/features/remarks/services/notify-remark-eve
 import { PERMISSIONS, hasPermission } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
 
 export type AddRemarkResult =
   | { success: true }
@@ -48,7 +49,7 @@ export async function addDakRemark(
     if (!parsed.success) {
       return {
         success: false,
-        message: parsed.error.issues[0]?.message ?? "Invalid remark",
+        message: parsed.error.issues[0]?.message ?? "Invalid remark input.",
       };
     }
 
@@ -60,12 +61,20 @@ export async function addDakRemark(
 
     const { data: dak, error: dakError } = await supabase
       .from("dak_entries")
-      .select("id, dak_number")
+      .select("id, dak_number, department_id, assignment_unit_id, assigned_to")
       .eq("id", parsed.data.dakId)
       .maybeSingle();
 
     if (dakError || !dak) {
       return { success: false, message: "DAK entry not found." };
+    }
+
+    // Object-level isolation check
+    if (user.role === "department_user" && user.departmentId && dak.department_id && dak.department_id !== user.departmentId) {
+      return { success: false, message: "Unauthorized: Access to this DAK is restricted." };
+    }
+    if (user.role === "section_user" && user.sectionId && dak.assignment_unit_id && dak.assignment_unit_id !== user.sectionId) {
+      return { success: false, message: "Unauthorized: Access to this DAK is restricted." };
     }
 
     const isInternal =
@@ -81,7 +90,7 @@ export async function addDakRemark(
     });
 
     if (error) {
-      return { success: false, message: error.message ?? "Failed to save remark." };
+      return { success: false, message: formatSafeErrorMessage(error, "Failed to save remark.") };
     }
 
     const label = getRemarkTypeLabel(parsed.data.remarkType);
@@ -106,11 +115,11 @@ export async function addDakRemark(
 
     revalidatePath(`/dashboard/dak/${parsed.data.dakId}`);
     return { success: true };
-  } catch (error) {
-    console.error("[addDakRemark]", error);
+  } catch (error: unknown) {
+    logSafeError("addDakRemark", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Unexpected error",
+      message: formatSafeErrorMessage(error, "Unexpected error saving remark."),
     };
   }
 }
@@ -119,15 +128,20 @@ export async function addRemarkFormAction(
   _prev: AddRemarkFormState,
   formData: FormData
 ): Promise<AddRemarkFormState> {
-  const result = await addDakRemark({
-    dakId: formData.get("dakId") as string,
-    remarkType: formData.get("remarkType") as AddRemarkInput["remarkType"],
-    body: formData.get("body") as string,
-  });
+  try {
+    const result = await addDakRemark({
+      dakId: formData.get("dakId") as string,
+      remarkType: formData.get("remarkType") as AddRemarkInput["remarkType"],
+      body: formData.get("body") as string,
+    });
 
-  if (!result.success) {
-    return { message: result.message };
+    if (!result.success) {
+      return { message: result.message };
+    }
+
+    return { success: true };
+  } catch (err: unknown) {
+    logSafeError("addRemarkFormAction", err);
+    return { message: formatSafeErrorMessage(err, "Failed to submit remark.") };
   }
-
-  return { success: true };
 }

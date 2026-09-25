@@ -43,14 +43,14 @@ export function ChangePasswordForm() {
   );
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} autoComplete="off" className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="currentPassword">Current Password</Label>
         <input
           id="currentPassword"
           name="currentPassword"
           type="password"
-          autoComplete="current-password"
+          autoComplete="off"
           required
           className={inputClassName}
           aria-invalid={Boolean(state.errors?.currentPassword)}
@@ -66,7 +66,7 @@ export function ChangePasswordForm() {
           id="newPassword"
           name="newPassword"
           type="password"
-          autoComplete="new-password"
+          autoComplete="off"
           required
           minLength={PASSWORD_MIN_LENGTH}
           className={inputClassName}
@@ -101,7 +101,7 @@ export function ChangePasswordForm() {
           id="confirmPassword"
           name="confirmPassword"
           type="password"
-          autoComplete="new-password"
+          autoComplete="off"
           required
           minLength={PASSWORD_MIN_LENGTH}
           className={inputClassName}

@@ -104,14 +104,15 @@ async function applyApprovedRequest(
 export async function reviewDakRequest(
   input: ReviewDakRequestInput
 ): Promise<ReviewDakRequestResult> {
-  const user = await getSessionUser();
-  if (
-    !user ||
-    !canReviewRequests(user.role) ||
-    !hasPermission(user.role, PERMISSIONS.DAK_ASSIGN)
-  ) {
-    return { success: false, message: "Unauthorized." };
-  }
+  try {
+    const user = await getSessionUser();
+    if (
+      !user ||
+      !canReviewRequests(user.role) ||
+      !hasPermission(user.role, PERMISSIONS.DAK_ASSIGN)
+    ) {
+      return { success: false, message: "Unauthorized." };
+    }
 
   const parsed = reviewDakRequestSchema.safeParse(input);
   if (!parsed.success) {
@@ -208,18 +209,29 @@ export async function reviewDakRequest(
     actorName: user.name,
   });
 
-  revalidateDak(request.dak_id);
-  return { success: true };
+    revalidateDak(request.dak_id);
+    return { success: true };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("reviewDakRequest", err);
+    return { success: false, message: formatSafeErrorMessage(err, "Failed to process review.") };
+  }
 }
 
 export async function reviewDakRequestFormAction(
   _prev: { message?: string },
   formData: FormData
 ) {
-  const result = await reviewDakRequest({
-    requestId: formData.get("requestId") as string,
-    decision: formData.get("decision") as "approved" | "rejected",
-    reviewRemarks: formData.get("reviewRemarks") as string,
-  });
-  return result.success ? {} : { message: result.message };
+  try {
+    const result = await reviewDakRequest({
+      requestId: formData.get("requestId") as string,
+      decision: formData.get("decision") as "approved" | "rejected",
+      reviewRemarks: formData.get("reviewRemarks") as string,
+    });
+    return result.success ? {} : { message: result.message };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("reviewDakRequestFormAction", err);
+    return { message: formatSafeErrorMessage(err, "Failed to submit review.") };
+  }
 }

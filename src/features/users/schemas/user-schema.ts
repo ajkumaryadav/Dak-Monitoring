@@ -11,42 +11,58 @@ const userRoleSchema = z.enum([
   "section_user",
 ]);
 
-export const userFormSchema = z
-  .object({
-    name: z.string().trim().min(2, "Name is required"),
-    email: z.string().trim().email("Valid email is required"),
-    mobile: z
-      .string()
-      .trim()
-      .optional()
-      .or(z.literal(""))
-      .transform((v) => v || undefined),
-    designation: z.string().trim().min(2, "Designation is required"),
-    employeeCode: z
-      .string()
-      .trim()
-      .optional()
-      .or(z.literal(""))
-      .transform((v) => v || undefined),
-    password: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .transform((v) => v || undefined),
-    role: userRoleSchema,
-    departmentId: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .transform((v) => v || null),
-    sectionId: z
-      .string()
-      .optional()
-      .or(z.literal(""))
-      .transform((v) => v || null),
-    isActive: z.coerce.boolean().default(true),
-  })
-  .superRefine((data, ctx) => {
+const baseUserObject = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be 100 characters or fewer"),
+  email: z
+    .string()
+    .trim()
+    .max(255, "Email must be 255 characters or fewer")
+    .email("Valid email is required"),
+  mobile: z
+    .string()
+    .trim()
+    .max(20, "Mobile number must be 20 characters or fewer")
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => v || undefined),
+  designation: z
+    .string()
+    .trim()
+    .min(2, "Designation must be at least 2 characters")
+    .max(100, "Designation must be 100 characters or fewer"),
+  employeeCode: z
+    .string()
+    .trim()
+    .max(50, "Employee code must be 50 characters or fewer")
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => v || undefined),
+  password: z
+    .string()
+    .max(128, "Password must be 128 characters or fewer")
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => v || undefined),
+  role: userRoleSchema,
+  departmentId: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => v || null),
+  sectionId: z
+    .string()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => v || null),
+  isActive: z.coerce.boolean().default(true),
+});
+
+function applyUserRefinements<T extends z.ZodTypeAny>(schema: T) {
+  return schema.superRefine((data: any, ctx) => {
     if (data.role === "department_user") {
       if (!data.departmentId) {
         ctx.addIssue({
@@ -86,10 +102,18 @@ export const userFormSchema = z
       }
     }
   });
+}
 
-export const createUserSchema = userFormSchema.safeExtend({
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
+export const userFormSchema = applyUserRefinements(baseUserObject);
+
+export const createUserSchema = applyUserRefinements(
+  baseUserObject.extend({
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(128, "Password must be 128 characters or fewer"),
+  })
+);
 
 export const updateUserSchema = userFormSchema;
 

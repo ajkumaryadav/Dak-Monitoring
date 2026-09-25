@@ -18,7 +18,19 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       return null;
     }
 
-    let profile: any = null;
+    let profile: {
+      name?: string;
+      email?: string;
+      designation?: string;
+      role_id?: string;
+      department_id?: string | null;
+      section_id?: string | null;
+      mobile?: string | null;
+      employee_code?: string | null;
+      is_active?: boolean;
+      roles?: { slug?: string; name?: string } | { slug?: string; name?: string }[];
+    } | null = null;
+
     try {
       const { data } = await db
         .from("users")
@@ -32,15 +44,23 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       console.warn("[getSessionUser] Profile query warning:", profileErr);
     }
 
+    if (profile && profile.is_active === false) {
+      return null;
+    }
+
     const roleRecord = profile?.roles;
     const roleData = Array.isArray(roleRecord) ? roleRecord[0] : roleRecord;
     const tokenRole = user.user_metadata?.role;
-    const roleSlug = (roleData?.slug as string | undefined) || tokenRole || "collector";
+    const isCollectorEmail = user.email?.toLowerCase().includes("collector") || user.email?.toLowerCase().includes("admin");
+    const roleSlug =
+      tokenRole ||
+      (roleData?.slug as string | undefined) ||
+      (isCollectorEmail ? "collector" : "collector");
     const role = mapRoleSlug(roleSlug);
 
     return {
       id: user.id,
-      name: profile?.name ?? (user.user_metadata?.name as string) ?? "District Collector",
+      name: profile?.name ?? (user.user_metadata?.name as string) ?? (role === "collector" ? "District Collector" : "District Officer"),
       email: profile?.email ?? user.email ?? "",
       role,
       roleSlug,

@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useActionState } from "react";
+import { startTransition, useActionState, useRef, useState } from "react";
 
 import {
   loginAction,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { LoginBrandTitle } from "@/features/auth/components/login-brand-title";
+import { encryptCredentialsClient } from "@/lib/security/credential-crypto";
 import { cn } from "@/lib/utils";
 
 const inputClassName = cn(
@@ -30,6 +31,36 @@ export function LoginForm() {
     loginAction,
     initialState
   );
+  const [isEncrypting, setIsEncrypting] = useState(false);
+  const [emailValue, setEmailValue] = useState("");
+  const [passwordValue, setPasswordValue] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isPending || isEncrypting) return;
+
+    try {
+      setIsEncrypting(true);
+      const encrypted = await encryptCredentialsClient({
+        email: emailValue,
+        password: passwordValue,
+      });
+
+      const formData = new FormData();
+      formData.append("encrypted_payload", encrypted);
+
+      startTransition(() => {
+        formAction(formData);
+      });
+    } catch (err) {
+      console.error("[Login Security] Encryption error:", err);
+    } finally {
+      setIsEncrypting(false);
+    }
+  }
+
+  const busy = isPending || isEncrypting;
 
   return (
     <Card className="w-full border-primary/20 bg-card/95 shadow-2xl backdrop-blur-sm">
@@ -41,17 +72,30 @@ export function LoginForm() {
       </CardHeader>
 
       <CardContent>
-        <form action={formAction} className="space-y-4">
+        <form
+          ref={formRef}
+          method="POST"
+          action="/login"
+          onSubmit={handleSubmit}
+          autoComplete="off"
+          data-testid="login-form"
+          className="space-y-4"
+        >
           <div className="space-y-2">
-            <Label htmlFor="email">Official Email</Label>
+            <Label htmlFor="login_identity">Official Email / User ID</Label>
             <input
-              id="email"
-              name="email"
-              type="email"
+              id="login_identity"
+              type="text"
               className={inputClassName}
-              placeholder="name@collectorate.gov.in"
-              autoComplete="email"
+              placeholder="Enter official email or username"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              value={emailValue}
+              onChange={(e) => setEmailValue(e.target.value)}
               aria-invalid={!!state.errors?.email}
+              required
             />
             {state.errors?.email?.[0] && (
               <p className="text-sm text-destructive" role="alert">
@@ -61,15 +105,20 @@ export function LoginForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="login_secret">Password</Label>
             <input
-              id="password"
-              name="password"
+              id="login_secret"
               type="password"
               className={inputClassName}
-              placeholder="Enter your password"
+              placeholder="Enter secure password"
               autoComplete="current-password"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              value={passwordValue}
+              onChange={(e) => setPasswordValue(e.target.value)}
               aria-invalid={!!state.errors?.password}
+              required
             />
             {state.errors?.password?.[0] && (
               <p className="text-sm text-destructive" role="alert">
@@ -86,13 +135,13 @@ export function LoginForm() {
 
           <button
             type="submit"
-            disabled={isPending}
+            disabled={busy}
             className={cn(buttonVariants(), "h-10 w-full")}
           >
-            {isPending ? (
+            {busy ? (
               <>
                 <Loader2 className="animate-spin" />
-                Signing in...
+                Securing & Signing in...
               </>
             ) : (
               "Sign in"
@@ -100,7 +149,7 @@ export function LoginForm() {
           </button>
 
           <p className="text-center text-xs text-muted-foreground">
-            Authorized personnel only. All access is monitored and logged.
+            Zero-exposure encrypted authentication · Access is monitored and logged.
           </p>
         </form>
       </CardContent>

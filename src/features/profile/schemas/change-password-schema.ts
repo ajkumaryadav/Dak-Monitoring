@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 128;
 
 export function getPasswordStrength(password: string): {
   score: number;
@@ -22,15 +23,22 @@ export function getPasswordStrength(password: string): {
 const newPasswordSchema = z
   .string()
   .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+  .max(PASSWORD_MAX_LENGTH, `Password must be ${PASSWORD_MAX_LENGTH} characters or fewer`)
   .regex(/[a-z]/, "Password must include a lowercase letter")
   .regex(/[A-Z]/, "Password must include an uppercase letter")
   .regex(/\d/, "Password must include a number");
 
 export const changePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current password is required"),
+    currentPassword: z
+      .string()
+      .min(1, "Current password is required")
+      .max(PASSWORD_MAX_LENGTH, `Current password must be ${PASSWORD_MAX_LENGTH} characters or fewer`),
     newPassword: newPasswordSchema,
-    confirmPassword: z.string().min(1, "Please confirm your new password"),
+    confirmPassword: z
+      .string()
+      .min(1, "Please confirm your new password")
+      .max(PASSWORD_MAX_LENGTH, `Password confirmation must be ${PASSWORD_MAX_LENGTH} characters or fewer`),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "Passwords do not match",

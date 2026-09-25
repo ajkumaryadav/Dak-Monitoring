@@ -39,14 +39,15 @@ function revalidateDak(dakId: string) {
 export async function submitDakRequest(
   input: SubmitDakRequestInput
 ): Promise<SubmitDakRequestResult> {
-  const user = await getSessionUser();
-  if (
-    !user ||
-    !hasPermission(user.role, PERMISSIONS.DAK_UPDATE) ||
-    !canUpdateDakStatusRole(user.role)
-  ) {
-    return { success: false, message: "Unauthorized." };
-  }
+  try {
+    const user = await getSessionUser();
+    if (
+      !user ||
+      !hasPermission(user.role, PERMISSIONS.DAK_UPDATE) ||
+      !canUpdateDakStatusRole(user.role)
+    ) {
+      return { success: false, message: "Unauthorized." };
+    }
 
   const parsed = submitDakRequestSchema.safeParse(input);
   if (!parsed.success) {
@@ -161,45 +162,56 @@ export async function submitDakRequest(
     actorName: user.name,
   });
 
-  revalidateDak(parsed.data.dakId);
-  return { success: true };
+    revalidateDak(parsed.data.dakId);
+    return { success: true };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("submitDakRequest", err);
+    return { success: false, message: formatSafeErrorMessage(err, "Failed to submit request.") };
+  }
 }
 
 export async function submitDakRequestFormAction(
   _prev: { message?: string },
   formData: FormData
 ) {
-  const requestType = formData.get("requestType") as SubmitDakRequestInput["requestType"];
+  try {
+    const requestType = formData.get("requestType") as SubmitDakRequestInput["requestType"];
 
-  let input: SubmitDakRequestInput;
-  if (requestType === "transfer") {
-    input = {
-      dakId: formData.get("dakId") as string,
-      requestType: "transfer",
-      targetDepartmentId: formData.get("targetDepartmentId") as string,
-      remarks: formData.get("remarks") as string,
-    };
-  } else if (requestType === "extension") {
-    input = {
-      dakId: formData.get("dakId") as string,
-      requestType: "extension",
-      requestedDueDate: formData.get("requestedDueDate") as string,
-      remarks: formData.get("remarks") as string,
-    };
-  } else if (requestType === "clarification") {
-    input = {
-      dakId: formData.get("dakId") as string,
-      requestType: "clarification",
-      remarks: formData.get("remarks") as string,
-    };
-  } else {
-    input = {
-      dakId: formData.get("dakId") as string,
-      requestType: "escalation",
-      remarks: formData.get("remarks") as string,
-    };
+    let input: SubmitDakRequestInput;
+    if (requestType === "transfer") {
+      input = {
+        dakId: formData.get("dakId") as string,
+        requestType: "transfer",
+        targetDepartmentId: formData.get("targetDepartmentId") as string,
+        remarks: formData.get("remarks") as string,
+      };
+    } else if (requestType === "extension") {
+      input = {
+        dakId: formData.get("dakId") as string,
+        requestType: "extension",
+        requestedDueDate: formData.get("requestedDueDate") as string,
+        remarks: formData.get("remarks") as string,
+      };
+    } else if (requestType === "clarification") {
+      input = {
+        dakId: formData.get("dakId") as string,
+        requestType: "clarification",
+        remarks: formData.get("remarks") as string,
+      };
+    } else {
+      input = {
+        dakId: formData.get("dakId") as string,
+        requestType: "escalation",
+        remarks: formData.get("remarks") as string,
+      };
+    }
+
+    const result = await submitDakRequest(input);
+    return result.success ? {} : { message: result.message };
+  } catch (err: unknown) {
+    const { logSafeError, formatSafeErrorMessage } = await import("@/lib/security/errors");
+    logSafeError("submitDakRequestFormAction", err);
+    return { message: formatSafeErrorMessage(err, "Failed to submit request.") };
   }
-
-  const result = await submitDakRequest(input);
-  return result.success ? {} : { message: result.message };
 }

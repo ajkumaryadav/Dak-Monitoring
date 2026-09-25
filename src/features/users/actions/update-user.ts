@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import {
   updateUserSchema,
@@ -12,6 +13,7 @@ import { createActivityLog } from "@/features/activity/services/activity-log";
 import { canManageUsers } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
 
 export type UpdateUserResult =
   | { success: true }
@@ -25,7 +27,7 @@ export type UpdateUserFormState = {
 
 function revalidateUserPaths(userId: string) {
   revalidatePath("/dashboard/admin/users");
-  revalidatePath(`/dashboard/admin/users/${userId}`);
+  if (userId) revalidatePath(`/dashboard/admin/users/${userId}`);
   revalidatePath("/dashboard");
 }
 
@@ -37,6 +39,11 @@ export async function updateUser(
     const actor = await getSessionUser();
     if (!actor || !canManageUsers(actor.role)) {
       return { success: false, message: "You do not have permission to edit users." };
+    }
+
+    const validId = z.string().uuid().safeParse(userId);
+    if (!validId.success) {
+      return { success: false, message: "Invalid user identifier." };
     }
 
     const parsed = updateUserSchema.safeParse(input);
@@ -75,7 +82,7 @@ export async function updateUser(
       .eq("id", userId);
 
     if (error) {
-      return { success: false, message: error.message ?? "Failed to update user." };
+      return { success: false, message: formatSafeErrorMessage(error, "Failed to update user.") };
     }
 
     await admin.auth.admin.updateUserById(userId, {
@@ -99,11 +106,11 @@ export async function updateUser(
 
     revalidateUserPaths(userId);
     return { success: true };
-  } catch (error) {
-    console.error("[updateUser]", error);
+  } catch (error: unknown) {
+    logSafeError("updateUser", error);
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Unexpected error updating user.",
+      message: formatSafeErrorMessage(error, "Unexpected error updating user."),
     };
   }
 }
@@ -112,26 +119,34 @@ export async function updateUserFormAction(
   _prev: UpdateUserFormState,
   formData: FormData
 ): Promise<UpdateUserFormState> {
-  const userId = formData.get("userId") as string;
+  try {
+    const userId = formData.get("userId") as string;
 
-  const result = await updateUser(userId, {
-    name: formData.get("name") as string,
-    email: formData.get("email") as string,
-    mobile: (formData.get("mobile") as string) ?? "",
-    designation: formData.get("designation") as string,
-    employeeCode: (formData.get("employeeCode") as string) ?? "",
-    password: "",
-    role: formData.get("role") as UpdateUserInput["role"],
-    departmentId: (formData.get("departmentId") as string) ?? "",
-    sectionId: (formData.get("sectionId") as string) ?? "",
-    isActive:
-      formData.get("isActive") === "on" ||
-      formData.get("isActive") === "true",
-  });
+    const result = await updateUser(userId, {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      mobile: (formData.get("mobile") as string) ?? "",
+      designation: formData.get("designation") as string,
+      employeeCode: (formData.get("employeeCode") as string) ?? "",
+      password: "",
+      role: formData.get("role") as UpdateUserInput["role"],
+      departmentId: (formData.get("departmentId") as string) ?? "",
+      sectionId: (formData.get("sectionId") as string) ?? "",
+      isActive:
+        formData.get("isActive") === "on" ||
+        formData.get("isActive") === "true",
+    });
 
-  if (!result.success) {
-    return { success: false, message: result.message };
+    if (!result.success) {
+      return { success: false, message: result.message };
+    }
+
+    redirect("/dashboard/admin/users?updated=1");
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "digest" in err && typeof (err as any).digest === "string" && (err as any).digest.startsWith("NEXT_REDIRECT")) {
+      throw err;
+    }
+    logSafeError("updateUserFormAction", err);
+    return { success: false, message: formatSafeErrorMessage(err, "Failed to update user.") };
   }
-
-  redirect("/dashboard/admin/users?updated=1");
 }

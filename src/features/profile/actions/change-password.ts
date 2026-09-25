@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { changePasswordSchema } from "@/features/profile/schemas/change-password-schema";
 import { requireSessionUser } from "@/lib/session";
 import { createClient } from "@/lib/supabase/server";
+import { revokeAllUserSessions } from "@/lib/auth/session-store";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
 
 export type ChangePasswordState = {
   message?: string;
@@ -20,41 +22,49 @@ export async function changePasswordAction(
   _prevState: ChangePasswordState,
   formData: FormData
 ): Promise<ChangePasswordState> {
-  const user = await requireSessionUser();
+  try {
+    const user = await requireSessionUser();
 
-  const parsed = changePasswordSchema.safeParse({
-    currentPassword: formData.get("currentPassword"),
-    newPassword: formData.get("newPassword"),
-    confirmPassword: formData.get("confirmPassword"),
-  });
+    const parsed = changePasswordSchema.safeParse({
+      currentPassword: formData.get("currentPassword"),
+      newPassword: formData.get("newPassword"),
+      confirmPassword: formData.get("confirmPassword"),
+    });
 
-  if (!parsed.success) {
-    return { errors: parsed.error.flatten().fieldErrors };
+    if (!parsed.success) {
+      return { errors: parsed.error.flatten().fieldErrors };
+    }
+
+    const supabase = await createClient();
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: parsed.data.currentPassword,
+    });
+
+    if (signInError) {
+      return {
+        errors: { currentPassword: ["Current password is incorrect."] },
+      };
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: parsed.data.newPassword,
+    });
+
+    if (updateError) {
+      return { message: "Unable to update password. Please try again." };
+    }
+
+    // Invalidate old sessions
+    await revokeAllUserSessions(user.id);
+
+    revalidatePath("/dashboard/profile");
+    revalidatePath("/dashboard/settings");
+
+    return { success: true, message: "Password changed successfully. Please log in again if required." };
+  } catch (err: unknown) {
+    logSafeError("changePasswordAction", err);
+    return { message: formatSafeErrorMessage(err, "Failed to change password.") };
   }
-
-  const supabase = await createClient();
-
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: user.email,
-    password: parsed.data.currentPassword,
-  });
-
-  if (signInError) {
-    return {
-      errors: { currentPassword: ["Current password is incorrect."] },
-    };
-  }
-
-  const { error: updateError } = await supabase.auth.updateUser({
-    password: parsed.data.newPassword,
-  });
-
-  if (updateError) {
-    return { message: "Unable to update password. Please try again." };
-  }
-
-  revalidatePath("/dashboard/profile");
-  revalidatePath("/dashboard/settings");
-
-  return { success: true, message: "Password changed successfully." };
 }

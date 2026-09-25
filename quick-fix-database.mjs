@@ -1,13 +1,27 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { config } from "dotenv";
 import postgres from "postgres";
 
-// 1. Load environment variables
+// 1. Load environment variables without external dependencies
 for (const envFile of [".env.production", ".env.local", ".env"]) {
   const envPath = resolve(process.cwd(), envFile);
   if (existsSync(envPath)) {
-    config({ path: envPath, override: false });
+    try {
+      const raw = readFileSync(envPath, "utf8");
+      for (const line of raw.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#")) {
+          const eqIdx = trimmed.indexOf("=");
+          if (eqIdx > 0) {
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed.slice(eqIdx + 1).trim().replace(/^["'](.*)["']$/, "$1");
+            if (!process.env[key]) {
+              process.env[key] = val;
+            }
+          }
+        }
+      }
+    } catch {}
   }
 }
 
@@ -83,6 +97,13 @@ async function runQuickFix() {
       'ALTER TABLE IF EXISTS public.dak_atr ADD COLUMN IF NOT EXISTS submitted_at timestamptz DEFAULT now()',
       'ALTER TABLE IF EXISTS public.dak_atr ADD COLUMN IF NOT EXISTS created_at timestamptz DEFAULT now()',
       'ALTER TABLE IF EXISTS public.dak_atr ADD COLUMN IF NOT EXISTS updated_at timestamptz DEFAULT now()',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS is_deleted boolean NOT NULL DEFAULT false',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS is_archived boolean NOT NULL DEFAULT false',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS deleted_at timestamptz',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS deleted_by uuid REFERENCES public.users (id) ON DELETE SET NULL',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archived_at timestamptz',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archived_by uuid REFERENCES public.users (id) ON DELETE SET NULL',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archive_period_years integer',
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS applicant_mobile text',
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS applicant_reference text',
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS assignment_unit_id uuid REFERENCES public.assignment_units (id) ON DELETE SET NULL',
@@ -90,10 +111,14 @@ async function runQuickFix() {
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS source_id uuid REFERENCES public.dak_sources (id) ON DELETE SET NULL',
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS sla_due_date timestamptz',
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS escalation_level integer NOT NULL DEFAULT 0',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS is_escalated boolean NOT NULL DEFAULT false',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS intake_type text DEFAULT \'physical\'',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposal_date timestamptz',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposal_remarks text',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposal_authority text',
+      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS final_decision text',
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS disposed_date timestamptz',
       'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS closed_date timestamptz',
-      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS deleted_at timestamptz',
-      'ALTER TABLE IF EXISTS public.dak_entries ADD COLUMN IF NOT EXISTS archived_at timestamptz',
       'ALTER TABLE IF EXISTS public.users ADD COLUMN IF NOT EXISTS mobile_number text',
       'ALTER TABLE IF EXISTS public.users ADD COLUMN IF NOT EXISTS department_id uuid REFERENCES public.departments (id) ON DELETE SET NULL',
       'ALTER TABLE IF EXISTS public.users ADD COLUMN IF NOT EXISTS section_id uuid REFERENCES public.assignment_units (id) ON DELETE SET NULL',
@@ -113,6 +138,9 @@ async function runQuickFix() {
       'CREATE TABLE IF NOT EXISTS public.system_backups (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), backup_name text NOT NULL UNIQUE, file_path text NOT NULL, file_size bigint NOT NULL DEFAULT 0, checksum_sha256 text, status text NOT NULL DEFAULT \'created\', verification_status text NOT NULL DEFAULT \'pending\', verification_report jsonb NOT NULL DEFAULT \'{}\'::jsonb, manifest jsonb NOT NULL DEFAULT \'{}\'::jsonb, created_by uuid REFERENCES public.users (id) ON DELETE SET NULL, created_at timestamptz NOT NULL DEFAULT now(), verified_at timestamptz, restored_at timestamptz, error_message text)',
       'CREATE TABLE IF NOT EXISTS public.system_admin_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid REFERENCES public.users (id) ON DELETE SET NULL, role text, action text NOT NULL, module text NOT NULL DEFAULT \'database_storage\', affected_records integer NOT NULL DEFAULT 0, affected_files integer NOT NULL DEFAULT 0, result text NOT NULL DEFAULT \'success\', ip_address text, duration_ms integer, details jsonb NOT NULL DEFAULT \'{}\'::jsonb, created_at timestamptz NOT NULL DEFAULT now())',
       'CREATE TABLE IF NOT EXISTS public.orphan_cleanup_reports (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), report_type text NOT NULL, orphan_db_count integer NOT NULL DEFAULT 0, orphan_file_count integer NOT NULL DEFAULT 0, recoverable_bytes bigint NOT NULL DEFAULT 0, report jsonb NOT NULL DEFAULT \'{}\'::jsonb, created_by uuid REFERENCES public.users (id) ON DELETE SET NULL, created_at timestamptz NOT NULL DEFAULT now())',
+      'CREATE TABLE IF NOT EXISTS public.auth_sessions (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL, token_hash varchar(128) NOT NULL UNIQUE, created_at timestamptz NOT NULL DEFAULT now(), expires_at timestamptz NOT NULL, revoked_at timestamptz, user_agent text, ip_address text)',
+      'CREATE INDEX IF NOT EXISTS idx_auth_sessions_token_hash ON public.auth_sessions (token_hash)',
+      'CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id ON public.auth_sessions (user_id)',
       'CREATE TABLE IF NOT EXISTS public.master_data_audit_logs (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), entity_type text NOT NULL, entity_id uuid NOT NULL, action text NOT NULL, old_data jsonb, new_data jsonb, performed_by uuid REFERENCES public.users (id) ON DELETE SET NULL, created_at timestamptz NOT NULL DEFAULT now())',
       'CREATE TABLE IF NOT EXISTS public.sla_rules (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), priority text NOT NULL UNIQUE, max_days integer NOT NULL, warning_days integer NOT NULL, escalation_role text NOT NULL DEFAULT \'collector\', is_active boolean NOT NULL DEFAULT true, created_at timestamptz NOT NULL DEFAULT now())',
       'INSERT INTO public.sla_rules (priority, max_days, warning_days, escalation_role, is_active) VALUES (\'immediate\', 1, 0, \'collector\', true), (\'urgent\', 3, 1, \'collector\', true), (\'important\', 7, 2, \'collector\', true), (\'routine\', 15, 3, \'collector\', true) ON CONFLICT (priority) DO NOTHING'

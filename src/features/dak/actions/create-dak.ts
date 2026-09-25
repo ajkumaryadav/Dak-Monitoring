@@ -17,6 +17,7 @@ import { notifyDakCreated } from "@/features/notifications/services/notify-dak-e
 import { hasPermission, isOperatorDashboardRole, PERMISSIONS } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
+import { logSafeError, formatSafeErrorMessage } from "@/lib/security/errors";
 
 export type CreateDakResult =
   | { success: true; dakId: string }
@@ -110,10 +111,10 @@ export async function createDak(
       .single();
 
     if (error || !inserted) {
-      console.error("[createDak]", error);
+      logSafeError("createDak:db", error);
       return {
         success: false,
-        message: error?.message ?? "Failed to save DAK entry.",
+        message: formatSafeErrorMessage(error, "Failed to save DAK entry."),
       };
     }
 
@@ -167,14 +168,11 @@ export async function createDak(
     }
 
     return { success: true, dakId: inserted.id };
-  } catch (error) {
-    console.error("[createDak]", error);
+  } catch (error: unknown) {
+    logSafeError("createDak", error);
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred while saving.",
+      message: formatSafeErrorMessage(error, "An unexpected error occurred while saving."),
     };
   }
 }

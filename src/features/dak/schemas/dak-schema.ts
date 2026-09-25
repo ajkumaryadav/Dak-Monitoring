@@ -36,19 +36,23 @@ export const createDakSchema = z.object({
   subject: z
     .string()
     .trim()
-    .min(5, "Subject must be at least 5 characters"),
+    .min(5, "Subject must be at least 5 characters")
+    .max(255, "Subject must be 255 characters or fewer"),
   senderName: z
     .string()
     .trim()
-    .min(2, "Sender name must be at least 2 characters"),
+    .min(2, "Sender name must be at least 2 characters")
+    .max(100, "Sender name must be 100 characters or fewer"),
   senderAddress: z
     .string()
     .trim()
-    .min(5, "Sender address must be at least 5 characters"),
+    .min(5, "Sender address must be at least 5 characters")
+    .max(500, "Sender address must be 500 characters or fewer"),
   applicantMobile: z
     .string()
     .trim()
     .min(10, "Enter a valid 10-digit mobile number")
+    .max(20, "Enter a valid mobile number")
     .transform((v) => v.replace(/\D/g, "").slice(-10))
     .refine((v) => /^\d{10}$/.test(v), {
       message: "Enter a valid 10-digit mobile number",
@@ -69,7 +73,11 @@ export const createDakSchema = z.object({
     .string({ error: "Please select a DAK source" })
     .min(1, "Please select a DAK source")
     .uuid("Please select a valid DAK source"),
-  remarks: z.string().max(1000, "Remarks must be 1000 characters or fewer"),
+  remarks: z
+    .string()
+    .max(2000, "Remarks must be 2000 characters or fewer")
+    .optional()
+    .transform((v) => v?.trim() ?? ""),
   attachment: z.any().optional(),
 });
 

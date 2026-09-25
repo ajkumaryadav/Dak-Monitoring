@@ -1,13 +1,27 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { config } from "dotenv";
 import postgres from "postgres";
 
-// Load environment variables from .env.production, .env.local, or .env
-for (const envFile of [".env.production", ".env.local", ".env"]) {
+// Load environment variables without external dependencies (.env.local, .env.production, .env)
+for (const envFile of [".env.local", ".env.production", ".env"]) {
   const envPath = resolve(process.cwd(), envFile);
   if (existsSync(envPath)) {
-    config({ path: envPath, override: false });
+    try {
+      const raw = readFileSync(envPath, "utf8");
+      for (const line of raw.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#")) {
+          const eqIdx = trimmed.indexOf("=");
+          if (eqIdx > 0) {
+            const key = trimmed.slice(0, eqIdx).trim();
+            const val = trimmed.slice(eqIdx + 1).trim().replace(/^["'](.*)["']$/, "$1");
+            if (!process.env[key]) {
+              process.env[key] = val;
+            }
+          }
+        }
+      }
+    } catch {}
   }
 }
 
@@ -72,7 +86,7 @@ async function runHealthCheck() {
     const existingTablesResult = await sql`
       SELECT table_name 
       FROM information_schema.tables 
-      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      WHERE table_schema = 'public' AND table_type IN ('BASE TABLE', 'VIEW')
     `;
     const existingTableNames = new Set(existingTablesResult.map((r) => r.table_name));
 

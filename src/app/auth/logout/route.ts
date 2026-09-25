@@ -30,6 +30,10 @@ async function handleLogout(request: NextRequest) {
   const response = NextResponse.redirect(loginUrl);
 
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  if (token) {
+    const { revokeSession } = await import("@/lib/auth/session-store");
+    await revokeSession(token);
+  }
   const user = token ? verifyOfflineToken(token) : null;
 
   if (user) {
@@ -46,12 +50,17 @@ async function handleLogout(request: NextRequest) {
   }
 
   // Clear authentication cookie
+  const isSecure =
+    process.env.COOKIE_SECURE === "true" ||
+    process.env.NODE_ENV === "production";
+
   response.cookies.delete(AUTH_COOKIE_NAME);
   response.cookies.set(AUTH_COOKIE_NAME, "", {
     path: "/",
     maxAge: 0,
     httpOnly: true,
     sameSite: "lax",
+    secure: isSecure,
   });
 
   return response;

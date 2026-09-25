@@ -3,11 +3,12 @@ import { z } from "zod";
 import { getDistrictDateString } from "@/features/dak/lib/dak-dates";
 
 const baseRequestFields = {
-  dakId: z.string().uuid(),
+  dakId: z.string().uuid("Invalid DAK ID"),
   remarks: z
     .string()
     .trim()
-    .min(5, "Remarks are mandatory (minimum 5 characters)"),
+    .min(5, "Remarks are mandatory (minimum 5 characters)")
+    .max(2000, "Remarks must be 2000 characters or fewer"),
 };
 
 export const submitTransferRequestSchema = z.object({
@@ -27,6 +28,7 @@ export const submitExtensionRequestSchema = z.object({
   requestedDueDate: z
     .string()
     .min(1, "Requested due date is required")
+    .max(35)
     .refine((value) => value.slice(0, 10) >= getDistrictDateString(), {
       message: "Requested due date must be on or after today",
     }),
@@ -45,12 +47,13 @@ export const submitDakRequestSchema = z.discriminatedUnion("requestType", [
 ]);
 
 export const reviewDakRequestSchema = z.object({
-  requestId: z.string().uuid(),
+  requestId: z.string().uuid("Invalid request ID"),
   decision: z.enum(["approved", "rejected"]),
   reviewRemarks: z
     .string()
     .trim()
-    .min(5, "Review remarks are mandatory (minimum 5 characters)"),
+    .min(5, "Review remarks are mandatory (minimum 5 characters)")
+    .max(2000, "Review remarks must be 2000 characters or fewer"),
 });
 
 export type SubmitDakRequestInput = z.infer<typeof submitDakRequestSchema>;

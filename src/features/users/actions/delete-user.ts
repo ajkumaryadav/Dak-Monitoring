@@ -1,12 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { createActivityLog } from "@/features/activity/services/activity-log";
 import { canPermanentlyDeleteUser } from "@/features/system-admin/lib/permissions";
 import { getUserById } from "@/features/users/services/get-users";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/session";
+import { formatSafeErrorMessage, logSafeError } from "@/lib/security/errors";
+import { revokeAllUserSessions } from "@/lib/auth/session-store";
 
 export type DeleteUserResult =
   | { success: true }
@@ -29,10 +32,15 @@ export async function permanentlyDeleteUser(
       };
     }
 
+    const validId = z.string().uuid().safeParse(userId);
+    if (!validId.success) {
+      return { success: false, message: "Invalid user ID format." };
+    }
+
     if (confirmation.trim().toUpperCase() !== "DELETE") {
       return {
         success: false,
-        message: 'Type DELETE to confirm permanent user deletion.',
+        message: "Type DELETE to confirm permanent user deletion.",
       };
     }
 
@@ -61,6 +69,9 @@ export async function permanentlyDeleteUser(
       };
     }
 
+    // Invalidate all active sessions for this user
+    await revokeAllUserSessions(userId);
+
     const { error: profileError } = await admin
       .from("users")
       .delete()
@@ -69,13 +80,13 @@ export async function permanentlyDeleteUser(
     if (profileError) {
       return {
         success: false,
-        message: profileError.message ?? "Failed to delete user profile.",
+        message: formatSafeErrorMessage(profileError, "Failed to delete user profile."),
       };
     }
 
     const { error: authError } = await admin.auth.admin.deleteUser(userId);
     if (authError) {
-      console.error("[permanentlyDeleteUser] auth", authError.message);
+      logSafeError("permanentlyDeleteUser:auth", authError);
     }
 
     await createActivityLog({
@@ -89,12 +100,11 @@ export async function permanentlyDeleteUser(
     revalidatePath("/dashboard/admin/users");
     revalidatePath("/dashboard");
     return { success: true };
-  } catch (error) {
-    console.error("[permanentlyDeleteUser]", error);
+  } catch (error: unknown) {
+    logSafeError("permanentlyDeleteUser", error);
     return {
       success: false,
-      message:
-        error instanceof Error ? error.message : "Unexpected delete failure.",
+      message: formatSafeErrorMessage(error, "Unexpected delete failure."),
     };
   }
 }

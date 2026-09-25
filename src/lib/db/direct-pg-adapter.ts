@@ -72,12 +72,18 @@ export function createDirectPgClient(cookieStore?: any): DirectPgClient {
         const result = await offlineSignInWithPassword(email, password);
         if (!result.error && result.data.session?.access_token) {
           try {
+            const isSecure =
+              process.env.COOKIE_SECURE === "false"
+                ? false
+                : process.env.COOKIE_SECURE === "true" ||
+                  process.env.NODE_ENV === "production" ||
+                  process.env.REQUIRE_HTTPS === "true";
             const store = cookieStore || (await cookies());
             store.set(AUTH_COOKIE_NAME, result.data.session.access_token, {
               path: "/",
               httpOnly: true,
               sameSite: "lax",
-              secure: process.env.COOKIE_SECURE === "true",
+              secure: isSecure,
               maxAge: 7 * 24 * 3600,
             });
           } catch {
@@ -109,6 +115,17 @@ export function createDirectPgClient(cookieStore?: any): DirectPgClient {
         }
 
         const user = verifyOfflineToken(token);
+        if (!user) {
+          return { data: { user: null }, error: null };
+        }
+
+        // Validate server session state (revocation check)
+        const { validateServerSession } = await import("@/lib/auth/session-store");
+        const isValid = await validateServerSession(token);
+        if (!isValid) {
+          return { data: { user: null }, error: null };
+        }
+
         return { data: { user }, error: null };
       },
 
@@ -130,6 +147,13 @@ export function createDirectPgClient(cookieStore?: any): DirectPgClient {
           return { data: { session: null }, error: null };
         }
 
+        // Validate server session state (revocation check)
+        const { validateServerSession } = await import("@/lib/auth/session-store");
+        const isValid = await validateServerSession(token);
+        if (!isValid) {
+          return { data: { session: null }, error: null };
+        }
+
         return {
           data: {
             session: {
@@ -144,7 +168,21 @@ export function createDirectPgClient(cookieStore?: any): DirectPgClient {
       signOut: async () => {
         try {
           const store = cookieStore || (await cookies());
+          const token = store.get(AUTH_COOKIE_NAME)?.value;
+          if (token) {
+            const { revokeSession } = await import("@/lib/auth/session-store");
+            await revokeSession(token);
+          }
           store.delete(AUTH_COOKIE_NAME);
+          store.set(AUTH_COOKIE_NAME, "", {
+            path: "/",
+            maxAge: 0,
+            httpOnly: true,
+            sameSite: "lax",
+            secure:
+              process.env.COOKIE_SECURE === "true" ||
+              process.env.NODE_ENV === "production",
+          });
         } catch {}
         return { error: null };
       },
