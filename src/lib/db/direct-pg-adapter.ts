@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { getPgClient } from "@/lib/db/pg-client";
 import { PgQueryBuilder } from "@/lib/db/pg-query-builder";
 import {
@@ -8,6 +8,28 @@ import {
   type AuthUser,
 } from "@/lib/auth/offline-auth";
 import { getStorageProvider } from "@/lib/storage/storage-service";
+
+async function resolveCookieSecure(): Promise<boolean> {
+  if (process.env.COOKIE_SECURE === "false") return false;
+  if (process.env.COOKIE_SECURE === "true") return true;
+  if (process.env.REQUIRE_HTTPS === "true") return true;
+  if (process.env.REQUIRE_HTTPS === "false") return false;
+
+  try {
+    const reqHeaders = await headers();
+    const proto =
+      reqHeaders.get("x-forwarded-proto") ||
+      (reqHeaders.get("referer")?.startsWith("https://") ? "https" : "") ||
+      "";
+    if (proto === "https") return true;
+    if (proto === "http") return false;
+  } catch {
+    // headers() might not be available in non-request context
+  }
+
+  // Default to false so plain HTTP works reliably over IP addresses and LAN without browsers dropping Secure cookies
+  return false;
+}
 
 export interface DirectPgClient {
   from: <T = any>(tableName: string) => PgQueryBuilder<T>;
@@ -72,12 +94,7 @@ export function createDirectPgClient(cookieStore?: any): DirectPgClient {
         const result = await offlineSignInWithPassword(email, password);
         if (!result.error && result.data.session?.access_token) {
           try {
-            const isSecure =
-              process.env.COOKIE_SECURE === "false"
-                ? false
-                : process.env.COOKIE_SECURE === "true" ||
-                  process.env.NODE_ENV === "production" ||
-                  process.env.REQUIRE_HTTPS === "true";
+            const isSecure = await resolveCookieSecure();
             const store = cookieStore || (await cookies());
             store.set(AUTH_COOKIE_NAME, result.data.session.access_token, {
               path: "/",
@@ -167,6 +184,7 @@ export function createDirectPgClient(cookieStore?: any): DirectPgClient {
 
       signOut: async () => {
         try {
+          const isSecure = await resolveCookieSecure();
           const store = cookieStore || (await cookies());
           const token = store.get(AUTH_COOKIE_NAME)?.value;
           if (token) {
@@ -179,9 +197,7 @@ export function createDirectPgClient(cookieStore?: any): DirectPgClient {
             maxAge: 0,
             httpOnly: true,
             sameSite: "lax",
-            secure:
-              process.env.COOKIE_SECURE === "true" ||
-              process.env.NODE_ENV === "production",
+            secure: isSecure,
           });
         } catch {}
         return { error: null };

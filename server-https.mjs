@@ -175,7 +175,9 @@ function proxyHttpRequest(req, res, isHttps = true) {
   const proxyReq = http.request(options, (proxyRes) => {
     // Add security headers to response
     const headers = { ...proxyRes.headers };
-    if (isHttps) {
+    const isIpHost = /^(\d{1,3}\.){3}\d{1,3}(:\d+)?$/.test(clientHost);
+    const allowHsts = process.env.ENABLE_HSTS === "true" || (!isIpHost && process.env.ENABLE_HSTS !== "false");
+    if (isHttps && allowHsts) {
       headers["strict-transport-security"] = "max-age=31536000; includeSubDomains; preload";
     }
     headers["x-content-type-options"] = "nosniff";
@@ -197,7 +199,7 @@ function proxyHttpRequest(req, res, isHttps = true) {
       "base-uri 'self'",
       "object-src 'none'",
     ];
-    if (isHttps) {
+    if (isHttps && allowHsts) {
       cspDirectives.push("upgrade-insecure-requests");
     }
     headers["content-security-policy"] = cspDirectives.join("; ");

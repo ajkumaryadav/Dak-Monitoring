@@ -13,7 +13,8 @@
     "db:apply-notifications": "node scripts/apply-notifications-migration.mjs",
     "db:apply-compliance-drafts": "node scripts/apply-compliance-drafts-migration.mjs",
     "db:apply-storage-mime-types": "node scripts/apply-storage-mime-migration.mjs",
-    "sla:monitor": "node scripts/run-sla-monitor.mjs"
+    "sla:monitor": "node scripts/run-sla-monitor.mjs",
+    "release": "node scripts/build-and-package.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

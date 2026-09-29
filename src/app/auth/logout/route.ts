@@ -50,9 +50,16 @@ async function handleLogout(request: NextRequest) {
   }
 
   // Clear authentication cookie
+  const proto =
+    request.headers.get("x-forwarded-proto") ||
+    (request.url.startsWith("https") ? "https" : "http");
+  const isHttps = proto === "https" || process.env.REQUIRE_HTTPS === "true";
   const isSecure =
-    process.env.COOKIE_SECURE === "true" ||
-    process.env.NODE_ENV === "production";
+    process.env.COOKIE_SECURE === "false"
+      ? false
+      : process.env.COOKIE_SECURE === "true"
+      ? true
+      : isHttps;
 
   response.cookies.delete(AUTH_COOKIE_NAME);
   response.cookies.set(AUTH_COOKIE_NAME, "", {
